@@ -21,12 +21,17 @@ class Main extends Sprite
 #end
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
 	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
+
+#if windows //@TODO does this work on all native targets?
+	var lime_stage_constrain_cursor_to_window_frame = flash.Lib.load("lime", "lime_stage_constrain_cursor_to_window_frame", 2);
+#end
 	
 	// You can pretty much ignore everything from here on - your code should go in your states.
 	
 	public static function main():Void
 	{	
 		Lib.current.addChild(new Main());
+		
 	}
 	
 	public function new() 
@@ -57,7 +62,10 @@ class Main extends Sprite
 	{
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
-
+		
+#if windows
+		lime_stage_constrain_cursor_to_window_frame(flash.Lib.stage.__handle, true);
+#end
 		if (zoom == -1)
 		{
 			var ratioX:Float = stageWidth / gameWidth;

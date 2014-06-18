@@ -280,7 +280,6 @@ class Player extends FlxSprite
 				velocity.y = -Reg.PLAYER_JUMP_VEL;
 				onGround = false;
 				m_bJumpHeldNoRelease = true;
-				trace("jumped at " + FlxG.game.ticks);
 			}
 		}
 		else
@@ -528,7 +527,6 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function FireBullet( origin:FlxPoint, target:FlxPoint, newAngle:Float ):Void
 	{
-		trace("fired at " + FlxG.game.ticks);
 		animation.play("fire", true, 0);
 		firing = true;
 		

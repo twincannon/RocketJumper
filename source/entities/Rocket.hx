@@ -99,8 +99,6 @@ class Rocket extends FlxSprite
 			else
 				distance = RemapValClamped( distance, 0.5, 0.0, 1.0, 0.0 );
 				
-				//trace(distance);
-				
 			var amplitudeX:Float = ROCKET_AMP_X * distance * explosionAmpMod;
 			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
 			
@@ -110,14 +108,10 @@ class Rocket extends FlxSprite
 			if ( Reg.player.velocity.y < -(Reg.PLAYER_JUMP_VEL - 80) && Reg.player.velocity.y >= -(Reg.PLAYER_JUMP_VEL) )
 			{
 				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
-				trace("adjsuted");
 			}
 			
 			Reg.player.velocity.x += vecDir.x * amplitudeX;
 			Reg.player.velocity.y += vecDir.y * amplitudeY - bonusvel;
-			
-			trace(Reg.player.velocity.y);
-		
 		}
 		
 		//TODO make this a flxgroup for all explodable stuff and iterate through it instead of only checking for player
