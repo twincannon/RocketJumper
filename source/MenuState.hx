@@ -48,30 +48,30 @@ class MenuState extends FlxState
 	{
 		super.update();
 		
-#if debug
-		//remove this for release....******************************
-		FlxG.cameras.fade(0x00000000, 0.10, false, startGame);
-		//*********************************************************
-#else
+//#if debug
+		startGame();
+		return;
+//#else
 		// Do logo display/timing
 		if (logotimer == 0)
 		{
 			FlxG.cameras.fade(0x00000000, 0.50, true);
 			//FlxG.sound.play("assets/sounds/coin" + Reg.SoundExtension, 1, false);
 		}
-		
+
 		if (logotimer >= 0)
 			logotimer += FlxG.elapsed;
 			
-		if (FlxG.keys.anyJustPressed(["SPACE", "ENTER", "C"]))
+		if (FlxG.keys.anyJustPressed(["SPACE", "ENTER", "C", "ESCAPE"]))
 			logotimer = 2;
+			
 		
 		if (logotimer >= 2)
 		{
 			logotimer = -1;
 			FlxG.cameras.fade(0x00000000, 0.50, false, startGame);
 		}
-#end
+//#end
 	}	
 
 	private function startGame():Void

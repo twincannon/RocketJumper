@@ -89,7 +89,7 @@ class Rocket extends FlxSprite
 			var vecLength:Float = vecDir.length;
 			vecDir.normalize();
 			
-			var distance:Float = RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
+			var distance:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
 			//normalize distance a bit here. this is to make "perfect rocketjumps" easier and less frame-perfect
 			if ( distance > 0.5 )
@@ -97,7 +97,7 @@ class Rocket extends FlxSprite
 				distance = 1.0;
 			}
 			else
-				distance = RemapValClamped( distance, 0.5, 0.0, 1.0, 0.0 );
+				distance = Reg.RemapValClamped( distance, 0.5, 0.0, 1.0, 0.0 );
 				
 			var amplitudeX:Float = ROCKET_AMP_X * distance * explosionAmpMod;
 			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
@@ -140,27 +140,9 @@ class Rocket extends FlxSprite
         return Math.sqrt(x*x + y*y);
     }
 	
-	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
-	{
-		if ( A == B )
-			return val >= B ? D : C;
-		var cVal:Float = (val - A) / (B - A);
-		cVal = clamp( cVal, 0.0, 1.0 );
 
-		return C + (D - C) * cVal;
-	}
 	
-	public static inline function clamp( val:Float, minVal:Float, maxVal:Float ) : Float
-	{
-		if ( maxVal < minVal )
-			return maxVal;
-		else if( val < minVal )
-			return minVal;
-		else if( val > maxVal )
-			return maxVal;
-		else
-			return val;
-	}
+
 	
 	public static inline function remap( x:Float, oMin:Float, oMax:Float, nMin:Float, nMax:Float ) : Float
 	{

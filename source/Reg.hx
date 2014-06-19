@@ -23,10 +23,33 @@ class Reg
 	public inline static var PLAYER_JUMP_VEL = 260;
 	public inline static var PLAYER_JUMPHOLD_VEL = 3; //amount of vel to apply per-frame while holding jump (mario style)
 	public inline static var PLAYER_JUMPHOLD_VEL_MOD = 0.02; //add "min(player.velocity.x, player_max_speed) * this" to jumphold vel
+	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
 	public inline static var GRAVITY = 800;
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;
+	
+	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
+	{
+		if ( A == B )
+			return val >= B ? D : C;
+		var cVal:Float = (val - A) / (B - A);
+		cVal = clamp( cVal, 0.0, 1.0 );
+
+		return C + (D - C) * cVal;
+	}
+	
+	public static inline function clamp( val:Float, minVal:Float, maxVal:Float ) : Float
+	{
+		if ( maxVal < minVal )
+			return maxVal;
+		else if( val < minVal )
+			return minVal;
+		else if( val > maxVal )
+			return maxVal;
+		else
+			return val;
+	}
 	
 	/**
 	 * Generic levels Array that can be used for cross-state stuff.

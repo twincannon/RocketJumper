@@ -39,12 +39,18 @@ class Player extends FlxSprite
 	public var crosshairLocation:FlxPoint = FlxPoint.get(0, 0);
 	public var usingMouse = true;
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
+	public var crosshairLine:FlxSprite;
+	public var cameraFollowPoint:FlxSprite;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
 		super(X, Y);		
 		
 		loadGraphic(Assets.getBitmapData("assets/images/player.png"), true, 58, 58);
+		
+		cameraFollowPoint = new FlxSprite();
+		cameraFollowPoint.setSize( 1, 1 );
+		cameraFollowPoint.collisionType = FlxObject.NONE;
 		
 		animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
@@ -98,7 +104,13 @@ class Player extends FlxSprite
 		m_sprFireEffect.centerOffsets();
 		m_sprFireEffect.kill();
 		
-		FlxG.state.add(m_sprFireEffect);
+		FlxG.state.add(m_sprFireEffect); //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
+		
+		crosshairLine = new FlxSprite();
+		crosshairLine.loadGraphic(AssetPaths.line__png, true, 1, 75);
+		crosshairLine.setSize(1, 1);
+		crosshairLine.scrollFactor.set( 0, 0 );
+		FlxG.state.add(crosshairLine);
 	}
 	
 	public function goalMet():Void
@@ -128,6 +140,8 @@ class Player extends FlxSprite
 		//to run at half speed, and the timer was running at half speed too
 		if ( levelTimer > 0 && !levelBeat )
 			levelTimer += FlxG.elapsed;
+			
+		cameraFollowPoint.setPosition( getMidpoint().x, getMidpoint().y );
 		
 		super.update();
 	}
@@ -220,7 +234,6 @@ class Player extends FlxSprite
 		var vecAxis = new FlxVector( xaxis, yaxis );
 		var length = vecAxis.length;
 	
-
 		//deadzone
 		if ( length < 0.3 )
 		{
@@ -229,8 +242,8 @@ class Player extends FlxSprite
 		}
 		
 		var angle:Float = Math.atan2( yaxis, xaxis );
-		crosshairLocation.x = 50 * Math.cos(angle);
-		crosshairLocation.y = 50 * Math.sin(angle);
+		crosshairLocation.x = 75 * Math.cos(angle);
+		crosshairLocation.y = 75 * Math.sin(angle);
 		
 		if ( xaxis != m_OldGamepadAxis.x || yaxis != m_OldGamepadAxis.y )
 		{
@@ -319,7 +332,7 @@ class Player extends FlxSprite
 		melting = false;
 		living = true;
 		
-		//@TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//@TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! remove all rockets on res
 		//ROCKETS DONT GET REMOVED.... and i have no way of tracking them..! fuck!
 		
 		velocity.set(0, 0);
@@ -541,7 +554,7 @@ class Player extends FlxSprite
 		
 		var rocket = new Rocket( origin.x, origin.y );
 		rocket.angle = newAngle;
-		rocket.angleshoot( origin.x, origin.y - 10, Reg.ROCKET_SPEED, target );
+		rocket.angleshoot( origin.x, origin.y - Reg.PLAYER_SHOOT_Y_OFFSET, Reg.ROCKET_SPEED, target );
 		FlxG.state.add(rocket); 
 		
 		m_flRocketFireTimer = Reg.ROCKET_COOLDOWN;

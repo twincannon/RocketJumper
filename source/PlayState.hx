@@ -19,6 +19,7 @@ import flixel.group.FlxTypedGroup;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
+import flixel.util.FlxAngle;
 
 
 /**
@@ -107,7 +108,7 @@ class PlayState extends FlxState
 		add( m_sprCrosshair );
 		
 		//snap camera to world, follow the player, and make entire world collidable
-		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.5);
+		FlxG.camera.follow(Reg.player.cameraFollowPoint, FlxCamera.STYLE_LOCKON, 0.5);
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with pixel lines?? http://i.imgur.com/FHGaahO.gif
 		FlxG.camera.setBounds(0 - 300, 0, map.width + 600, map.height);		
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
@@ -157,11 +158,32 @@ class PlayState extends FlxState
 	 */
 	override public function update():Void
 	{
+#if !flash
+		if ( FlxG.keys.justPressed.ESCAPE )
+			Sys.exit(0);
+#end
+			
 		if ( Reg.player.usingMouse )
 			m_sprCrosshair.setPosition( Math.ceil(FlxG.mouse.screenX - m_sprCrosshair.width / 2), Math.ceil(FlxG.mouse.screenY - m_sprCrosshair.height / 2) );
 		else
 			m_sprCrosshair.setPosition( Reg.player.getScreenXY().x + Reg.player.crosshairLocation.x ,//- m_sprCrosshair.width / 2,
 										Reg.player.getScreenXY().y + Reg.player.crosshairLocation.y );// - m_sprCrosshair.height / 2);
+										
+		
+		// Update crosshair line to player
+		var xhairScreenCenter:FlxPoint = FlxPoint.get( m_sprCrosshair.getScreenXY().x + m_sprCrosshair.width / 2, m_sprCrosshair.getScreenXY().y + m_sprCrosshair.height / 2 );
+		var playerShootScreenCenter:FlxPoint = FlxPoint.get( Reg.player.getScreenXY().x + Reg.player.width / 2 , Reg.player.getScreenXY().y + Reg.player.height / 2 - Reg.PLAYER_SHOOT_Y_OFFSET + 2 );
+		Reg.player.crosshairLine.setPosition( xhairScreenCenter.x, xhairScreenCenter.y );
+		Reg.player.crosshairLine.origin.set( 0, 0 );
+		
+		var angle = FlxAngle.getAngle( playerShootScreenCenter, xhairScreenCenter );
+		Reg.player.crosshairLine.angle = angle;
+		
+		var distance:Float = xhairScreenCenter.distanceTo( playerShootScreenCenter );
+		
+		Reg.player.crosshairLine.scale.y = Reg.RemapValClamped( distance, 150, 20, 1.0, 0.0 );
+		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
+		
 		super.update();
 
 		timerText.text = "Time: " + Std.int(Reg.player.levelTimer*1000) / 1000;
