@@ -16,7 +16,7 @@
     <Width>6000</Width>
     <Height>6000</Height>
   </LevelMaximumSize>
-  <Filename>C:\Users\Michael\Desktop\HaxeFlixel\rocketjumper\assets\data\level01.oep</Filename>
+  <Filename>D:\GitHub\RocketJumper\assets\data\RocketJumper.oep</Filename>
   <AngleMode>Degrees</AngleMode>
   <CameraEnabled>false</CameraEnabled>
   <CameraSize>
@@ -29,7 +29,31 @@
   </LevelValueDefinitions>
   <LayerDefinitions>
     <LayerDefinition xsi:type="TileLayerDefinition">
-      <Name>walls</Name>
+      <Name>tilesbg</Name>
+      <Grid>
+        <Width>20</Width>
+        <Height>20</Height>
+      </Grid>
+      <ScrollFactor>
+        <X>1</X>
+        <Y>1</Y>
+      </ScrollFactor>
+      <ExportMode>CSV</ExportMode>
+    </LayerDefinition>
+    <LayerDefinition xsi:type="TileLayerDefinition">
+      <Name>tilesdetail</Name>
+      <Grid>
+        <Width>20</Width>
+        <Height>20</Height>
+      </Grid>
+      <ScrollFactor>
+        <X>1</X>
+        <Y>1</Y>
+      </ScrollFactor>
+      <ExportMode>CSV</ExportMode>
+    </LayerDefinition>
+    <LayerDefinition xsi:type="TileLayerDefinition">
+      <Name>tiles</Name>
       <Grid>
         <Width>20</Width>
         <Height>20</Height>
@@ -77,6 +101,24 @@
     <Tileset>
       <Name>ooze</Name>
       <FilePath>..\images\tiles_ooze.png</FilePath>
+      <TileSize>
+        <Width>20</Width>
+        <Height>20</Height>
+      </TileSize>
+      <TileSep>0</TileSep>
+    </Tileset>
+    <Tileset>
+      <Name>tilesbg</Name>
+      <FilePath>..\images\tilesbg.png</FilePath>
+      <TileSize>
+        <Width>20</Width>
+        <Height>20</Height>
+      </TileSize>
+      <TileSep>0</TileSep>
+    </Tileset>
+    <Tileset>
+      <Name>tilesdetail</Name>
+      <FilePath>..\images\tilesdetail.png</FilePath>
       <TileSize>
         <Width>20</Width>
         <Height>20</Height>

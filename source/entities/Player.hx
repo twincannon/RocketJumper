@@ -50,7 +50,7 @@ class Player extends FlxSprite
 		
 		cameraFollowPoint = new FlxSprite();
 		cameraFollowPoint.setSize( 1, 1 );
-		cameraFollowPoint.collisionType = FlxObject.NONE;
+		cameraFollowPoint.allowCollisions = FlxObject.NONE;
 		
 		animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);

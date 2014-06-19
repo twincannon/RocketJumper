@@ -34,6 +34,8 @@ class PlayState extends FlxState
 	private var m_tileMap:FlxOgmoLoader; //@TODO rename this stupid var.. and the "map" in reg.. currentlevel or something?????? or actually i bet THIS needs to be in reg..fuck, we'll see.
 	private var map:FlxTilemap;
 	private var ooze:FlxTilemap;
+	private var mapbg:FlxTilemap;
+	private var detailmap:FlxTilemap;
 	private var m_sprCrosshair:FlxSprite;
 	private var deadText:FlxText;
 	private var timerText:FlxText;
@@ -50,12 +52,14 @@ class PlayState extends FlxState
 #end
 		
 		m_tileMap = new FlxOgmoLoader(AssetPaths.level01__oel);
-		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "walls"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
+		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
+		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "tiles"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
+		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
 		ooze = m_tileMap.loadTilemap("assets/images/tiles_ooze.png", 20, 20, "ooze"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
 		
-		for ( i in 3...5 )
-			map.setTileProperties( i, FlxObject.NONE ); //set tiles 3 and 4 to be non-collidable (@TODO make these a separate map..?)
-
+		mapbg.allowCollisions = FlxObject.NONE;
+		detailmap.allowCollisions = FlxObject.NONE;
+		
 		checkpoints = new FlxTypedGroup<Checkpoint>();
 		
 		backgroundTiles = new FlxTypedGroup<FlxSprite>();
@@ -77,6 +81,8 @@ class PlayState extends FlxState
 		
 		add(backgroundTiles);
 		Reg.mapGroup = new FlxGroup();
+		Reg.mapGroup.add( mapbg );
+		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( map );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
