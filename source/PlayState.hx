@@ -12,6 +12,7 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxMath;
 import flixel.FlxObject;
 import flixel.util.FlxPoint;
+import haxe.xml.Fast;
 import openfl.Assets;
 import entities.Player;
 import flixel.util.FlxRect;
@@ -20,7 +21,7 @@ import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxAngle;
-
+import sys.io.File;
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -39,6 +40,7 @@ class PlayState extends FlxState
 	private var m_sprCrosshair:FlxSprite;
 	private var deadText:FlxText;
 	private var timerText:FlxText;
+	private var levelNameText:FlxText;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -47,11 +49,25 @@ class PlayState extends FlxState
 	{
 		super.create();
 		
+		if ( !Reg.levelsloaded )
+		{
+			Reg.levelsloaded = true;
+			var xml = Xml.parse(File.getContent("assets/data/levels.xml"));
+			var fast = new haxe.xml.Fast(xml.firstElement());
+			var levels = fast.node.levels;
+			for ( l in levels.nodes.level )
+			{
+				Reg.levelnames.push(l.innerData);
+				Reg.leveltitles.push(l.att.name);
+			}
+				
+		}
+		
+
 #if debug
 		//FlxG.debugger.drawDebug = true;
 #end
-		
-		m_tileMap = new FlxOgmoLoader(AssetPaths.level01__oel);
+		m_tileMap = new FlxOgmoLoader("assets/data/"+Reg.levelnames[Reg.levelnum]);//AssetPaths.level01__oel);
 		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
 		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "tiles"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
 		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
@@ -65,6 +81,7 @@ class PlayState extends FlxState
 		backgroundTiles = new FlxTypedGroup<FlxSprite>();
 		var bgW = 303;
 		var bgH = 256;
+		
 		
 		for (i in -1...4)
 		{
@@ -107,6 +124,14 @@ class PlayState extends FlxState
 		timerText.scrollFactor.set( 0, 0 );
 		add(timerText);
 		
+		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
+		var levelNameTextWidth = 200;
+		levelNameText = new FlxText(FlxG.width - levelNameTextWidth - 10, 10, levelNameTextWidth, Reg.leveltitle);
+		levelNameText.scrollFactor.set(0, 0);
+		levelNameText.alignment = "right";
+		add(levelNameText);
+		trace(FlxG.width);
+		
 		//custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
 		m_sprCrosshair.scrollFactor.set(0, 0);
@@ -118,6 +143,8 @@ class PlayState extends FlxState
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with pixel lines?? http://i.imgur.com/FHGaahO.gif
 		FlxG.camera.setBounds(0 - 300, 0, map.width + 600, map.height);		
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
+		
+		
 	}
 	
 	private function placeEntities( entityName:String, entityData:Xml ):Void
@@ -168,6 +195,19 @@ class PlayState extends FlxState
 		if ( FlxG.keys.justPressed.ESCAPE )
 			Sys.exit(0);
 #end
+
+		if ( FlxG.keys.justPressed.ENTER )
+		{
+			var levelchanged:Bool = false;
+			if ( Reg.levelnum < Reg.levelnames.length - 1 )
+			{
+				Reg.levelnum++;
+				levelchanged = true;
+			}
+			
+			if( levelchanged )
+				FlxG.switchState(new PlayState());
+		}
 			
 		if ( Reg.player.usingMouse )
 			m_sprCrosshair.setPosition( Math.ceil(FlxG.mouse.screenX - m_sprCrosshair.width / 2), Math.ceil(FlxG.mouse.screenY - m_sprCrosshair.height / 2) );

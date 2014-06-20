@@ -341,8 +341,8 @@ class Player extends FlxSprite
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
 		animation.play("idle");
-		x = spawnPoint.x;
-		y = spawnPoint.y;
+		x = spawnPoint.x - width/2;
+		y = spawnPoint.y - height/2;
 		
 		if ( checkPointNum == 0 || levelBeat )
 		{

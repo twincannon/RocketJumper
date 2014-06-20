@@ -29,6 +29,12 @@ class Reg
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;
 	
+	public static var levelnum:Int = 0;
+	public static var leveltitle:String = "Level title";
+	public static var levelnames:Array<String> = new Array<String>();
+	public static var leveltitles:Array<String> = new Array<String>();
+	public static var levelsloaded:Bool = false;
+	
 	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
 	{
 		if ( A == B )
