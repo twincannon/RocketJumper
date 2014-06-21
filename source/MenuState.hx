@@ -29,6 +29,7 @@ class MenuState extends FlxState
 		logo.y = FlxG.height / 2 - logo.height / 2;
 		
 		FlxG.mouse.visible = false;
+		FlxG.fixedTimestep = false;
 		//FlxG.autoPause = false;
 	}
 	

@@ -29,6 +29,8 @@ class Rocket extends FlxSprite
 		setSize( 1, 1 );
 		centerOffsets();
 		centerOrigin();
+		
+		Reg.rockets.add(this);
 	}
 	
 	

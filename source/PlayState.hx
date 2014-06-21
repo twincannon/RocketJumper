@@ -21,7 +21,6 @@ import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxAngle;
-import sys.io.File;
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -41,6 +40,7 @@ class PlayState extends FlxState
 	private var deadText:FlxText;
 	private var timerText:FlxText;
 	private var levelNameText:FlxText;
+	private var levelFinishedText:FlxText;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -51,8 +51,9 @@ class PlayState extends FlxState
 		
 		if ( !Reg.levelsloaded )
 		{
+			//Assets.getText
 			Reg.levelsloaded = true;
-			var xml = Xml.parse(File.getContent("assets/data/levels.xml"));
+			var xml = Xml.parse(Assets.getText("assets/data/levels.xml"));
 			var fast = new haxe.xml.Fast(xml.firstElement());
 			var levels = fast.node.levels;
 			for ( l in levels.nodes.level )
@@ -60,7 +61,6 @@ class PlayState extends FlxState
 				Reg.levelnames.push(l.innerData);
 				Reg.leveltitles.push(l.att.name);
 			}
-				
 		}
 		
 
@@ -114,9 +114,10 @@ class PlayState extends FlxState
 		add(Reg.player);
 		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
 		
-		deadText = new FlxText( FlxG.width / 2 - 65, FlxG.height / 3, 150, "Dead! Press R to respawn");
+		deadText = new FlxText( FlxG.width / 2 - 75, 50, 150, "Dead! Press [R] or (X) to respawn.");
 		deadText.color = FlxColor.WHITE;
 		deadText.scrollFactor.set( 0, 0 );
+		deadText.alignment = "center";
 		add(deadText);
 		deadText.kill();
 		
@@ -125,13 +126,19 @@ class PlayState extends FlxState
 		timerText.scrollFactor.set( 0, 0 );
 		add(timerText);
 		
+		var levelFinishedTextWidth = 250;
+		levelFinishedText = new FlxText( FlxG.width / 2 - levelFinishedTextWidth / 2, 50, levelFinishedTextWidth, "Level finished text" );
+		levelFinishedText.scrollFactor.set( 0, 0 );
+		levelFinishedText.alignment = "center";
+		add(levelFinishedText);
+		levelFinishedText.kill();
+		
 		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
 		var levelNameTextWidth = 200;
 		levelNameText = new FlxText(FlxG.width - levelNameTextWidth - 10, 10, levelNameTextWidth, Reg.leveltitle);
 		levelNameText.scrollFactor.set(0, 0);
 		levelNameText.alignment = "right";
 		add(levelNameText);
-		trace(FlxG.width);
 		
 		//custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
@@ -144,8 +151,6 @@ class PlayState extends FlxState
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with pixel lines?? http://i.imgur.com/FHGaahO.gif
 		FlxG.camera.setBounds(0 - 300, 0, map.width + 600, map.height);		
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
-		
-		
 	}
 	
 	private function placeEntities( entityName:String, entityData:Xml ):Void
@@ -197,19 +202,6 @@ class PlayState extends FlxState
 			Sys.exit(0);
 #end
 
-		if ( FlxG.keys.justPressed.ENTER )
-		{
-			var levelchanged:Bool = false;
-			if ( Reg.levelnum < Reg.levelnames.length - 1 )
-			{
-				Reg.levelnum++;
-				levelchanged = true;
-			}
-			
-			if( levelchanged )
-				FlxG.switchState(new PlayState());
-		}
-			
 		if ( Reg.player.usingMouse )
 			m_sprCrosshair.setPosition( Math.ceil(FlxG.mouse.screenX - m_sprCrosshair.width / 2), Math.ceil(FlxG.mouse.screenY - m_sprCrosshair.height / 2) );
 		else
@@ -232,9 +224,12 @@ class PlayState extends FlxState
 		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
 		
 		super.update();
-
+		
+		if ( Reg.gameTimerStarted )
+			Reg.gameTimer += FlxG.elapsed;
+		
 		timerText.text = "Time: " + Std.int(Reg.player.levelTimer*1000) / 1000;
-
+		
 		if ( Reg.player.living )
 		{
 			if ( deadText.alive )
@@ -250,17 +245,56 @@ class PlayState extends FlxState
 			if ( FlxG.overlap( Reg.player, goal ) )
 				Reg.player.goalMet();
 			
-			if ( ooze.overlapsWithCallback( Reg.player,
-											function(P:FlxObject, T:FlxObject) { return  FlxG.overlap( P, T ); },
-											true ) ) //the bool here makes this return the specific FlxTile to the function
+			if ( !Reg.player.levelBeat && Reg.player.living )
 			{
-				Reg.player.melting = true;
+				if ( ooze.overlapsWithCallback( Reg.player,
+												function(P:FlxObject, T:FlxObject) { return  FlxG.overlap( P, T ); },
+												true ) ) //the bool here makes this return the specific FlxTile to the function
+				{
+					Reg.player.melting = true;
+				}
 			}
+			
+			if ( Reg.player.levelBeat )
+			{
+				if ( Reg.levelnum < Reg.levelnames.length - 1 )
+				{
+					levelFinishedText.text = "Goal! Hit [ENTER] or (Y) to go to next level!";
+				}
+				else
+				{
+					levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + Reg.gameTimer + "\nHit [ENTER] or (Y) to play through it again.";
+					Reg.gameTimerStarted = false;
+				}
+				levelFinishedText.revive();
+			}
+			else
+				levelFinishedText.kill();
 		}
 		else
 		{
 			deadText.revive();
 			FlxG.camera.follow( null );
+		}
+		
+		if ( (FlxG.keys.justPressed.ENTER || Reg.player.gamepadTryNextLevel) && Reg.player.levelBeat )
+		{
+			Reg.player.gamepadTryNextLevel = false;
+			
+			if ( Reg.levelnum < Reg.levelnames.length - 1 )
+			{
+				Reg.levelnum++;
+				FlxG.switchState(new PlayState());
+			}
+			else
+			{
+				Reg.levelnum = 0;
+				Reg.gameTimer = 0;
+			}
+				
+			Reg.player.levelBeat = false;
+			Reg.destroyRockets();
+			FlxG.switchState(new PlayState());
 		}
 	}
 }

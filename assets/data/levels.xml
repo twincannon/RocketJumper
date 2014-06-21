@@ -1,6 +1,6 @@
 <LevelList>
 	<levels>
-		<level name="downtown">sewer.oel</level>
-		<level name="crash daily's secret level">cdspl.oel</level>
+		<level name="sewer">sewer.oel</level>
+		<level name="downtown">level01.oel</level>
 	</levels>
 </LevelList>

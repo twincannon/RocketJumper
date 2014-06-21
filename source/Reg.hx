@@ -2,8 +2,10 @@ package;
 
 import entities.Player;
 import flixel.group.FlxGroup;
+import flixel.group.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
+import entities.Rocket;
 
 import flixel.util.FlxPoint;
 
@@ -28,24 +30,33 @@ class Reg
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;
+	public static var rockets:FlxGroup = new FlxGroup();
+	
+	public static inline function destroyRockets():Void
+	{
+		for ( rocket in Reg.rockets )
+			rocket.destroy();
+	}
 	
 	public static var levelnum:Int = 0;
 	public static var leveltitle:String = "Level title";
 	public static var levelnames:Array<String> = new Array<String>();
 	public static var leveltitles:Array<String> = new Array<String>();
 	public static var levelsloaded:Bool = false;
+	public static var gameTimerStarted:Bool = false;
+	public static var gameTimer:Float = 0;
 	
 	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
 	{
 		if ( A == B )
 			return val >= B ? D : C;
 		var cVal:Float = (val - A) / (B - A);
-		cVal = clamp( cVal, 0.0, 1.0 );
+		cVal = Clamp( cVal, 0.0, 1.0 );
 
 		return C + (D - C) * cVal;
 	}
 	
-	public static inline function clamp( val:Float, minVal:Float, maxVal:Float ) : Float
+	public static inline function Clamp( val:Float, minVal:Float, maxVal:Float ) : Float
 	{
 		if ( maxVal < minVal )
 			return maxVal;
@@ -65,11 +76,6 @@ class Reg
 	/**
 	 * Generic level variable that can be used for cross-state stuff.
 	 * Example usage: Storing the current level number.
-	 */
-	public static var level:Int = 0;
-	/**
-	 * Generic scores Array that can be used for cross-state stuff.
-	 * Example usage: Storing the scores for level.
 	 */
 	public static var scores:Array<Dynamic> = [];
 	/**

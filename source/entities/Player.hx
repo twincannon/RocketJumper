@@ -41,6 +41,7 @@ class Player extends FlxSprite
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
 	public var crosshairLine:FlxSprite;
 	public var cameraFollowPoint:FlxSprite;
+	public var gamepadTryNextLevel:Bool;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -119,6 +120,7 @@ class Player extends FlxSprite
 		{
 			checkPointNum = 0;
 			levelBeat = true;
+			velocity.x = 0;
 		}
 	}
 	
@@ -131,7 +133,7 @@ class Player extends FlxSprite
 		HandleAnimation();
 		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
 		HandleInput(); //handle input, update velocity
-		HandleGamepadInput(); //@TODO gamepad isn't recognized in windows!???!? why?
+		HandleGamepadInput();
 		UpdateFireEffect(); //muzzleflash
 		
 		m_flRocketFireTimer -= FlxG.elapsed;
@@ -160,9 +162,8 @@ class Player extends FlxSprite
 			
 		oldMouseScreenXY = FlxPoint.get( FlxG.mouse.screenX, FlxG.mouse.screenY );
 		
-		if ( !living )
+		if ( !living || levelBeat )
 			return;
-			
 		
 		var mouseAngle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
 		
@@ -204,9 +205,12 @@ class Player extends FlxSprite
 		if ( m_gamePad.justPressed(XboxButtonID.X) )
 			Resurrect();
 			
-		if ( !living )
-			return;
+		if ( m_gamePad.justPressed(XboxButtonID.Y) )
+			gamepadTryNextLevel = true;
 			
+		if ( !living || levelBeat )
+			return;
+		
 		var xboxJumpPressed = m_gamePad.justPressed(XboxButtonID.A) ||
 							  m_gamePad.justPressed(XboxButtonID.DPAD_UP) ||
 							  m_gamePad.justPressed(XboxButtonID.RIGHT_ANALOGUE) ||
@@ -328,6 +332,8 @@ class Player extends FlxSprite
 	
 	private function Resurrect():Void
 	{
+		Reg.destroyRockets();
+		
 		FlxG.camera.follow(this);
 		melting = false;
 		living = true;
@@ -341,8 +347,8 @@ class Player extends FlxSprite
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
 		animation.play("idle");
-		x = spawnPoint.x - width/2;
-		y = spawnPoint.y - height/2;
+		x = spawnPoint.x;
+		y = spawnPoint.y;
 		
 		if ( checkPointNum == 0 || levelBeat )
 		{
@@ -360,15 +366,14 @@ class Player extends FlxSprite
 	{
 		if ( !living )
 			return;
-		// @TODO lol -- wtf - there's a "touching floor" function, gotta use that....
-		//if (isTouching(FlxObject.FLOOR))
-		
 		
 		/*
 		 * TODO: 
 			 * make an animation priority system.. if there isnt one
 			 * then i can just be like "if animation doesnt loop, isnt finished, and is higher priority, dont change
 			 * like playAnimation( "anim", looping, priority );
+			 * 
+			 * What could also work is an animation.callback system as shown here, seems to be made for it: http://pastebin.com/auh87105
 			 * */
 				
 		if ( velocity.y == 0 && !onGround && !isTouching(FlxObject.CEILING) )
@@ -424,7 +429,6 @@ class Player extends FlxSprite
 			}
 		}
 		
-		//var aimAngle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
 		var aimAngle:Float;
 		if ( usingMouse )
 			aimAngle = FlxAngle.getAngle( getScreenXY(), FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY));
@@ -434,7 +438,6 @@ class Player extends FlxSprite
 		if ( m_flOldMouseAngle != aimAngle )
 		{
 			m_bAimAnimDirty = true;
-		//	aimAngle = FlxAngle.getAngle( getMidpoint(), FlxPoint.get( (m_OldGamepadAxis.x * 1000) + (x + width * 0.5), (m_OldGamepadAxis.y * 1000) + (x + width * 0.5) ) );
 		}
 		
 		//super contrived if statement, but basically once we start "aiming", dont stop until we move again
@@ -505,6 +508,9 @@ class Player extends FlxSprite
 			
 		if ( levelTimer == 0 )
 			levelTimer += FlxG.elapsed;
+			
+		if ( !Reg.gameTimerStarted )
+			Reg.gameTimerStarted = true;
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -563,12 +569,12 @@ class Player extends FlxSprite
 			levelTimer += FlxG.elapsed;
 	}
 	
-	public function touchCheckpoint(P:FlxObject, C:Checkpoint):Void//( X:Float, Y:Float, Num:Int ):Void
+	public function touchCheckpoint(P:FlxObject, C:Checkpoint):Void
 	{
 		if ( !levelBeat && C.number > checkPointNum )
 		{
 			checkPointNum = C.number;
-			spawnPoint.set( C.getMidpoint().x, C.getMidpoint().y );
+			spawnPoint.set( C.getMidpoint().x - width/2, C.y + C.height - height );
 		}
 	}
 }
