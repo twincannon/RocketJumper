@@ -67,11 +67,11 @@ class PlayState extends FlxState
 #if debug
 		//FlxG.debugger.drawDebug = true;
 #end
-		m_tileMap = new FlxOgmoLoader("assets/data/"+Reg.levelnames[Reg.levelnum]);//AssetPaths.level01__oel);
-		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
+		m_tileMap = new FlxOgmoLoader("assets/data/"+Reg.levelnames[Reg.levelnum]);
+		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg");
 		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "tiles"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
-		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
-		ooze = m_tileMap.loadTilemap("assets/images/tiles_ooze.png", 20, 20, "ooze"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
+		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail");
+		ooze = m_tileMap.loadTilemap("assets/images/tiles_ooze.png", 20, 20, "ooze");
 		
 		mapbg.allowCollisions = FlxObject.NONE;
 		detailmap.allowCollisions = FlxObject.NONE;
@@ -82,7 +82,8 @@ class PlayState extends FlxState
 		var bgW = 303;
 		var bgH = 256;
 		
-		
+		//@TODO get width/height of map and make just enough of these background tiles
+		//also maybe make a different background type for fun
 		for (i in -1...4)
 		{
 			for (j in -1...4)
