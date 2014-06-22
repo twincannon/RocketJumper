@@ -313,7 +313,7 @@ class Player extends FlxSprite
 		if ( !living )
 			return;
 			
-		if (melting) //change this into some kind of setalive system .. also rename living to like isdead or something.. dumb
+		if (melting)
 		{
 			var falling = true;
 			if ( velocity.y < 0 )
@@ -330,7 +330,7 @@ class Player extends FlxSprite
 		}
 	}
 	
-	private function Resurrect():Void
+	public function Resurrect():Void
 	{
 		Reg.destroyRockets();
 		
@@ -338,12 +338,9 @@ class Player extends FlxSprite
 		melting = false;
 		living = true;
 		
-		//@TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! remove all rockets on res
-		//ROCKETS DONT GET REMOVED.... and i have no way of tracking them..! fuck!
-		
 		velocity.set(0, 0);
 		allowCollisions = FlxObject.ANY;
-		facing = FlxObject.RIGHT;
+		facing = FlxObject.RIGHT; //@TODO make an arg for this based on playerstart/checkpoint orientation
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
 		animation.play("idle");
@@ -500,6 +497,7 @@ class Player extends FlxSprite
 				
 		running = true;
 		
+		//@TODO pretty major bug here, on flash 60 fps the acceleration is slower than windows 120 fps
 		if ( dir == FlxObject.LEFT && velocity.x > -Reg.PLAYER_MAX_SPEED )
 			velocity.x -= Reg.PLAYER_ACCEL;
 			

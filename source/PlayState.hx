@@ -147,17 +147,16 @@ class PlayState extends FlxState
 		add( m_sprCrosshair );
 		
 		//snap camera to world, follow the player, and make entire world collidable
-		FlxG.camera.follow(Reg.player.cameraFollowPoint, FlxCamera.STYLE_LOCKON, 0.5);
-	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with pixel lines?? http://i.imgur.com/FHGaahO.gif
+		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
+	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
 		FlxG.camera.setBounds(0 - 300, 0, map.width + 600, map.height);		
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
 	}
 	
 	private function placeEntities( entityName:String, entityData:Xml ):Void
 	{
-		//there has to be a way to CREATE these here so i can do stuff like
-		//pass x/y and have it work in new().. instead of doing this nonsense?
-		//@TODO REFACTOR IT
+		//@TODO  CREATE these objects here so i can do stuff like
+		//pass x/y and have it set via create() instead of doing this nonsense
 		
 		var x:Int = Std.parseInt(entityData.get("x"));
 		var y:Int = Std.parseInt(entityData.get("y"));
