@@ -41,7 +41,7 @@
       <ExportMode>CSV</ExportMode>
     </LayerDefinition>
     <LayerDefinition xsi:type="TileLayerDefinition">
-      <Name>tilesdetail</Name>
+      <Name>tiles</Name>
       <Grid>
         <Width>20</Width>
         <Height>20</Height>
@@ -53,7 +53,7 @@
       <ExportMode>CSV</ExportMode>
     </LayerDefinition>
     <LayerDefinition xsi:type="TileLayerDefinition">
-      <Name>tiles</Name>
+      <Name>tilesdetail</Name>
       <Grid>
         <Width>20</Width>
         <Height>20</Height>

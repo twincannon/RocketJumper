@@ -82,7 +82,7 @@ class PlayState extends FlxState
 		var bgW = 303;
 		var bgH = 256;
 		
-		//@TODO get width/height of map and make just enough of these background tiles
+		//@TODO make 4 of these in a classic scrolling bg style instead of making way too many to cover the map
 		//also maybe make a different background type for fun
 		for (i in -1...4)
 		{
@@ -100,8 +100,8 @@ class PlayState extends FlxState
 		add(backgroundTiles);
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
-		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( map );
+		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
 
@@ -149,7 +149,7 @@ class PlayState extends FlxState
 		//snap camera to world, follow the player, and make entire world collidable
 		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
-		FlxG.camera.setBounds(0 - 300, 0, map.width + 600, map.height);		
+		FlxG.camera.setBounds(0, 0, map.width, map.height);		
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
 	}
 	
@@ -235,6 +235,18 @@ class PlayState extends FlxState
 				deadText.kill();
 				
 			FlxG.collide(map, Reg.player);
+			
+			//Don't let player leave the map (horizontally)
+			if ( Reg.player.x < map.x )
+				Reg.player.x = map.x;
+			else if ( Reg.player.x + Reg.player.width > map.width )
+				Reg.player.x = map.width - Reg.player.width;
+			
+			if ( Reg.player.y > map.height || Reg.player.y < map.y )
+			{
+				Reg.player.y = map.y;
+				Reg.player.velocity.y = 0;
+			}
 			
 			if ( FlxG.overlap( Reg.player, checkpoints, Reg.player.touchCheckpoint ) )
 			{

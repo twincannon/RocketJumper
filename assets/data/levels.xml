@@ -1,6 +1,7 @@
 <LevelList>
 	<levels>
 		<level name="Construction Yard">intro.oel</level>
-		<level name="downtown">level01.oel</level>
+		<level name="The Sewers">sewer.oel</level>
+		<level name="Downtown">level01.oel</level>
 	</levels>
 </LevelList>
