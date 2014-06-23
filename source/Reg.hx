@@ -46,6 +46,12 @@ class Reg
 	public static var gameTimerStarted:Bool = false;
 	public static var gameTimer:Float = 0;
 	
+#if (native || windows)
+	public inline static var shouldPixelPerfectRender:Bool = false;
+#else
+	public inline static var shouldPixelPerfectRender:Bool = true; //for whatever reason, this makes sprites jitter if false on flash target, and if true on windows target
+#end
+	
 	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
 	{
 		if ( A == B )

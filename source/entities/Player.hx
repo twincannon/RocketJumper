@@ -84,6 +84,8 @@ class Player extends FlxSprite
 		width = 18;
 		height = 32;
 		offset.set(20, 26);
+		
+		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 
 		//another interesting way of handling movement, with maxvel and accel
 		//https://github.com/HaxeFlixel/flixel-demos/blob/master/Editors/TiledEditor/source/PlayState.hx
@@ -121,6 +123,7 @@ class Player extends FlxSprite
 			checkPointNum = 0;
 			levelBeat = true;
 			velocity.x = 0;
+			acceleration.x = 0;
 		}
 	}
 	
@@ -165,10 +168,14 @@ class Player extends FlxSprite
 		if ( !living || levelBeat )
 			return;
 		
-		var mouseAngle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
 		
 		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
+		{
+			var mouseAngle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
 			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
+		}
+		
+		acceleration.x = 0;
 		
 		if (FlxG.keys.anyPressed(["LEFT", "A"]))
 			Walk( FlxObject.LEFT );
@@ -188,7 +195,7 @@ class Player extends FlxSprite
 			else if (velocity.x < -Reg.PLAYER_MAX_SPEED)
 				velocity.x = -Reg.PLAYER_MAX_SPEED;
 		}
-		
+
 		// Less drag when airborn
 		drag.x = onGround ? Reg.PLAYER_DRAG : Reg.PLAYER_DRAG_AIR;
 	}
@@ -497,12 +504,29 @@ class Player extends FlxSprite
 				
 		running = true;
 		
-		//@TODO pretty major bug here, on flash 60 fps the acceleration is slower than windows 120 fps
+		if ( dir == FlxObject.LEFT )
+		{
+			if ( !onGround && velocity.x > 0 )
+				acceleration.x = -1500;
+			else if ( velocity.x > -Reg.PLAYER_MAX_SPEED )
+				acceleration.x = -1000;
+		}
+		
+		if ( dir == FlxObject.RIGHT )
+		{
+			if ( !onGround && velocity.x < 0 )
+				acceleration.x = 1500;
+			else if ( velocity.x < Reg.PLAYER_MAX_SPEED )
+				acceleration.x = 1000;
+		}
+	/*	
 		if ( dir == FlxObject.LEFT && velocity.x > -Reg.PLAYER_MAX_SPEED )
-			velocity.x -= Reg.PLAYER_ACCEL;
+			acceleration.x = -drag.x;
+			//velocity.x -= Reg.PLAYER_ACCEL;
 			
 		if ( dir == FlxObject.RIGHT && velocity.x < Reg.PLAYER_MAX_SPEED )
-			velocity.x += Reg.PLAYER_ACCEL;
+			acceleration.x = drag.x;
+			//velocity.x += Reg.PLAYER_ACCEL;*/
 			
 		if ( levelTimer == 0 )
 			levelTimer += FlxG.elapsed;

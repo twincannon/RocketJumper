@@ -29,7 +29,7 @@ class Rocket extends FlxSprite
 		setSize( 1, 1 );
 		centerOffsets();
 		centerOrigin();
-		
+		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		Reg.rockets.add(this);
 	}
 	

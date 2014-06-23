@@ -1,6 +1,7 @@
 package;
 
 import entities.Goal;
+import entities.Sign;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -27,8 +28,9 @@ import flixel.util.FlxAngle;
  */
 class PlayState extends FlxState
 {
-	public var backgroundTiles:FlxTypedGroup<FlxSprite>; //make background a 40x40 shit with like fencing, doors, windows, etc
-	private var checkpoints:FlxTypedGroup<Checkpoint>;
+	public var backgroundTiles:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
+	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
+	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
 	private var goal:Goal;
 	private var camera:FlxCamera;
 	private var m_tileMap:FlxOgmoLoader; //@TODO rename this stupid var.. and the "map" in reg.. currentlevel or something?????? or actually i bet THIS needs to be in reg..fuck, we'll see.
@@ -41,6 +43,8 @@ class PlayState extends FlxState
 	private var timerText:FlxText;
 	private var levelNameText:FlxText;
 	private var levelFinishedText:FlxText;
+	private var signText:FlxText;
+	private var signTextBox:FlxSprite;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -64,6 +68,8 @@ class PlayState extends FlxState
 		}
 		
 
+		
+
 #if debug
 		//FlxG.debugger.drawDebug = true;
 #end
@@ -76,9 +82,6 @@ class PlayState extends FlxState
 		mapbg.allowCollisions = FlxObject.NONE;
 		detailmap.allowCollisions = FlxObject.NONE;
 		
-		checkpoints = new FlxTypedGroup<Checkpoint>();
-		
-		backgroundTiles = new FlxTypedGroup<FlxSprite>();
 		var bgW = 303;
 		var bgH = 256;
 		
@@ -111,10 +114,19 @@ class PlayState extends FlxState
 		
 		add(goal);
 		add(checkpoints);
+		add(signs);
 		add(Reg.player);
 		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
 		
-		deadText = new FlxText( FlxG.width / 2 - 75, 50, 150, "Dead! Press [R] or (X) to respawn.");
+		var signTextWidth = 300;
+		var signTextY = 40;
+		signTextBox = new FlxSprite( FlxG.width / 2 - signTextWidth / 2, signTextY - 15, AssetPaths.signtextbox__png );
+		signTextBox.scrollFactor.set( 0, 0 );
+		signTextBox.allowCollisions = FlxObject.NONE;
+		add(signTextBox);
+		signTextBox.kill();
+		
+		deadText = new FlxText( FlxG.width / 2 - 100, 50, 200, "Dead! Press [R] or (X) to respawn.");
 		deadText.color = FlxColor.WHITE;
 		deadText.scrollFactor.set( 0, 0 );
 		deadText.alignment = "center";
@@ -139,6 +151,12 @@ class PlayState extends FlxState
 		levelNameText.scrollFactor.set(0, 0);
 		levelNameText.alignment = "right";
 		add(levelNameText);
+		
+		signText = new FlxText( FlxG.width / 2 - signTextWidth / 2 + 10, signTextY, signTextWidth - 20, "I'm a sign!" );
+		signText.scrollFactor.set( 0, 0 );
+		signText.alignment = "center";
+		add(signText);
+		signText.kill();
 		
 		//custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
@@ -180,6 +198,12 @@ class PlayState extends FlxState
 			goal.x = x;
 			goal.y = y;
 			goal.setSize( 20, 40 ); //@TODO parameterize these somewhere
+		}
+		else if ( entityName == "sign" )
+		{
+			var signtext = StringTools.replace( entityData.get("text"), "\\n", "\n" );
+			var sign = new Sign( x, y, signtext );
+			signs.add(sign);
 		}
 	}
 	/**
@@ -256,15 +280,28 @@ class PlayState extends FlxState
 			if ( FlxG.overlap( Reg.player, goal ) )
 				Reg.player.goalMet();
 			
-			if ( !Reg.player.levelBeat && Reg.player.living )
+			var drawsigntext = false;
+
+			if ( !Reg.player.levelBeat )
 			{
 				if ( ooze.overlapsWithCallback( Reg.player,
-												function(P:FlxObject, T:FlxObject) { return  FlxG.overlap( P, T ); },
+												function(P:FlxObject, T:FlxObject) { return FlxG.overlap( P, T ); },
 												true ) ) //the bool here makes this return the specific FlxTile to the function
 				{
 					Reg.player.melting = true;
 				}
+				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { signText.text = S.signText; return FlxG.overlap( P, S ); } ) )
+				{
+					signTextBox.revive();
+					signText.revive();
+				}
+				else if ( signText.alive )
+				{
+					signTextBox.kill();
+					signText.kill();
+				}
 			}
+			
 			
 			if ( Reg.player.levelBeat )
 			{
@@ -279,7 +316,7 @@ class PlayState extends FlxState
 				}
 				levelFinishedText.revive();
 			}
-			else
+			else if ( levelFinishedText.alive )
 				levelFinishedText.kill();
 		}
 		else

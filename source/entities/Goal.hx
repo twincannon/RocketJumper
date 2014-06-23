@@ -16,5 +16,9 @@ class Goal extends FlxSprite
 		loadGraphic(AssetPaths.goal__png, true, 20, 40);
 		animation.add( "idle", [ for (i in 0...4) i ], 5 );
 		animation.play("idle");
+		
+		moves = false;
+		
+		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 	}
 }

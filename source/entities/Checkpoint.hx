@@ -15,5 +15,6 @@ class Checkpoint extends FlxObject
 		setPosition( X, Y );
 		setSize( W, H );
 		number = Num;
+		moves = false;
 	}
 }
