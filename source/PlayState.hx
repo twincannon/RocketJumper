@@ -2,6 +2,7 @@ package;
 
 import entities.Goal;
 import entities.Sign;
+import flash.events.Event;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -23,6 +24,8 @@ import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxAngle;
 
+
+
 /**
  * A FlxState which can be used for the actual gameplay.
  */
@@ -32,19 +35,16 @@ class PlayState extends FlxState
 	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
 	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
 	private var goal:Goal;
-	private var camera:FlxCamera;
 	private var m_tileMap:FlxOgmoLoader; //@TODO rename this stupid var.. and the "map" in reg.. currentlevel or something?????? or actually i bet THIS needs to be in reg..fuck, we'll see.
 	private var map:FlxTilemap;
 	private var ooze:FlxTilemap;
 	private var mapbg:FlxTilemap;
 	private var detailmap:FlxTilemap;
 	private var m_sprCrosshair:FlxSprite;
-	private var deadText:FlxText;
-	private var timerText:FlxText;
-	private var levelNameText:FlxText;
-	private var levelFinishedText:FlxText;
-	private var signText:FlxText;
-	private var signTextBox:FlxSprite;
+	private var hud:HUD;
+
+	private var camMinZoom:Float = 1.0;
+	private var camMaxZoom:Float = 4.0;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -52,6 +52,8 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		
+		
 		
 		if ( !Reg.levelsloaded )
 		{
@@ -67,9 +69,6 @@ class PlayState extends FlxState
 			}
 		}
 		
-
-		
-
 #if debug
 		//FlxG.debugger.drawDebug = true;
 #end
@@ -86,16 +85,17 @@ class PlayState extends FlxState
 		var bgH = 256;
 		
 		//@TODO make 4 of these in a classic scrolling bg style instead of making way too many to cover the map
-		//also maybe make a different background type for fun
-		for (i in -1...4)
+		//also maybe make a different background type for some levels
+		for (i in -1...5)
 		{
 			for (j in -1...4)
 			{
 				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
-				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.5;
+				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.2;
 				bgtile.width = 0;
 				bgtile.height = 0;
 				bgtile.allowCollisions = FlxObject.NONE;
+				bgtile.pixelPerfectRender = Reg.shouldPixelPerfectRender;
 				backgroundTiles.add(bgtile);
 			}
 		}
@@ -107,7 +107,7 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
-
+		
 		Reg.player = new Player(); //should i make this in placeentities? but then i'd need to check for player existing everywhere
 		goal = new Goal();
 		m_tileMap.loadEntities(placeEntities, "entities");
@@ -118,57 +118,85 @@ class PlayState extends FlxState
 		add(Reg.player);
 		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
 		
-		var signTextWidth = 300;
-		var signTextY = 40;
-		signTextBox = new FlxSprite( FlxG.width / 2 - signTextWidth / 2, signTextY - 15, AssetPaths.signtextbox__png );
-		signTextBox.scrollFactor.set( 0, 0 );
-		signTextBox.allowCollisions = FlxObject.NONE;
-		add(signTextBox);
-		signTextBox.kill();
-		
-		deadText = new FlxText( FlxG.width / 2 - 100, 50, 200, "Dead! Press [R] or (X) to respawn.");
-		deadText.color = FlxColor.WHITE;
-		deadText.scrollFactor.set( 0, 0 );
-		deadText.alignment = "center";
-		add(deadText);
-		deadText.kill();
-		
-		timerText = new FlxText( 10, 10, 100, "Time: "+Reg.player.levelTimer );
-		timerText.color = FlxColor.WHITE;
-		timerText.scrollFactor.set( 0, 0 );
-		add(timerText);
-		
-		var levelFinishedTextWidth = 250;
-		levelFinishedText = new FlxText( FlxG.width / 2 - levelFinishedTextWidth / 2, 50, levelFinishedTextWidth, "Level finished text" );
-		levelFinishedText.scrollFactor.set( 0, 0 );
-		levelFinishedText.alignment = "center";
-		add(levelFinishedText);
-		levelFinishedText.kill();
-		
-		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
-		var levelNameTextWidth = 200;
-		levelNameText = new FlxText(FlxG.width - levelNameTextWidth - 10, 10, levelNameTextWidth, Reg.leveltitle);
-		levelNameText.scrollFactor.set(0, 0);
-		levelNameText.alignment = "right";
-		add(levelNameText);
-		
-		signText = new FlxText( FlxG.width / 2 - signTextWidth / 2 + 10, signTextY, signTextWidth - 20, "I'm a sign!" );
-		signText.scrollFactor.set( 0, 0 );
-		signText.alignment = "center";
-		add(signText);
-		signText.kill();
-		
 		//custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
 		m_sprCrosshair.scrollFactor.set(0, 0);
-		FlxG.mouse.visible = false;
+		
+		FlxG.mouse.visible = true;//false;
 		add( m_sprCrosshair );
 		
 		//snap camera to world, follow the player, and make entire world collidable
-		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
+//		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
-		FlxG.camera.setBounds(0, 0, map.width, map.height);		
+			
 		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
+		FlxG.camera.setBounds(0, 0, map.width, map.height);	
+
+	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
+		
+		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+		add(hud);
+		
+		/*hudCamera = new FlxCamera(0, 0, FlxG.stage.stageWidth, FlxG.stage.stageHeight, 1);
+		hudCamera.bgColor = 0xCC000000;
+		hudCamera.follow( hud.centerPoint );
+		FlxG.cameras.add(hudCamera);*/
+		//hud.forEachOfType(FlxObject, function(O:FlxObject) { O.camera = hudCamera; } );
+	
+		FlxG.camera.follow(Reg.player);
+
+		FlxG.watch.add(FlxG.stage, "width"); //equal to FlxG.game.width
+		FlxG.watch.add(FlxG.stage, "height");
+		FlxG.watch.add(FlxG.stage, "stageWidth");
+		FlxG.watch.add(FlxG.stage, "stageHeight");
+		FlxG.watch.add(FlxG.game, "scaleX");
+		FlxG.watch.add(FlxG.game, "scaleY");
+		FlxG.watch.add(FlxG.game, "x");
+		FlxG.watch.add(FlxG.game, "y");
+		FlxG.watch.add(FlxG.camera, "width");
+		FlxG.watch.add(FlxG.camera, "height");
+		FlxG.watch.add(FlxG.camera, "zoom");
+		FlxG.watch.add(FlxG.camera, "x");
+		FlxG.watch.add(FlxG.camera, "y");
+		FlxG.watch.add(FlxG.camera, "deadzone");
+		FlxG.watch.add(hud.camera, "x");
+		FlxG.watch.add(hud.camera, "y");
+		FlxG.watch.add(hud.camera, "width");
+		FlxG.watch.add(hud.camera, "height");
+	}
+
+	override public function onResize(Width:Int, Height:Int):Void
+	{
+		// Accepting My Fucking Fate bug: this updates the hud camera, but the height isn't what it should be when resizing
+		// the window to a ratio inequal to the starting ratio. I have tried EVERYTHING. Even strange shit like adding
+		// "abs((stageHight * game.scaleY) - stageHight)", which is the exact offset needed according to MULTIPLE calculations
+		// of examining the image in irfanview. I Give Up.
+		hud.updateSizes( 0, 0, Width, Height );		
+		handleCameraZoom( Width / FlxG.camera.width );
+	}
+	
+	private function handleCameraZoom( targetZoom:Float ):Void
+	{
+		var W:Int = FlxG.stage.stageWidth;
+		var H:Int = FlxG.stage.stageHeight;
+		//TODO: handle updated camera bounds...
+		
+		//TODO: add lerping, make it handle deadzones ....
+		
+		var calcMaxZoom = camMaxZoom * ( W / FlxG.camera.width );
+		var calcMinZoom = camMinZoom * ( W / FlxG.camera.width );
+		
+		var newzoom = Reg.Clamp( targetZoom, calcMinZoom, calcMaxZoom );
+		
+		if ( FlxG.camera.zoom != newzoom )
+		{
+			FlxG.camera.zoom = newzoom;
+			
+			var basezoom = W / FlxG.camera.width; //2
+			var offsetamt = basezoom - newzoom;
+			FlxG.camera.x = offsetamt * (FlxG.camera.width / basezoom) * basezoom / 2;
+			FlxG.camera.y = offsetamt * (FlxG.camera.height / basezoom) * basezoom / 2;
+		}		
 	}
 	
 	private function placeEntities( entityName:String, entityData:Xml ):Void
@@ -206,20 +234,19 @@ class PlayState extends FlxState
 			signs.add(sign);
 		}
 	}
-	/**
-	 * Function that is called when this state is destroyed - you might want to 
-	 * consider setting all objects this state uses to null to help garbage collection.
-	 */
-	override public function destroy():Void
-	{
-		super.destroy();
-	}
-
+	
 	/**
 	 * Function that is called once every frame.
 	 */
 	override public function update():Void
 	{
+		
+		if (FlxG.mouse.wheel != 0)
+		{
+			handleCameraZoom( FlxG.camera.zoom + (FlxG.mouse.wheel * 0.1) );
+		}
+		
+		
 #if !flash
 		if ( FlxG.keys.justPressed.ESCAPE )
 			Sys.exit(0);
@@ -251,12 +278,12 @@ class PlayState extends FlxState
 		if ( Reg.gameTimerStarted )
 			Reg.gameTimer += FlxG.elapsed;
 		
-		timerText.text = "Time: " + Std.int(Reg.player.levelTimer*1000) / 1000;
+		hud.timerText.text = "Time: " + Std.int(Reg.player.levelTimer*1000) / 1000;
 		
 		if ( Reg.player.living )
 		{
-			if ( deadText.alive )
-				deadText.kill();
+			if ( hud.deadText.alive )
+				hud.deadText.kill();
 				
 			FlxG.collide(map, Reg.player);
 			
@@ -290,15 +317,15 @@ class PlayState extends FlxState
 				{
 					Reg.player.melting = true;
 				}
-				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { signText.text = S.signText; return FlxG.overlap( P, S ); } ) )
+				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { hud.signText.text = S.signText; return FlxG.overlap( P, S ); } ) )
 				{
-					signTextBox.revive();
-					signText.revive();
+					hud.signTextBox.revive();
+					hud.signText.revive();
 				}
-				else if ( signText.alive )
+				else if ( hud.signText.alive )
 				{
-					signTextBox.kill();
-					signText.kill();
+					hud.signTextBox.kill();
+					hud.signText.kill();
 				}
 			}
 			
@@ -307,21 +334,21 @@ class PlayState extends FlxState
 			{
 				if ( Reg.levelnum < Reg.levelnames.length - 1 )
 				{
-					levelFinishedText.text = "Goal! Hit [ENTER] or (Y) to go to next level!";
+					hud.levelFinishedText.text = "Goal! Hit [ENTER] or (Y) to go to next level!";
 				}
 				else
 				{
-					levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + Reg.gameTimer + "\nHit [ENTER] or (Y) to play through it again.";
+					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + Reg.gameTimer + "\nHit [ENTER] or (Y) to play through it again.";
 					Reg.gameTimerStarted = false;
 				}
-				levelFinishedText.revive();
+				hud.levelFinishedText.revive();
 			}
-			else if ( levelFinishedText.alive )
-				levelFinishedText.kill();
+			else if ( hud.levelFinishedText.alive )
+				hud.levelFinishedText.kill();
 		}
 		else
 		{
-			deadText.revive();
+			hud.deadText.revive();
 			FlxG.camera.follow( null );
 		}
 		
@@ -344,5 +371,14 @@ class PlayState extends FlxState
 			Reg.destroyRockets();
 			FlxG.switchState(new PlayState());
 		}
+	}
+	
+	/**
+	 * Function that is called when this state is destroyed - you might want to 
+	 * consider setting all objects this state uses to null to help garbage collection.
+	 */
+	override public function destroy():Void
+	{
+		super.destroy();
 	}
 }

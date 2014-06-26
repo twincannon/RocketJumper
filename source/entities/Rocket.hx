@@ -76,7 +76,7 @@ class Rocket extends FlxSprite
 		var explosionAmpMod = doBigExplosion ? 2.0 : 1.0;
 		
 		
-		if ( Reg.player.living && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
+		if ( Reg.player.living && !Reg.player.levelBeat && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
 		{
 
 			FlxG.collide( Reg.player, Reg.mapGroup ); //this is ghetto, but we need to make sure the player isn't currently inside the map or the velocity change wont work... 
@@ -85,7 +85,7 @@ class Rocket extends FlxSprite
 			//functionize all this nonsense.....
 			var rocketVec:FlxVector = new FlxVector( getMidpoint().x, getMidpoint().y );
 			var playerVec:FlxVector = new FlxVector( Reg.player.getMidpoint().x, Reg.player.getMidpoint().y );
-
+			
 			var direction:FlxPoint = playerVec.subtract( rocketVec.x, rocketVec.y );
 			var vecDir:FlxVector = new FlxVector( direction.x, direction.y );
 			var vecLength:Float = vecDir.length;

@@ -289,8 +289,8 @@
     <goal id="0" x="4060" y="1320" />
     <sign id="2" x="940" y="1580" text="Aim downwards and then JUMP and SHOOT at the same time to rocket jump!" />
     <sign id="3" x="420" y="1580" text="Controls: WASD to move, W or Space to jump, and Click to fire rockets\n\nYou can also use an xbox controller!" />
-    <sign id="4" x="2380" y="1080" text="One rocket can't quite make this jump alone... but two?" />
-    <sign id="5" x="3020" y="940" text="This one is tricky. You'll need the force of two rockets at once." />
+    <sign id="4" x="2380" y="1080" text="One rocket can't quite make this jump alone...\n\nYou just need an extra little boost to reach the top!" />
+    <sign id="5" x="3000" y="940" text="This one is tricky. You'll need the force of two rockets at once." />
     <sign id="6" x="3400" y="1280" text="(Tip: You fall faster than rockets -- fire one from the top! Try again!)" />
     <sign id="7" x="1720" y="1420" text="You can get quite high with a simple rocket jump. Timing is everything!" />
   </entities>

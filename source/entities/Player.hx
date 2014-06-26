@@ -206,6 +206,7 @@ class Player extends FlxSprite
 	private function HandleGamepadInput():Void
 	{
 		m_gamePad = FlxG.gamepads.lastActive;
+		//@todo FlxG.gamepads.getByID()???? maybe this would solve the problem
 		if ( m_gamePad == null )
 			return;
 			
