@@ -42,9 +42,11 @@ class PlayState extends FlxState
 	private var detailmap:FlxTilemap;
 	private var m_sprCrosshair:FlxSprite;
 	private var hud:HUD;
-
-	private var camMinZoom:Float = 1.0;
-	private var camMaxZoom:Float = 4.0;
+	
+	private static inline var camMinZoom:Float = 1.0;
+	private static inline var camMaxZoom:Float = 4.0;
+	private var camZoomWhenLevelBeat:Float = 0;
+	private var camLevelBeatTimeElapsed:Float = 0;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -53,11 +55,54 @@ class PlayState extends FlxState
 	{
 		super.create();
 		
+		if ( Reg.worldCam != null )
+			Reg.worldCam.destroy;
 		
+		FlxG.cameras.reset();
 		
+		Reg.worldCam = new FlxCamera( 0, 0, FlxG.width, FlxG.height, 1 );
+		
+		FlxG.cameras.add(Reg.worldCam);
+		FlxG.camera = Reg.worldCam;
+		
+		setupLevel();
+		
+		//create and add entities
+		Reg.player = new Player();
+		goal = new Goal();
+		m_tileMap.loadEntities(placeEntities, "entities"); //set player/goal properties, and create goals/checkpoints
+		add(goal);
+		add(checkpoints);
+		add(signs);
+		add(Reg.player);
+		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
+		
+		//custom mouse cursor
+		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
+		m_sprCrosshair.scrollFactor.set(0, 0);
+		m_sprCrosshair.camera = Reg.worldCam;
+		FlxG.mouse.visible = false;
+		add( m_sprCrosshair );
+		
+	//	FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
+	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
+	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
+		
+		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
+		FlxG.camera.setBounds(0, 0, map.width, map.height);	
+		
+		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+		add(hud);
+		
+		Reg.worldCam.follow(Reg.player);
+		
+		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+	}
+	
+	private function setupLevel():Void
+	{
 		if ( !Reg.levelsloaded )
 		{
-			//Assets.getText
 			Reg.levelsloaded = true;
 			var xml = Xml.parse(Assets.getText("assets/data/levels.xml"));
 			var fast = new haxe.xml.Fast(xml.firstElement());
@@ -69,14 +114,16 @@ class PlayState extends FlxState
 			}
 		}
 		
-#if debug
-		//FlxG.debugger.drawDebug = true;
-#end
 		m_tileMap = new FlxOgmoLoader("assets/data/"+Reg.levelnames[Reg.levelnum]);
 		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg");
 		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "tiles"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
 		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail");
 		ooze = m_tileMap.loadTilemap("assets/images/tiles_ooze.png", 20, 20, "ooze");
+		
+		mapbg.camera = Reg.worldCam;
+		map.camera = Reg.worldCam;
+		detailmap.camera = Reg.worldCam;
+		ooze.camera = Reg.worldCam;
 		
 		mapbg.allowCollisions = FlxObject.NONE;
 		detailmap.allowCollisions = FlxObject.NONE;
@@ -86,7 +133,7 @@ class PlayState extends FlxState
 		
 		//@TODO make 4 of these in a classic scrolling bg style instead of making way too many to cover the map
 		//also maybe make a different background type for some levels
-		for (i in -1...5)
+		for (i in -1...6)
 		{
 			for (j in -1...4)
 			{
@@ -96,6 +143,7 @@ class PlayState extends FlxState
 				bgtile.height = 0;
 				bgtile.allowCollisions = FlxObject.NONE;
 				bgtile.pixelPerfectRender = Reg.shouldPixelPerfectRender;
+				bgtile.camera = Reg.worldCam;
 				backgroundTiles.add(bgtile);
 			}
 		}
@@ -107,70 +155,11 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
-		
-		Reg.player = new Player(); //should i make this in placeentities? but then i'd need to check for player existing everywhere
-		goal = new Goal();
-		m_tileMap.loadEntities(placeEntities, "entities");
-		
-		add(goal);
-		add(checkpoints);
-		add(signs);
-		add(Reg.player);
-		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
-		
-		//custom mouse cursor
-		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
-		m_sprCrosshair.scrollFactor.set(0, 0);
-		
-		FlxG.mouse.visible = true;//false;
-		add( m_sprCrosshair );
-		
-		//snap camera to world, follow the player, and make entire world collidable
-//		FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
-	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
-			
-		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
-		FlxG.camera.setBounds(0, 0, map.width, map.height);	
-
-	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
-		
-		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
-		add(hud);
-		
-		/*hudCamera = new FlxCamera(0, 0, FlxG.stage.stageWidth, FlxG.stage.stageHeight, 1);
-		hudCamera.bgColor = 0xCC000000;
-		hudCamera.follow( hud.centerPoint );
-		FlxG.cameras.add(hudCamera);*/
-		//hud.forEachOfType(FlxObject, function(O:FlxObject) { O.camera = hudCamera; } );
-	
-		FlxG.camera.follow(Reg.player);
-
-		FlxG.watch.add(FlxG.stage, "width"); //equal to FlxG.game.width
-		FlxG.watch.add(FlxG.stage, "height");
-		FlxG.watch.add(FlxG.stage, "stageWidth");
-		FlxG.watch.add(FlxG.stage, "stageHeight");
-		FlxG.watch.add(FlxG.game, "scaleX");
-		FlxG.watch.add(FlxG.game, "scaleY");
-		FlxG.watch.add(FlxG.game, "x");
-		FlxG.watch.add(FlxG.game, "y");
-		FlxG.watch.add(FlxG.camera, "width");
-		FlxG.watch.add(FlxG.camera, "height");
-		FlxG.watch.add(FlxG.camera, "zoom");
-		FlxG.watch.add(FlxG.camera, "x");
-		FlxG.watch.add(FlxG.camera, "y");
-		FlxG.watch.add(FlxG.camera, "deadzone");
-		FlxG.watch.add(hud.camera, "x");
-		FlxG.watch.add(hud.camera, "y");
-		FlxG.watch.add(hud.camera, "width");
-		FlxG.watch.add(hud.camera, "height");
 	}
 
 	override public function onResize(Width:Int, Height:Int):Void
 	{
-		// Accepting My Fucking Fate bug: this updates the hud camera, but the height isn't what it should be when resizing
-		// the window to a ratio inequal to the starting ratio. I have tried EVERYTHING. Even strange shit like adding
-		// "abs((stageHight * game.scaleY) - stageHight)", which is the exact offset needed according to MULTIPLE calculations
-		// of examining the image in irfanview. I Give Up.
+		//the hud camera doesn't resize correctly here but I've tried absolutely everything.
 		hud.updateSizes( 0, 0, Width, Height );		
 		handleCameraZoom( Width / FlxG.camera.width );
 	}
@@ -179,9 +168,10 @@ class PlayState extends FlxState
 	{
 		var W:Int = FlxG.stage.stageWidth;
 		var H:Int = FlxG.stage.stageHeight;
+		
 		//TODO: handle updated camera bounds...
 		
-		//TODO: add lerping, make it handle deadzones ....
+		//TODO: make it handle deadzones ....
 		
 		var calcMaxZoom = camMaxZoom * ( W / FlxG.camera.width );
 		var calcMinZoom = camMinZoom * ( W / FlxG.camera.width );
@@ -196,14 +186,16 @@ class PlayState extends FlxState
 			var offsetamt = basezoom - newzoom;
 			FlxG.camera.x = offsetamt * (FlxG.camera.width / basezoom) * basezoom / 2;
 			FlxG.camera.y = offsetamt * (FlxG.camera.height / basezoom) * basezoom / 2;
+
+			//@TODO make a proper bounds offset..... this isnt right. but its ok for now because im fed up with this shit
+			var boundsOffsetX = FlxG.camera.x;
+			var boundsOffsetY = FlxG.camera.y;
+			FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, map.width - boundsOffsetX*2, map.height - boundsOffsetY*2);	
 		}		
 	}
 	
 	private function placeEntities( entityName:String, entityData:Xml ):Void
 	{
-		//@TODO  CREATE these objects here so i can do stuff like
-		//pass x/y and have it set via create() instead of doing this nonsense
-		
 		var x:Int = Std.parseInt(entityData.get("x"));
 		var y:Int = Std.parseInt(entityData.get("y"));
 		if ( entityName == "player" )
@@ -240,10 +232,36 @@ class PlayState extends FlxState
 	 */
 	override public function update():Void
 	{
+		// if player resurrected() is called while level is beat, we need to reset zoom stuff
+		if ( Reg.playerReset )
+		{
+			camZoomWhenLevelBeat = 0;
+			camLevelBeatTimeElapsed = 0;
+			handleCameraZoom( FlxG.stage.stageWidth / FlxG.camera.width );
+			
+			Reg.playerReset = false;
+		}
 		
-		if (FlxG.mouse.wheel != 0)
+		// check for camera zoom
+		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat )
 		{
 			handleCameraZoom( FlxG.camera.zoom + (FlxG.mouse.wheel * 0.1) );
+		}
+		
+		// if we beat the level, do a zoom in effect
+		if ( Reg.player.levelBeat )
+		{
+			if ( camZoomWhenLevelBeat == 0 )
+				camZoomWhenLevelBeat = FlxG.camera.zoom;
+			
+			var calcMaxZoom = camMaxZoom * ( FlxG.stage.stageWidth / FlxG.camera.width );
+			var newzoom = Reg.Lerp( camZoomWhenLevelBeat, calcMaxZoom, camLevelBeatTimeElapsed / 1.5 );
+			
+			if ( newzoom < calcMaxZoom - 1.0 )
+			{
+				handleCameraZoom( newzoom );
+				camLevelBeatTimeElapsed += FlxG.elapsed;
+			}
 		}
 		
 		
@@ -338,7 +356,11 @@ class PlayState extends FlxState
 				}
 				else
 				{
-					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + Reg.gameTimer + "\nHit [ENTER] or (Y) to play through it again.";
+					var s = Std.string( Reg.gameTimer );
+					var i = s.indexOf( '.' );
+					s = s.substr( 0, i + 4 );
+					
+					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + s + "\nHit [ENTER] or (Y) to play through it again.";
 					Reg.gameTimerStarted = false;
 				}
 				hud.levelFinishedText.revive();

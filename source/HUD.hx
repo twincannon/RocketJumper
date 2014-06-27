@@ -26,15 +26,16 @@ class HUD extends FlxGroup
 	private var x:Float = 10000;
 	private var y:Float = 0;
 	
-	private var signTextWidth = 300;
+	private var signTextWidth = 600;
 	private var signTextY = 40;
-	private var signTextBuffer = 10;
-	private var levelFinishedTextWidth = 250;
-	private var levelFinishedTextY = 50;
-	private var levelNameTextWidth = 200;
-	private var deadTextWidth = 200;
-	private var timerTextWidth = 150;
-	private var cornerTextBuffer = 10;
+	private var signTextBuffer = 30;
+	private var levelFinishedTextWidth = 700;
+	private var levelFinishedTextY = 150;
+	private var levelNameTextWidth = 400;
+	private var deadTextWidth = 700;
+	private var deadTextY = 150;
+	private var timerTextWidth = 300;
+	private var cornerTextBuffer = 20;
 	
 	private var tl:FlxSprite;
 	private var tr:FlxSprite;
@@ -46,9 +47,6 @@ class HUD extends FlxGroup
 	{
 		super();
 		
-		
-		
-
 		centerPoint = new FlxSprite(x + W/2 - 2, y + H/2 - 2);
 		centerPoint.makeGraphic(4, 4, FlxColor.PINK);
 		if( RENDER_DEBUG_STUFF )
@@ -79,36 +77,54 @@ class HUD extends FlxGroup
 		}
 		
 
-		signTextBox = new FlxSprite( x + W / 2 - signTextWidth / 2, y + signTextY - 15, AssetPaths.signtextbox__png );
+		signTextBox = new FlxSprite( 0, 0, AssetPaths.signtextbox__png );
 		signTextBox.allowCollisions = FlxObject.NONE;
 		add(signTextBox);
 		signTextBox.kill();
 		
-		deadText = new FlxText( x + W / 2 - deadTextWidth/2, y + 50, deadTextWidth, "Dead! Press [R] or (X) to respawn.");
+		deadText = new FlxText( 0, 0, deadTextWidth, "Dead! Press [R] or (X) to respawn.");
 		deadText.color = FlxColor.WHITE;
 		deadText.alignment = "center";
+		deadText.size = 32;
+		setBorder( deadText );
 		add(deadText);
 		deadText.kill();
 		
-		timerText = new FlxText( x + cornerTextBuffer, y + cornerTextBuffer, timerTextWidth, "Time: "+Reg.player.levelTimer );
+		timerText = new FlxText( 0, 0, timerTextWidth, "Time: "+Reg.player.levelTimer );
 		timerText.color = FlxColor.WHITE;
-		timerText.size = 16;
+		timerText.size = 24;
+		setBorder( timerText );
 		add(timerText);
 		
-		levelFinishedText = new FlxText( x + W / 2 - levelFinishedTextWidth / 2, y + levelFinishedTextY, levelFinishedTextWidth, "Level finished text" );
+		levelFinishedText = new FlxText( 0, 0, levelFinishedTextWidth, "Level finished text" );
 		levelFinishedText.alignment = "center";
+		levelFinishedText.size = 24;
+		setBorder( levelFinishedText );
 		add(levelFinishedText);
 		levelFinishedText.kill();
 		
 		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
-		levelNameText = new FlxText( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer, levelNameTextWidth, Reg.leveltitle);
+		levelNameText = new FlxText( 0, 0, levelNameTextWidth, Reg.leveltitle);
 		levelNameText.alignment = "right";
+		levelNameText.size = 16;
+		setBorder( levelNameText );
 		add(levelNameText);
 		
-		signText = new FlxText( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY, signTextWidth - signTextBuffer*2, "I'm a sign!" );
+		signText = new FlxText( 0, 0, signTextWidth - signTextBuffer*2, "I'm a sign!" );
 		signText.alignment = "center";
+		signText.size = 16;
+		setBorder( signText );
 		add(signText);
 		signText.kill();
+		
+		updateSizes(x, y, W, H);
+	}
+	
+	private function setBorder( Text:FlxText ):Void
+	{
+		Text.borderSize = 2;
+		Text.borderStyle = FlxText.BORDER_OUTLINE_FAST;
+		Text.borderColor = 0xFF2266AA;
 	}
 	
 	public function updateSizes( X:Float, Y: Float, W:Int, H:Int ):Void
@@ -129,11 +145,11 @@ class HUD extends FlxGroup
 			br.setPosition( x + W - 10, y + H - 10 );
 		}
 		
-		signTextBox.setPosition( x + W / 2 - signTextWidth / 2, y + signTextY - 15 );
-		deadText.setPosition( x + W / 2 - deadTextWidth/2, y + 50 );
+		signTextBox.setPosition( x + W / 2 - signTextWidth / 2, y + signTextY );
+		deadText.setPosition( x + W / 2 - deadTextWidth/2, y + deadTextY );
 		timerText.setPosition( x + cornerTextBuffer, y + cornerTextBuffer );
 		levelFinishedText.setPosition( x + W / 2 - levelFinishedTextWidth / 2, y + levelFinishedTextY );
 		levelNameText.setPosition( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer );
-		signText.setPosition( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY );
+		signText.setPosition( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY + signTextBuffer );
 	}
 }

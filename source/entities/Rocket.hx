@@ -14,9 +14,10 @@ import entities.Explosion;
 class Rocket extends FlxSprite
 {
 	private static inline var ROCKET_RADIUS:Float = 60;
-	private static inline var ROCKET_ENHANCE_TIMER = 0.5;
+	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.5;
 	private static inline var ROCKET_AMP_X:Int = 200;
 	private static inline var ROCKET_AMP_Y:Int = 200;
+	private static inline var ROCKET_LIFETIME:Float = 10.0;
 	private var m_flTimeAlive:Float = 0;
 
 	public function new(X:Float = 0, Y:Float = 0)
@@ -30,6 +31,7 @@ class Rocket extends FlxSprite
 		centerOffsets();
 		centerOrigin();
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
+		camera = Reg.worldCam;
 		Reg.rockets.add(this);
 	}
 	
@@ -56,11 +58,11 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += FlxG.elapsed;
 		
-		if ( FlxG.collide(this, Reg.mapGroup, explode) )
-			{
-				super.destroy();
-				this.destroy();				
-			}
+		if ( FlxG.collide(this, Reg.mapGroup, explode) || m_flTimeAlive >= ROCKET_LIFETIME )
+		{
+			super.destroy();
+			this.destroy();				
+		}
 	}
 	
 	private function explode(R:FlxObject, M:FlxObject):Void

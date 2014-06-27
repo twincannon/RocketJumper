@@ -6,7 +6,7 @@ import flixel.group.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
 import entities.Rocket;
-
+import flixel.FlxCamera;
 import flixel.util.FlxPoint;
 
 /**
@@ -31,6 +31,7 @@ class Reg
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;
 	public static var rockets:FlxGroup = new FlxGroup();
+	public static var worldCam:FlxCamera;
 	
 	public static inline function destroyRockets():Void
 	{
@@ -45,6 +46,8 @@ class Reg
 	public static var levelsloaded:Bool = false;
 	public static var gameTimerStarted:Bool = false;
 	public static var gameTimer:Float = 0;
+	
+	public static var playerReset:Bool = false;
 	
 #if (native || windows)
 	public inline static var shouldPixelPerfectRender:Bool = false;
@@ -72,6 +75,11 @@ class Reg
 			return maxVal;
 		else
 			return val;
+	}
+	
+	public static inline function Lerp( start:Float, end:Float, percent:Float )
+	{
+		return (start + percent * (end - start));
 	}
 	
 	/**

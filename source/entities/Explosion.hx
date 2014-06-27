@@ -11,6 +11,7 @@ class Explosion extends FlxSprite
 		super(X, Y);
 		
 		loadGraphic("assets/images/explosion.png", true, 36, 36);
+		camera = Reg.worldCam;
 		setSize( 1, 1 );
 		centerOffsets();
 		animation.add("explode", [for (i in 0...16) i], 30, false);

@@ -14,6 +14,7 @@ class Goal extends FlxSprite
 		super( X, Y );
 
 		loadGraphic(AssetPaths.goal__png, true, 20, 40);
+		camera = Reg.worldCam;
 		animation.add( "idle", [ for (i in 0...4) i ], 5 );
 		animation.play("idle");
 		

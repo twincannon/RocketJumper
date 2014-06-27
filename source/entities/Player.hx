@@ -40,7 +40,6 @@ class Player extends FlxSprite
 	public var usingMouse = true;
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
 	public var crosshairLine:FlxSprite;
-	public var cameraFollowPoint:FlxSprite;
 	public var gamepadTryNextLevel:Bool;
 
 	public function new(X:Float = 0, Y:Float = 0)
@@ -48,10 +47,7 @@ class Player extends FlxSprite
 		super(X, Y);		
 		
 		loadGraphic(Assets.getBitmapData("assets/images/player.png"), true, 58, 58);
-		
-		cameraFollowPoint = new FlxSprite();
-		cameraFollowPoint.setSize( 1, 1 );
-		cameraFollowPoint.allowCollisions = FlxObject.NONE;
+		camera = Reg.worldCam;
 		
 		animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
@@ -86,9 +82,6 @@ class Player extends FlxSprite
 		offset.set(20, 26);
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
-
-		//another interesting way of handling movement, with maxvel and accel
-		//https://github.com/HaxeFlixel/flixel-demos/blob/master/Editors/TiledEditor/source/PlayState.hx
 		
 		//player gravity/friction (drag gets re-set every frame in handleinput())
 		acceleration.y = Reg.GRAVITY;
@@ -105,6 +98,7 @@ class Player extends FlxSprite
 		m_sprFireEffect.animation.add("blast", [for (i in 0...8) i], 30, false); //remember: the for loop here goes from startframe to endframe+1 (i.e. 0...8 means 0-7)
 		m_sprFireEffect.setSize(1, 1);
 		m_sprFireEffect.centerOffsets();
+		m_sprFireEffect.camera = Reg.worldCam;
 		m_sprFireEffect.kill();
 		
 		FlxG.state.add(m_sprFireEffect); //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
@@ -113,6 +107,7 @@ class Player extends FlxSprite
 		crosshairLine.loadGraphic(AssetPaths.line__png, true, 1, 75);
 		crosshairLine.setSize(1, 1);
 		crosshairLine.scrollFactor.set( 0, 0 );
+		crosshairLine.camera = Reg.worldCam;
 		FlxG.state.add(crosshairLine);
 	}
 	
@@ -146,8 +141,6 @@ class Player extends FlxSprite
 		if ( levelTimer > 0 && !levelBeat )
 			levelTimer += FlxG.elapsed;
 			
-		cameraFollowPoint.setPosition( getMidpoint().x, getMidpoint().y );
-		
 		super.update();
 	}
 	
@@ -362,6 +355,8 @@ class Player extends FlxSprite
 			x = originalSpawnPoint.x;
 			y = originalSpawnPoint.y;
 			levelTimer = 0;
+			
+			Reg.playerReset = true;
 		}
 	}
 	// --------------------------------------------------------------------------------------
