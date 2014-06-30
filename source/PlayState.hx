@@ -3,6 +3,7 @@ package;
 import entities.Goal;
 import entities.Sign;
 import flash.events.Event;
+import flixel.addons.editors.tiled.TiledLayer;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -24,6 +25,10 @@ import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxAngle;
 
+import flixel.addons.editors.tiled.TiledMap;
+import flixel.addons.editors.tiled.TiledObject;
+import flixel.addons.editors.tiled.TiledObjectGroup;
+import flixel.addons.editors.tiled.TiledTileSet;
 
 
 /**
@@ -35,13 +40,15 @@ class PlayState extends FlxState
 	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
 	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
 	private var goal:Goal;
-	private var m_tileMap:FlxOgmoLoader; //@TODO rename this stupid var.. and the "map" in reg.. currentlevel or something?????? or actually i bet THIS needs to be in reg..fuck, we'll see.
 	private var map:FlxTilemap;
 	private var ooze:FlxTilemap;
 	private var mapbg:FlxTilemap;
 	private var detailmap:FlxTilemap;
 	private var m_sprCrosshair:FlxSprite;
 	private var hud:HUD;
+	private var tiledMap:TiledMap;
+
+	
 	
 	private static inline var camMinZoom:Float = 1.0;
 	private static inline var camMaxZoom:Float = 4.0;
@@ -70,7 +77,8 @@ class PlayState extends FlxState
 		//create and add entities
 		Reg.player = new Player();
 		goal = new Goal();
-		m_tileMap.loadEntities(placeEntities, "entities"); //set player/goal properties, and create goals/checkpoints
+		
+		loadEntities();
 		add(goal);
 		add(checkpoints);
 		add(signs);
@@ -88,8 +96,8 @@ class PlayState extends FlxState
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
 	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
 		
-		FlxG.worldBounds.set(0, 0, m_tileMap.width, m_tileMap.height);
-		FlxG.camera.setBounds(0, 0, map.width, map.height);	
+		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
+		FlxG.camera.setBounds(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
 		
 		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
 		add(hud);
@@ -114,11 +122,20 @@ class PlayState extends FlxState
 			}
 		}
 		
-		m_tileMap = new FlxOgmoLoader("assets/data/"+Reg.levelnames[Reg.levelnum]);
-		mapbg = m_tileMap.loadTilemap("assets/images/tilesbg.png", 20, 20, "tilesbg");
-		map = m_tileMap.loadTilemap("assets/images/tiles.png", 20, 20, "tiles"); //for some reason if using assetpath.tiles__png here, c++ doesnt compile??
-		detailmap = m_tileMap.loadTilemap("assets/images/tilesdetail.png", 20, 20, "tilesdetail");
-		ooze = m_tileMap.loadTilemap("assets/images/tiles_ooze.png", 20, 20, "ooze");
+		tiledMap = new TiledMap( "assets/data/"+Reg.levelnames[Reg.levelnum] );
+		
+		// To figure out each layer's StartingIndex, place the first tile of the given tilemap and check the .tmx in a text editor (remember no blank tiles now)
+		mapbg = new FlxTilemap();
+		mapbg.loadMap( tiledMap.getLayer("tilesbg").csvData, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, 49 );
+		
+		map = new FlxTilemap();
+		map.loadMap( tiledMap.getLayer("tiles").csvData, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, 1 );
+		
+		detailmap = new FlxTilemap();
+		detailmap.loadMap( tiledMap.getLayer("tilesdetail").csvData, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, 117 );
+		
+		ooze = new FlxTilemap();
+		ooze.loadMap( tiledMap.getLayer("ooze").csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, 109 );
 		
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
@@ -156,7 +173,7 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
 	}
-
+	
 	override public function onResize(Width:Int, Height:Int):Void
 	{
 		//the hud camera doesn't resize correctly here but I've tried absolutely everything.
@@ -190,43 +207,56 @@ class PlayState extends FlxState
 			//@TODO make a proper bounds offset..... this isnt right. but its ok for now because im fed up with this shit
 			var boundsOffsetX = FlxG.camera.x;
 			var boundsOffsetY = FlxG.camera.y;
-			FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, map.width - boundsOffsetX*2, map.height - boundsOffsetY*2);	
+			FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, tiledMap.fullWidth - boundsOffsetX*2, tiledMap.fullHeight - boundsOffsetY*2);	
 		}		
 	}
 	
-	private function placeEntities( entityName:String, entityData:Xml ):Void
+	private function loadEntities():Void
 	{
-		var x:Int = Std.parseInt(entityData.get("x"));
-		var y:Int = Std.parseInt(entityData.get("y"));
-		if ( entityName == "player" )
+		for ( group in tiledMap.objectGroups )
 		{
-			Reg.player.x = x;
-			Reg.player.y = y;
-			Reg.player.originalSpawnPoint = FlxPoint.get( x, y );
-			Reg.player.spawnPoint = FlxPoint.get( x, y );
+			for ( o in group.objects )
+			{
+				var x:Int = o.x;
+				var y:Int = o.y;
+				
+				if ( o.gid != -1 )
+					y -= group.map.getGidOwner(o.gid).tileHeight;
+					
+				switch ( o.type.toLowerCase() )
+				{
+					case "player":
+						Reg.player.x = x;
+						Reg.player.y = y;
+						Reg.player.originalSpawnPoint = FlxPoint.get( x, y );
+						Reg.player.spawnPoint = FlxPoint.get( x, y );
+					case "goal":
+						goal.x = x;
+						goal.y = y;
+						goal.setSize( 20, 40 ); //@TODO parameterize these somewhere
+					case "checkpoint":
+						var num:Int = 0;
+						if ( o.xmlData.hasNode.properties )
+							if ( o.xmlData.node.properties.hasNode.property )
+								num = Std.int( Std.parseFloat( o.xmlData.node.properties.node.property.att.value ) );
+						var w:Int = o.width;
+						var h:Int = o.height;
+						var chkpt = new Checkpoint( x, y, w, h, num );
+						checkpoints.add( chkpt );
+					case "sign":
+						var signtext:String = "";
+						if ( o.xmlData.hasNode.properties )
+							if ( o.xmlData.node.properties.hasNode.property )
+								signtext = StringTools.replace( o.xmlData.node.properties.node.property.att.value, "\\n", "\n" );
+						var sign = new Sign( x, y, signtext );
+						signs.add(sign);
+				}
+			}
+			
 		}
-		else if ( entityName == "checkpoint" )
-		{
-			var w:Int = Std.parseInt(entityData.get("width"));
-			var h:Int = Std.parseInt(entityData.get("height"));
-			var num:Int = Std.parseInt(entityData.get("num"));
-			var chkpt = new Checkpoint( x, y, w, h, num );
-			checkpoints.add( chkpt );
-		}
-		else if ( entityName == "goal" )
-		{
-			goal.x = x;
-			goal.y = y;
-			goal.setSize( 20, 40 ); //@TODO parameterize these somewhere
-		}
-		else if ( entityName == "sign" )
-		{
-			var signtext = StringTools.replace( entityData.get("text"), "\\n", "\n" );
-			var sign = new Sign( x, y, signtext );
-			signs.add(sign);
-		}
+		
 	}
-	
+		
 	/**
 	 * Function that is called once every frame.
 	 */
@@ -308,10 +338,10 @@ class PlayState extends FlxState
 			//Don't let player leave the map (horizontally)
 			if ( Reg.player.x < map.x )
 				Reg.player.x = map.x;
-			else if ( Reg.player.x + Reg.player.width > map.width )
-				Reg.player.x = map.width - Reg.player.width;
+			else if ( Reg.player.x + Reg.player.width > tiledMap.fullWidth )
+				Reg.player.x = tiledMap.fullWidth - Reg.player.width;
 			
-			if ( Reg.player.y > map.height || Reg.player.y < map.y )
+			if ( Reg.player.y > tiledMap.fullHeight || Reg.player.y < map.y )
 			{
 				Reg.player.y = map.y;
 				Reg.player.velocity.y = 0;

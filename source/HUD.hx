@@ -83,48 +83,40 @@ class HUD extends FlxGroup
 		signTextBox.kill();
 		
 		deadText = new FlxText( 0, 0, deadTextWidth, "Dead! Press [R] or (X) to respawn.");
-		deadText.color = FlxColor.WHITE;
-		deadText.alignment = "center";
-		deadText.size = 32;
-		setBorder( deadText );
+		setBorder( deadText, 32, "center", FlxColor.PINK );
 		add(deadText);
 		deadText.kill();
 		
 		timerText = new FlxText( 0, 0, timerTextWidth, "Time: "+Reg.player.levelTimer );
-		timerText.color = FlxColor.WHITE;
-		timerText.size = 24;
-		setBorder( timerText );
+		setBorder( timerText, 24, "left" );
 		add(timerText);
 		
 		levelFinishedText = new FlxText( 0, 0, levelFinishedTextWidth, "Level finished text" );
-		levelFinishedText.alignment = "center";
-		levelFinishedText.size = 24;
-		setBorder( levelFinishedText );
+		setBorder( levelFinishedText, 24, "center" );
 		add(levelFinishedText);
 		levelFinishedText.kill();
 		
 		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
 		levelNameText = new FlxText( 0, 0, levelNameTextWidth, Reg.leveltitle);
-		levelNameText.alignment = "right";
-		levelNameText.size = 16;
-		setBorder( levelNameText );
+		setBorder( levelNameText, 16, "right" );
 		add(levelNameText);
 		
 		signText = new FlxText( 0, 0, signTextWidth - signTextBuffer*2, "I'm a sign!" );
-		signText.alignment = "center";
-		signText.size = 16;
-		setBorder( signText );
+		setBorder( signText, 16, "center" );
 		add(signText);
 		signText.kill();
 		
 		updateSizes(x, y, W, H);
 	}
 	
-	private function setBorder( Text:FlxText ):Void
+	private function setBorder( Text:FlxText, Size:Float, Align:String, Color:Int = FlxColor.WHITE ):Void
 	{
 		Text.borderSize = 2;
 		Text.borderStyle = FlxText.BORDER_OUTLINE_FAST;
 		Text.borderColor = 0xFF2266AA;
+		Text.size = Size;
+		Text.alignment = Align;
+		Text.color = Color;
 	}
 	
 	public function updateSizes( X:Float, Y: Float, W:Int, H:Int ):Void
