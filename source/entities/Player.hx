@@ -18,7 +18,7 @@ class Player extends FlxSprite
 	private var landing:Bool = false;
 	private var firing:Bool = false;
 	private var running = false;
-	private var m_bJumpHeldNoRelease:Bool = false; //for mario style variable jump height
+	private var m_bJumpHeldNoRelease:Bool = false; //for mario style variable jump height, currently commented out
 	private inline static var PLAYER_FRAMERATE = 15;
 	private var m_sprFireEffect:FlxSprite;
 	private var m_flAimAnimTime:Float = 0;
@@ -41,6 +41,8 @@ class Player extends FlxSprite
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
 	public var crosshairLine:FlxSprite;
 	public var gamepadTryNextLevel:Bool;
+	public var innerHitbox:FlxObject;
+	private static inline var INNER_HITBOX_OFFSET:Int = 2;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -80,6 +82,9 @@ class Player extends FlxSprite
 		width = 18;
 		height = 32;
 		offset.set(20, 26);
+		
+		//a more lenient hitbox for harmful collisions
+		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 3 );
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		
@@ -137,11 +142,13 @@ class Player extends FlxSprite
 		m_flRocketFireTimer -= FlxG.elapsed;
 		
 		//@TODO .. so.. uh.. there's a pretty serious bug here where fraps was causing the game
-		//to run at half speed, and the timer was running at half speed too
+		//to run at half speed, and the timer was running at half speed too -- ok doesn't happen with vsync off at least..
 		if ( levelTimer > 0 && !levelBeat )
 			levelTimer += FlxG.elapsed;
 			
 		super.update();
+		
+		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -322,6 +329,7 @@ class Player extends FlxSprite
 			y += falling ? 24 : 6;
 			facing += falling ? 0 : FlxObject.DOWN;
 			allowCollisions = FlxObject.NONE;
+			innerHitbox.allowCollisions = FlxObject.NONE;
 			acceleration.set( 0, 0 );
 			drag.y = 20;
 			velocity.set( 0, falling ? 18 : -18 );
@@ -341,6 +349,7 @@ class Player extends FlxSprite
 		
 		velocity.set(0, 0);
 		allowCollisions = FlxObject.ANY;
+		innerHitbox.allowCollisions = FlxObject.ANY;
 		facing = FlxObject.RIGHT; //@TODO make an arg for this based on playerstart/checkpoint orientation
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;

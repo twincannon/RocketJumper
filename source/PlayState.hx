@@ -137,6 +137,15 @@ class PlayState extends FlxState
 		ooze = new FlxTilemap();
 		ooze.loadMap( tiledMap.getLayer("ooze").csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, 109 );
 		
+		
+/*#if !flash
+		//damn -- this doesn't seem to solve the vertical tearing issue
+		mapbg.tileScaleHack = 1.02;
+		map.tileScaleHack = 1.02;
+		detailmap.tileScaleHack = 1.02;
+		ooze.tileScaleHack = 1.02;
+#end*/
+		
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
 		detailmap.camera = Reg.worldCam;
@@ -359,7 +368,7 @@ class PlayState extends FlxState
 
 			if ( !Reg.player.levelBeat )
 			{
-				if ( ooze.overlapsWithCallback( Reg.player,
+				if ( ooze.overlapsWithCallback( Reg.player.innerHitbox,
 												function(P:FlxObject, T:FlxObject) { return FlxG.overlap( P, T ); },
 												true ) ) //the bool here makes this return the specific FlxTile to the function
 				{
