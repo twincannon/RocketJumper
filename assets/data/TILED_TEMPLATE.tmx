@@ -1,15 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="50" height="20" tilewidth="20" tileheight="20">
  <tileset firstgid="1" name="tiles" tilewidth="20" tileheight="20">
-  <image source="../images/tiles.png" width="240" height="80"/>
+  <image source="../images/tiles.png" width="240" height="160"/>
+  <terraintypes>
+   <terrain name="TilesBlack" tile="-1"/>
+   <terrain name="TilesDirt" tile="-1"/>
+   <terrain name="TilesStone" tile="-1"/>
+  </terraintypes>
+  <tile id="60" terrain="0,0,0,1"/>
+  <tile id="61" terrain="0,0,1,1"/>
+  <tile id="62" terrain="0,0,1,0"/>
+  <tile id="63" terrain="1,1,1,1"/>
+  <tile id="68" terrain="2,2,2,2"/>
+  <tile id="69" terrain="0,0,0,2"/>
+  <tile id="70" terrain="0,0,2,2"/>
+  <tile id="71" terrain="0,0,2,0"/>
+  <tile id="72" terrain="0,1,0,1"/>
+  <tile id="73" terrain="0,0,0,0"/>
+  <tile id="74" terrain="1,0,1,0"/>
+  <tile id="75" terrain="1,1,1,0"/>
+  <tile id="76" terrain="1,1,0,1"/>
+  <tile id="79" terrain="2,2,2,0"/>
+  <tile id="80" terrain="2,2,0,2"/>
+  <tile id="81" terrain="0,2,0,2"/>
+  <tile id="82" terrain="0,0,0,0"/>
+  <tile id="83" terrain="2,0,2,0"/>
+  <tile id="84" terrain="0,1,0,0"/>
+  <tile id="85" terrain="1,1,0,0"/>
+  <tile id="86" terrain="1,0,0,0"/>
+  <tile id="87" terrain="1,0,1,1"/>
+  <tile id="88" terrain="0,1,1,1"/>
+  <tile id="91" terrain="2,0,2,2"/>
+  <tile id="92" terrain="0,2,2,2"/>
+  <tile id="93" terrain="0,2,0,0"/>
+  <tile id="94" terrain="2,2,0,0"/>
+  <tile id="95" terrain="2,0,0,0"/>
  </tileset>
- <tileset firstgid="49" name="tilesbg" tilewidth="20" tileheight="20">
-  <image source="../images/tilesbg.png" width="240" height="100"/>
+ <tileset firstgid="97" name="tilesbg" tilewidth="20" tileheight="20">
+  <image source="../images/tilesbg.png" width="240" height="160"/>
+  <terraintypes>
+   <terrain name="Black" tile="-1"/>
+   <terrain name="Dirt" tile="-1"/>
+   <terrain name="Stone" tile="-1"/>
+  </terraintypes>
+  <tile id="60" terrain="0,0,0,1"/>
+  <tile id="61" terrain="0,0,1,1"/>
+  <tile id="62" terrain="0,0,1,0"/>
+  <tile id="63" terrain="1,1,1,1"/>
+  <tile id="68" terrain="2,2,2,2"/>
+  <tile id="69" terrain="0,0,0,2"/>
+  <tile id="70" terrain="0,0,2,2"/>
+  <tile id="71" terrain="0,0,2,0"/>
+  <tile id="72" terrain="0,1,0,1"/>
+  <tile id="74" terrain="1,0,1,0"/>
+  <tile id="75" terrain="1,1,1,0"/>
+  <tile id="76" terrain="1,1,0,1"/>
+  <tile id="79" terrain="2,2,2,0"/>
+  <tile id="80" terrain="2,2,0,2"/>
+  <tile id="81" terrain="0,2,0,2"/>
+  <tile id="82" terrain="0,0,0,0"/>
+  <tile id="83" terrain="2,0,2,0"/>
+  <tile id="84" terrain="0,1,0,0"/>
+  <tile id="85" terrain="1,1,0,0"/>
+  <tile id="86" terrain="1,0,0,0"/>
+  <tile id="87" terrain="1,0,1,1"/>
+  <tile id="88" terrain="0,1,1,1"/>
+  <tile id="91" terrain="2,0,2,2"/>
+  <tile id="92" terrain="0,2,2,2"/>
+  <tile id="93" terrain="0,2,0,0"/>
+  <tile id="94" terrain="2,2,0,0"/>
+  <tile id="95" terrain="2,0,0,0"/>
  </tileset>
- <tileset firstgid="109" name="ooze" tilewidth="20" tileheight="20">
+ <tileset firstgid="193" name="ooze" tilewidth="20" tileheight="20">
   <image source="../images/tiles_ooze.png" width="160" height="20"/>
  </tileset>
- <tileset firstgid="117" name="tilesdetail" tilewidth="20" tileheight="20">
+ <tileset firstgid="201" name="tilesdetail" tilewidth="20" tileheight="20">
   <image source="../images/tilesdetail.png" width="200" height="200"/>
  </tileset>
  <layer name="tilesbg" width="50" height="20">

@@ -3,6 +3,7 @@ import flixel.group.FlxGroup;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 import flixel.FlxG;
+import flixel.tile.FlxTilemap;
 import flixel.util.FlxColor;
 import flixel.FlxObject;
 import flixel.FlxCamera;
@@ -20,6 +21,9 @@ class HUD extends FlxGroup
 	public var signText:FlxText;
 	public var signTextBox:FlxSprite;
 	public var centerPoint:FlxSprite;
+	
+	//public var minimap:FlxTilemap;
+	//public var minimapbg:FlxTilemap;
 	
 	public var camera:FlxCamera;
 	
@@ -51,6 +55,9 @@ class HUD extends FlxGroup
 		centerPoint.makeGraphic(4, 4, FlxColor.PINK);
 		if( RENDER_DEBUG_STUFF )
 			add(centerPoint);
+		
+	//	minimap = new FlxTilemap(); //loaded in PlayState:setupLevel()
+	//	minimapbg = new FlxTilemap();
 		
 		camera = new FlxCamera( 0, 0, W, H, 1 );
 		camera.follow( centerPoint );
@@ -87,7 +94,7 @@ class HUD extends FlxGroup
 		add(deadText);
 		deadText.kill();
 		
-		timerText = new FlxText( 0, 0, timerTextWidth, "Time: "+Reg.player.levelTimer );
+		timerText = new FlxText( 0, 0, timerTextWidth, "Level timer" );
 		setBorder( timerText, 24, "left" );
 		add(timerText);
 		
@@ -106,9 +113,19 @@ class HUD extends FlxGroup
 		add(signText);
 		signText.kill();
 		
+		//minimapbg.setSize(180, 100); //instead of setting size/position, we need to just center it / offset it based on its w/h
+	//	minimapbg.setPosition(x, y);
+	//	minimapbg.allowCollisions = FlxObject.NONE;
+	//	add(minimapbg);
+		//so this is laggy as fuck. what we need to do is use this to make a bitmap
+		
+	//	minimap.setPosition(x, y);
+	//	minimap.allowCollisions = FlxObject.NONE;
+	//	add(minimap);
+		
 		updateSizes(x, y, W, H);
 	}
-	
+
 	private function setBorder( Text:FlxText, Size:Float, Align:String, Color:Int = FlxColor.WHITE ):Void
 	{
 		Text.borderSize = 2;
@@ -128,6 +145,16 @@ class HUD extends FlxGroup
 		
 		x += X;
 		y += Y;
+		
+	//	minimap.setPosition(x + W / 2, y + H / 2);
+	//	minimapbg.setPosition(x + W / 2, y + H / 2);
+		/*
+		if ( minimapbg.cachedGraphics != null )
+		{
+		var fuck:FlxSprite = new FlxSprite( x, y, minimapbg.cachedGraphics.bitmap );
+		add(fuck);
+		}
+		*/
 		
 		if ( RENDER_DEBUG_STUFF )
 		{

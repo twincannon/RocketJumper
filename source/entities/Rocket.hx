@@ -58,7 +58,7 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += FlxG.elapsed;
 		
-		if ( FlxG.collide(this, Reg.mapGroup, explode) || m_flTimeAlive >= ROCKET_LIFETIME )
+		if ( FlxG.collide(this, Reg.mapGroup, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
 		{
 			super.destroy();
 			this.destroy();				

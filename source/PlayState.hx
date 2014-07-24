@@ -1,6 +1,7 @@
 package;
 
 import entities.Goal;
+import entities.Rocket;
 import entities.Sign;
 import flash.events.Event;
 import flixel.addons.editors.tiled.TiledLayer;
@@ -10,6 +11,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
+import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemap;
 import flixel.ui.FlxButton;
 import flixel.util.FlxMath;
@@ -24,6 +26,7 @@ import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxAngle;
+import flixel.addons.tile.FlxTilemapExt;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -40,7 +43,7 @@ class PlayState extends FlxState
 	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
 	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
 	private var goal:Goal;
-	private var map:FlxTilemap;
+	private var map:FlxTilemapExt;
 	private var ooze:FlxTilemap;
 	private var mapbg:FlxTilemap;
 	private var detailmap:FlxTilemap;
@@ -72,6 +75,8 @@ class PlayState extends FlxState
 		FlxG.cameras.add(Reg.worldCam);
 		FlxG.camera = Reg.worldCam;
 		
+		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+		
 		setupLevel();
 		
 		//create and add entities
@@ -99,7 +104,6 @@ class PlayState extends FlxState
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 		FlxG.camera.setBounds(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
 		
-		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
 		add(hud);
 		
 		Reg.worldCam.follow(Reg.player);
@@ -122,14 +126,23 @@ class PlayState extends FlxState
 			}
 		}
 		
+		//@TODO: Tiled's maps start at 0, not -1 ... and it seems like FlxTilemap may do logic on anything that's not -1
+		//This means tiled maps might be more expensive just because empty space is 0's, not -1's? (see: FlxTilemap ln 1642 / open a .tmx file in notepad)
+		
 		tiledMap = new TiledMap( "assets/data/"+Reg.levelnames[Reg.levelnum] );
 		
 		// To figure out each layer's StartingIndex, place the first tile of the given tilemap and check the .tmx in a text editor (remember no blank tiles now)
 		mapbg = new FlxTilemap();
 		mapbg.loadMap( tiledMap.getLayer("tilesbg").csvData, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, 49 );
 		
-		map = new FlxTilemap();
+		map = new FlxTilemapExt();
 		map.loadMap( tiledMap.getLayer("tiles").csvData, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, 1 );
+		
+		var tempFL:Array<Int> = [34,46];
+		var tempFR:Array<Int> = [33,45];
+		var tempCL:Array<Int> = [36,48];
+		var tempCR:Array<Int> = [35,47];
+		map.setSlopes(tempFL, tempFR, tempCL, tempCR);
 		
 		detailmap = new FlxTilemap();
 		detailmap.loadMap( tiledMap.getLayer("tilesdetail").csvData, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, 117 );
@@ -137,14 +150,16 @@ class PlayState extends FlxState
 		ooze = new FlxTilemap();
 		ooze.loadMap( tiledMap.getLayer("ooze").csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, 109 );
 		
+		//hud.minimapbg.loadMap( tiledMap.getLayer("tilesbg").csvData, "assets/images/tilesbg_minimap.png", 1, 1, FlxTilemap.OFF, 49 );
+		//hud.minimap.loadMap( tiledMap.getLayer("tiles").csvData, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, 1 );
 		
-/*#if !flash
-		//damn -- this doesn't seem to solve the vertical tearing issue
+#if !flash
+		//damn -- this doesn't seem to solve the vertical tearing issue -- it's actually neighboring tiles bleeding into other tiles (i.e. the dirt block bleeding into the black block)
 		mapbg.tileScaleHack = 1.02;
 		map.tileScaleHack = 1.02;
 		detailmap.tileScaleHack = 1.02;
 		ooze.tileScaleHack = 1.02;
-#end*/
+#end
 		
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
@@ -303,12 +318,11 @@ class PlayState extends FlxState
 			}
 		}
 		
-		
 #if !flash
 		if ( FlxG.keys.justPressed.ESCAPE )
 			Sys.exit(0);
 #end
-
+		
 		if ( Reg.player.usingMouse )
 			m_sprCrosshair.setPosition( Math.ceil(FlxG.mouse.screenX - m_sprCrosshair.width / 2), Math.ceil(FlxG.mouse.screenY - m_sprCrosshair.height / 2) );
 		else
