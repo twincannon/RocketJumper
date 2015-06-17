@@ -18,6 +18,7 @@ import flixel.util.FlxMath;
 import flixel.FlxObject;
 import flixel.util.FlxPoint;
 import haxe.xml.Fast;
+import haxe.io.Path;
 import openfl.Assets;
 import entities.Player;
 import flixel.util.FlxRect;
@@ -50,11 +51,11 @@ class PlayState extends FlxState
 	private var m_sprCrosshair:FlxSprite;
 	private var hud:HUD;
 	private var tiledMap:TiledMap;
-
-	
 	
 	private static inline var camMinZoom:Float = 1.0;
 	private static inline var camMaxZoom:Float = 4.0;
+	private var camVelZoomOffset:Float = 0.0;
+	private static inline var CAM_VEL_ZOOM_OFFSET_MAX:Float = 1.0;
 	private var camZoomWhenLevelBeat:Float = 0;
 	private var camLevelBeatTimeElapsed:Float = 0;
 	
@@ -102,13 +103,32 @@ class PlayState extends FlxState
 	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
-		FlxG.camera.setBounds(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
+		//FlxG.camera.setBounds(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
 		
 		add(hud);
 		
-		Reg.worldCam.follow(Reg.player);
+		Reg.worldCam.follow(Reg.player, FlxCamera.STYLE_LOCKON, FlxPoint.get(0,0), 5);
 		
 		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+		handleCameraZoom(2);
+	}
+	
+	function getStartGid(tiledLevel:TiledMap, tilesheetName:String):Int
+	{
+		var tileGID:Int = 1;
+		
+		for (tileset in tiledLevel.tilesets)
+		{
+			var tilesheetPath:Path = new Path(tileset.imageSource);
+			var thisTilesheetName = tilesheetPath.file + "." + tilesheetPath.ext;
+			
+			if (thisTilesheetName == tilesheetName)
+			{
+				tileGID = tileset.firstGID;
+			}
+		}
+		 
+		return tileGID;
 	}
 	
 	private function setupLevel():Void
@@ -126,18 +146,20 @@ class PlayState extends FlxState
 			}
 		}
 		
-		//@TODO: Tiled's maps start at 0, not -1 ... and it seems like FlxTilemap may do logic on anything that's not -1
-		//This means tiled maps might be more expensive just because empty space is 0's, not -1's? (see: FlxTilemap ln 1642 / open a .tmx file in notepad)
+		//WARNING: if you put a tile in the wrong layer (i.e. tilesbg in tiles), it causes a crash (?!) probably array indices error, which is silly
 		
-		tiledMap = new TiledMap( "assets/data/"+Reg.levelnames[Reg.levelnum] );
-		
-		// To figure out each layer's StartingIndex, place the first tile of the given tilemap and check the .tmx in a text editor (remember no blank tiles now)
+		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] );
+						
 		mapbg = new FlxTilemap();
-		mapbg.loadMap( tiledMap.getLayer("tilesbg").csvData, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, 49 );
+		mapbg.widthInTiles = tiledMap.width;
+		mapbg.heightInTiles = tiledMap.height;
+		mapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png") );
 		
 		map = new FlxTilemapExt();
-		map.loadMap( tiledMap.getLayer("tiles").csvData, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, 1 );
-		
+		map.widthInTiles = tiledMap.width;
+		map.heightInTiles = tiledMap.height;
+		map.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png") );
+
 		var tempFL:Array<Int> = [34,46];
 		var tempFR:Array<Int> = [33,45];
 		var tempCL:Array<Int> = [36,48];
@@ -145,13 +167,21 @@ class PlayState extends FlxState
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);
 		
 		detailmap = new FlxTilemap();
-		detailmap.loadMap( tiledMap.getLayer("tilesdetail").csvData, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, 117 );
+		detailmap.widthInTiles = tiledMap.width;
+		detailmap.heightInTiles = tiledMap.height;
+		detailmap.loadMap( tiledMap.getLayer("tilesdetail").tileArray, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesdetail.png") );
 		
 		ooze = new FlxTilemap();
-		ooze.loadMap( tiledMap.getLayer("ooze").csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, 109 );
+		ooze.widthInTiles = tiledMap.width;
+		ooze.heightInTiles = tiledMap.height;
+		ooze.loadMap( tiledMap.getLayer("ooze").tileArray, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
 		
-		//hud.minimapbg.loadMap( tiledMap.getLayer("tilesbg").csvData, "assets/images/tilesbg_minimap.png", 1, 1, FlxTilemap.OFF, 49 );
-		//hud.minimap.loadMap( tiledMap.getLayer("tiles").csvData, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, 1 );
+		/*hud.minimap.widthInTiles = tiledMap.width;
+		hud.minimap.heightInTiles = tiledMap.height;
+		hud.minimap.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png" ));
+		hud.minimapbg.widthInTiles = tiledMap.width;
+		hud.minimapbg.heightInTiles = tiledMap.height;
+		hud.minimapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png" ));*/
 		
 #if !flash
 		//damn -- this doesn't seem to solve the vertical tearing issue -- it's actually neighboring tiles bleeding into other tiles (i.e. the dirt block bleeding into the black block)
@@ -231,7 +261,7 @@ class PlayState extends FlxState
 			//@TODO make a proper bounds offset..... this isnt right. but its ok for now because im fed up with this shit
 			var boundsOffsetX = FlxG.camera.x;
 			var boundsOffsetY = FlxG.camera.y;
-			FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, tiledMap.fullWidth - boundsOffsetX*2, tiledMap.fullHeight - boundsOffsetY*2);	
+		//	FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, tiledMap.fullWidth - boundsOffsetX*2, tiledMap.fullHeight - boundsOffsetY*2);	
 		}		
 	}
 	
@@ -276,9 +306,7 @@ class PlayState extends FlxState
 						signs.add(sign);
 				}
 			}
-			
 		}
-		
 	}
 		
 	/**
@@ -296,6 +324,7 @@ class PlayState extends FlxState
 			Reg.playerReset = false;
 		}
 		
+		//@TODO ok flxg.mouse.wheel doesn't work in cpp anymore?
 		// check for camera zoom
 		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat )
 		{
@@ -317,7 +346,19 @@ class PlayState extends FlxState
 				camLevelBeatTimeElapsed += FlxG.elapsed;
 			}
 		}
-		
+		else
+		{
+		//	var oldzoom = FlxG.camera.zoom;
+		//	var newzoom = Reg.Lerp( oldzoom, CAM_VEL_ZOOM_OFFSET_MAX, 5 );
+			
+			if(Reg.player.velocity.y > 260) //falling
+				handleCameraZoom(FlxG.camera.zoom + 0.0125); //@TODO: these don't seem to be fps independant. Actually I bet a lot of this project isn't.. how do I get deltatime?
+			else if(Reg.player.velocity.y < -260) //rising
+				handleCameraZoom(FlxG.camera.zoom - 0.02);
+			else if(Reg.player.velocity.y == 0)
+				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );
+		}
+			
 #if !flash
 		if ( FlxG.keys.justPressed.ESCAPE )
 			Sys.exit(0);
@@ -328,7 +369,6 @@ class PlayState extends FlxState
 		else
 			m_sprCrosshair.setPosition( Reg.player.getScreenXY().x + Reg.player.crosshairLocation.x ,//- m_sprCrosshair.width / 2,
 										Reg.player.getScreenXY().y + Reg.player.crosshairLocation.y );// - m_sprCrosshair.height / 2);
-										
 		
 		// Update crosshair line to player
 		var xhairScreenCenter:FlxPoint = FlxPoint.get( m_sprCrosshair.getScreenXY().x + m_sprCrosshair.width / 2, m_sprCrosshair.getScreenXY().y + m_sprCrosshair.height / 2 );

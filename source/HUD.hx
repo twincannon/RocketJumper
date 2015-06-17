@@ -22,8 +22,8 @@ class HUD extends FlxGroup
 	public var signTextBox:FlxSprite;
 	public var centerPoint:FlxSprite;
 	
-	//public var minimap:FlxTilemap;
-	//public var minimapbg:FlxTilemap;
+	/*public var minimap:FlxTilemap;
+	public var minimapbg:FlxTilemap;*/
 	
 	public var camera:FlxCamera;
 	
@@ -56,8 +56,8 @@ class HUD extends FlxGroup
 		if( RENDER_DEBUG_STUFF )
 			add(centerPoint);
 		
-	//	minimap = new FlxTilemap(); //loaded in PlayState:setupLevel()
-	//	minimapbg = new FlxTilemap();
+	/*	minimap = new FlxTilemap(); //loaded in PlayState:setupLevel()
+		minimapbg = new FlxTilemap();*/
 		
 		camera = new FlxCamera( 0, 0, W, H, 1 );
 		camera.follow( centerPoint );
@@ -113,15 +113,14 @@ class HUD extends FlxGroup
 		add(signText);
 		signText.kill();
 		
-		//minimapbg.setSize(180, 100); //instead of setting size/position, we need to just center it / offset it based on its w/h
-	//	minimapbg.setPosition(x, y);
-	//	minimapbg.allowCollisions = FlxObject.NONE;
-	//	add(minimapbg);
+	/*	minimapbg.setPosition(x, y);
+		minimapbg.allowCollisions = FlxObject.NONE;
+		add(minimapbg);
 		//so this is laggy as fuck. what we need to do is use this to make a bitmap
 		
-	//	minimap.setPosition(x, y);
-	//	minimap.allowCollisions = FlxObject.NONE;
-	//	add(minimap);
+		minimap.setPosition(x, y);
+		minimap.allowCollisions = FlxObject.NONE;
+		add(minimap);*/
 		
 		updateSizes(x, y, W, H);
 	}
@@ -146,8 +145,9 @@ class HUD extends FlxGroup
 		x += X;
 		y += Y;
 		
-	//	minimap.setPosition(x + W / 2, y + H / 2);
-	//	minimapbg.setPosition(x + W / 2, y + H / 2);
+	/*	minimap.setPosition(x + W / 2, y + H / 2);
+		minimapbg.setPosition(x + W / 2, y + H / 2);*/
+		
 		/*
 		if ( minimapbg.cachedGraphics != null )
 		{

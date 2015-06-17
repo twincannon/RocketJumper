@@ -159,15 +159,17 @@ class Player extends FlxSprite
 		if ( FlxG.keys.justPressed.R )
 			Resurrect();
 			
-			
-		if ( oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY )
+		//oldMouseScreenXY = FlxPoint.get( FlxG.mouse.screenX, FlxG.mouse.screenY );
+		// Switch back to using mouse input by clicking - Was this, but broke: //if ( oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY )
+		if (!usingMouse && (FlxG.mouse.pressed || levelTimer <= 0))
+		{
+			FlxG.mouse.set(0, 0);
 			usingMouse = true;
-			
-		oldMouseScreenXY = FlxPoint.get( FlxG.mouse.screenX, FlxG.mouse.screenY );
+			return;
+		}	
 		
 		if ( !living || levelBeat )
-			return;
-		
+			return;	
 		
 		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
 		{
@@ -242,7 +244,8 @@ class Player extends FlxSprite
 		m_gamePad.deadZone = 0.0;
 		var xaxis = m_gamePad.getXAxis( XboxButtonID.RIGHT_ANALOGUE_X );
 		var yaxis = m_gamePad.getYAxis( XboxButtonID.RIGHT_ANALOGUE_Y );
-
+		//@TODO this shit is broken on windows, but works on flash.
+		
 		var vecAxis = new FlxVector( xaxis, yaxis );
 		var length = vecAxis.length;
 	
@@ -257,7 +260,8 @@ class Player extends FlxSprite
 		crosshairLocation.x = 75 * Math.cos(angle);
 		crosshairLocation.y = 75 * Math.sin(angle);
 		
-		if ( xaxis != m_OldGamepadAxis.x || yaxis != m_OldGamepadAxis.y )
+		//if ( xaxis != m_OldGamepadAxis.x || yaxis != m_OldGamepadAxis.y ) //there appears to be some slight jitter now making this get called when gamepad not in use
+		if(Math.abs(xaxis - m_OldGamepadAxis.x) > 0.1 || Math.abs(yaxis - m_OldGamepadAxis.y) > 0.1)
 		{
 			usingMouse = false;
 			m_bAimAnimDirty = true;
