@@ -258,7 +258,7 @@ class PlayState extends FlxState
 			FlxG.camera.x = offsetamt * (FlxG.camera.width / basezoom) * basezoom / 2;
 			FlxG.camera.y = offsetamt * (FlxG.camera.height / basezoom) * basezoom / 2;
 
-			//@TODO make a proper bounds offset..... this isnt right. but its ok for now because im fed up with this shit
+			//@TODO make a proper bounds offset..... this isnt right.
 			var boundsOffsetX = FlxG.camera.x;
 			var boundsOffsetY = FlxG.camera.y;
 		//	FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, tiledMap.fullWidth - boundsOffsetX*2, tiledMap.fullHeight - boundsOffsetY*2);	
@@ -324,7 +324,7 @@ class PlayState extends FlxState
 			Reg.playerReset = false;
 		}
 		
-		//@TODO ok flxg.mouse.wheel doesn't work in cpp anymore?
+		//@TODO ok flxg.mouse.wheel doesn't work in cpp target anymore? "FLX_MOUSE_ADVANCED" ?
 		// check for camera zoom
 		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat )
 		{
@@ -352,7 +352,7 @@ class PlayState extends FlxState
 		//	var newzoom = Reg.Lerp( oldzoom, CAM_VEL_ZOOM_OFFSET_MAX, 5 );
 			
 			if(Reg.player.velocity.y > 260) //falling
-				handleCameraZoom(FlxG.camera.zoom + 0.0125); //@TODO: these don't seem to be fps independant. Actually I bet a lot of this project isn't.. how do I get deltatime?
+				handleCameraZoom(FlxG.camera.zoom + 0.0125); //@TODO: these don't seem to be fps independant. Actually I bet a lot of this project isn't.. how do I get deltatime? -- "FlxG.elapsed"...but only relevant with non-fixed timestep!!
 			else if(Reg.player.velocity.y < -260) //rising
 				handleCameraZoom(FlxG.camera.zoom - 0.02);
 			else if(Reg.player.velocity.y == 0)
@@ -439,8 +439,7 @@ class PlayState extends FlxState
 					hud.signText.kill();
 				}
 			}
-			
-			
+						
 			if ( Reg.player.levelBeat )
 			{
 				if ( Reg.levelnum < Reg.levelnames.length - 1 )
@@ -494,6 +493,7 @@ class PlayState extends FlxState
 	 */
 	override public function destroy():Void
 	{
+		//@TODO: follow the advice and set stuff null here.
 		super.destroy();
 	}
 }
