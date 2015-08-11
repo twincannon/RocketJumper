@@ -5,7 +5,6 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.ui.FlxButton;
-import flixel.util.FlxMath;
 import openfl.Assets;
 
 /**
@@ -45,9 +44,9 @@ class MenuState extends FlxState
 	/**
 	 * Function that is called once every frame.
 	 */
-	override public function update():Void
+	override public function update(elapsed:Float):Void
 	{
-		super.update();
+		super.update(elapsed);
 		
 //#if debug
 		startGame();
@@ -61,7 +60,7 @@ class MenuState extends FlxState
 		}
 
 		if (logotimer >= 0)
-			logotimer += FlxG.elapsed;
+			logotimer += elapsed;
 			
 		if (FlxG.keys.anyJustPressed(["SPACE", "ENTER", "C", "ESCAPE"]))
 			logotimer = 2;

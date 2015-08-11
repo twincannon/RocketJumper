@@ -2,12 +2,11 @@ package;
 
 import entities.Player;
 import flixel.group.FlxGroup;
-import flixel.group.FlxTypedGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
 import entities.Rocket;
 import flixel.FlxCamera;
-import flixel.util.FlxPoint;
+import flixel.math.FlxPoint;
 
 /**
  * Handy, pre-built Registry class that can be used to store 

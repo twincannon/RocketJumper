@@ -6,11 +6,10 @@ import flixel.FlxObject;
 import flixel.group.FlxGroup;
 import openfl.Assets;
 import entities.Rocket;
-import flixel.util.FlxAngle;
-import flixel.util.FlxPoint;
+import flixel.math.FlxPoint;
+import flixel.math.FlxAngle;
 import flixel.input.gamepad.FlxGamepad;
-import flixel.input.gamepad.XboxButtonID;
-import flixel.util.FlxVector;
+import flixel.math.FlxVector;
 
 class Player extends FlxSprite
 {
@@ -130,7 +129,7 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	// Update
 	// --------------------------------------------------------------------------------------
-	override public function update():Void
+	override public function update(elapsed:Float):Void
 	{
 		HandleDeath();
 		HandleAnimation();
@@ -139,14 +138,14 @@ class Player extends FlxSprite
 		HandleGamepadInput();
 		UpdateFireEffect(); //muzzleflash
 		
-		m_flRocketFireTimer -= FlxG.elapsed;
+		m_flRocketFireTimer -= elapsed;
 		
 		//@TODO .. so.. uh.. there's a pretty serious bug here where fraps was causing the game
-		//to run at half speed, and the timer was running at half speed too -- ok doesn't happen with vsync off at least..
+		//to run at half speed, and the timer was running at half speed too -- ok doesn't happen with vsync off at least.. <<-- this is because of fixed timestep probably.
 		if ( levelTimer > 0 && !levelBeat )
-			levelTimer += FlxG.elapsed;
+			levelTimer += elapsed;
 			
-		super.update();
+		super.update(elapsed);
 		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
 	}
@@ -163,7 +162,7 @@ class Player extends FlxSprite
 		// Switch back to using mouse input by clicking - Was this, but broke: //if ( oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY )
 		if (!usingMouse && (FlxG.mouse.pressed || levelTimer <= 0))
 		{
-			FlxG.mouse.set(0, 0);
+			FlxG.mouse.reset;
 			usingMouse = true;
 			return;
 		}	
@@ -173,21 +172,20 @@ class Player extends FlxSprite
 		
 		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
 		{
-			var mouseAngle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
+			var mouseAngle:Float = getMidpoint().angleBetween( FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
 			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
 		}
 		
 		acceleration.x = 0;
 		
-		if (FlxG.keys.anyPressed(["LEFT", "A"]))
+		if (FlxG.keys.anyPressed([LEFT, A]))
 			Walk( FlxObject.LEFT );
 			
-		if (FlxG.keys.anyPressed(["RIGHT", "D"]))
+		if (FlxG.keys.anyPressed([RIGHT, D]))
 			Walk( FlxObject.RIGHT );
 		
-		var jumpkeys = ["UP", "W", "SPACE"];
-		m_bJumpHeldThisFrame = FlxG.keys.anyPressed(jumpkeys);
-		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed(jumpkeys);
+		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
+		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
 		
 		// Velocity limiter (there's also maxVelocity.x I could use?)
 		if ( onGround )
@@ -212,39 +210,37 @@ class Player extends FlxSprite
 		if ( m_gamePad == null )
 			return;
 			
-		if ( m_gamePad.justPressed(XboxButtonID.X) )
+		if ( m_gamePad.justPressed.X )
 			Resurrect();
 			
-		if ( m_gamePad.justPressed(XboxButtonID.Y) )
+		if ( m_gamePad.justPressed.Y )
 			gamepadTryNextLevel = true;
 			
 		if ( !living || levelBeat )
 			return;
 		
-		var xboxJumpPressed = m_gamePad.justPressed(XboxButtonID.A) ||
-							  m_gamePad.justPressed(XboxButtonID.DPAD_UP) ||
-							  m_gamePad.justPressed(XboxButtonID.RIGHT_ANALOGUE) ||
-							  m_gamePad.justPressed(XboxButtonID.RB);
+		var xboxJumpPressed = m_gamePad.justPressed.A ||
+							  m_gamePad.justPressed.DPAD_UP ||
+							  m_gamePad.justPressed.RIGHT_STICK_CLICK ||
+							  m_gamePad.justPressed.RIGHT_SHOULDER;
 		
-		var xboxFirePressed = m_gamePad.getAxis(XboxButtonID.RIGHT_TRIGGER) > 0.25 ||
-							  m_gamePad.justPressed(XboxButtonID.RIGHT_ANALOGUE) ||
-							  m_gamePad.justPressed(XboxButtonID.RB);
+		var xboxFirePressed = m_gamePad.analog.value.RIGHT_TRIGGER > 0.25 ||
+							  m_gamePad.justPressed.RIGHT_STICK_CLICK ||
+							  m_gamePad.justPressed.RIGHT_SHOULDER;
 							  
 							  
-		
 		m_bJumpHeldThisFrame = ( m_bJumpHeldThisFrame || xboxJumpPressed );
 		m_bJumpPressedThisFrame = ( m_bJumpPressedThisFrame || xboxJumpPressed );
 		
-		if ( m_gamePad.pressed(XboxButtonID.DPAD_LEFT) )
+		if ( m_gamePad.pressed.DPAD_LEFT )
 			Walk( FlxObject.LEFT );
 		
-		if ( m_gamePad.pressed(XboxButtonID.DPAD_RIGHT) )
+		if ( m_gamePad.pressed.DPAD_RIGHT )
 			Walk( FlxObject.RIGHT );
 		
-		m_gamePad.deadZone = 0.0;
-		var xaxis = m_gamePad.getXAxis( XboxButtonID.RIGHT_ANALOGUE_X );
-		var yaxis = m_gamePad.getYAxis( XboxButtonID.RIGHT_ANALOGUE_Y );
-		//@TODO this shit is broken on windows, but works on flash.
+		m_gamePad.deadZone = 0.0; //@TODO deadzone is probably fixed now in 4.0 ... so re-implement it
+		var xaxis = m_gamePad.analog.value.RIGHT_STICK_X;
+		var yaxis = m_gamePad.analog.value.RIGHT_STICK_Y;
 		
 		var vecAxis = new FlxVector( xaxis, yaxis );
 		var length = vecAxis.length;
@@ -275,7 +271,7 @@ class Player extends FlxSprite
 			yaxis *= 1000;
 			xaxis += x + width * 0.5;
 			yaxis += y + height * 0.5;
-			var joyangle:Float = FlxAngle.getAngle( getMidpoint(), FlxPoint.get(xaxis, yaxis) );
+			var joyangle:Float = getMidpoint().angleBetween( FlxPoint.get(xaxis, yaxis) );
 			FireBullet( getMidpoint(), FlxPoint.get(xaxis, yaxis), joyangle );
 		}
 	}
@@ -305,7 +301,7 @@ class Player extends FlxSprite
 			if ( jumpJustPressed )
 			{
 				animation.play("jump", true, 0);
-				firing = false; //we can interrupt a fire animation with jumping. really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
+				firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 				velocity.y = -Reg.PLAYER_JUMP_VEL;
 				onGround = false;
 				m_bJumpHeldNoRelease = true;
@@ -325,7 +321,7 @@ class Player extends FlxSprite
 		if ( !living )
 			return;
 			
-		if (melting)
+		if ( melting )
 		{
 			var falling = true;
 			if ( velocity.y < 0 )
@@ -441,12 +437,12 @@ class Player extends FlxSprite
 				animation.play("jump", true, 0);
 			}
 		}
-		
+
 		var aimAngle:Float;
 		if ( usingMouse )
-			aimAngle = FlxAngle.getAngle( getScreenXY(), FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY));
+			aimAngle = getScreenPosition().angleBetween( FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY) );
 		else
-			aimAngle = FlxAngle.getAngle( getScreenXY(), FlxPoint.get(getScreenXY().x + crosshairLocation.x, getScreenXY().y + crosshairLocation.y));
+			aimAngle = getScreenPosition().angleBetween( FlxPoint.get(getScreenPosition().x + crosshairLocation.x, getScreenPosition().y + crosshairLocation.y));
 			
 		if ( m_flOldMouseAngle != aimAngle )
 		{
@@ -577,6 +573,13 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function FireBullet( origin:FlxPoint, target:FlxPoint, newAngle:Float ):Void
 	{
+		//@TODO dotproduct this shizzle up and make it so you jump automatically if you're aiming straight down.
+	/*	var originvec = new FlxVector(origin.x, origin.y);
+		var targetvec = new FlxVector(target.x, target.y);
+		originvec.normalize();
+		targetvec.normalize();
+		var dot = originvec.dotProduct(targetvec);
+		trace( (origin.x*target.x + origin.y*target.y) );*/
 		animation.play("fire", true, 0);
 		firing = true;
 		

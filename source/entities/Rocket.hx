@@ -3,12 +3,12 @@ package entities;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxObject;
-import flixel.util.FlxPoint;
+import flixel.math.FlxPoint;
 import openfl.Assets;
 import flixel.util.FlxSpriteUtil; //for debug drawing
 import flixel.util.FlxColor;
 import flixel.addons.display.shapes.FlxShape;
-import flixel.util.FlxVector;
+import flixel.math.FlxVector;
 import entities.Explosion;
 
 class Rocket extends FlxSprite
@@ -46,9 +46,9 @@ class Rocket extends FlxSprite
 		velocity.y = Math.sin(rangle) * Speed;
 	}
 	
-	override public function update():Void 
+	override public function update(elapsed:Float):Void 
 	{
-		super.update();
+		super.update(elapsed);
 		
 		if ( scale.x < 0.6 && m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
 		{
@@ -56,7 +56,7 @@ class Rocket extends FlxSprite
 			scale.y *= 1.1;
 		}
 			
-		m_flTimeAlive += FlxG.elapsed;
+		m_flTimeAlive += elapsed;
 		
 		if ( FlxG.collide(this, Reg.mapGroup, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
 		{
@@ -132,9 +132,6 @@ class Rocket extends FlxSprite
 		
 		if( doBigExplosion )
 			expSpr.scale = FlxPoint.get(2, 2);
-		
-		
-		
 	}
 	
 	public static inline function distance(p0:FlxPoint, p1:FlxPoint) : Float
@@ -142,50 +139,7 @@ class Rocket extends FlxSprite
         var x = p0.x-p1.x;
         var y = p0.y-p1.y;
         return Math.sqrt(x*x + y*y);
-    }
-	
-
-	
-
-	
-	public static inline function remap( x:Float, oMin:Float, oMax:Float, nMin:Float, nMax:Float ) : Float
-	{
-
-		//range check
-		if (oMin == oMax)
-		{
-			return 0;
-		}
-
-		if (nMin == nMax)
-		{
-			return 0;
-		}
-
-		//check reversed input range
-		var reverseInput = false;
-		var oldMin = Math.min( oMin, oMax );
-		var oldMax = Math.max( oMin, oMax );
-		if (oldMin != oMin)
-			reverseInput = true;
-
-		//check reversed output range
-		var reverseOutput = false;
-		var newMin = Math.min( nMin, nMax );
-		var newMax = Math.max( nMin, nMax );
-		if (newMin != nMin)
-			reverseOutput = true;
-
-		var portion = (x - oldMin) * (newMax - newMin) / (oldMax - oldMin);
-		if (reverseInput)
-			portion = (oldMax - x) * (newMax - newMin) / (oldMax - oldMin);
-
-		var result = portion + newMin;
-		if (reverseOutput)
-			result = newMax - portion;
-
-		return result;
-	}
+    }	
 }
 
 

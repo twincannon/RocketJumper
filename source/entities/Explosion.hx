@@ -18,9 +18,9 @@ class Explosion extends FlxSprite
 		animation.play("explode");
 	}
 	
-	override public function update():Void
+	override public function update(elapsed:Float):Void
 	{
-		super.update();
+		super.update(elapsed);
 		
 		if ( animation.finished )
 			destroy();

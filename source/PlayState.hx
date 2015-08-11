@@ -14,26 +14,24 @@ import flixel.text.FlxText;
 import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemap;
 import flixel.ui.FlxButton;
-import flixel.util.FlxMath;
 import flixel.FlxObject;
-import flixel.util.FlxPoint;
+import flixel.math.FlxPoint;
 import haxe.xml.Fast;
 import haxe.io.Path;
 import openfl.Assets;
 import entities.Player;
-import flixel.util.FlxRect;
-import flixel.group.FlxTypedGroup;
+import flixel.math.FlxRect;
+import flixel.group.FlxGroup;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
-import flixel.util.FlxAngle;
+import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
-import flixel.addons.editors.tiled.TiledObjectGroup;
+import flixel.addons.editors.tiled.TiledObjectLayer;
 import flixel.addons.editors.tiled.TiledTileSet;
-
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -107,7 +105,7 @@ class PlayState extends FlxState
 		
 		add(hud);
 		
-		Reg.worldCam.follow(Reg.player, FlxCamera.STYLE_LOCKON, FlxPoint.get(0,0), 5);
+		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
 		
 		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
 		handleCameraZoom(2);
@@ -149,17 +147,26 @@ class PlayState extends FlxState
 		//WARNING: if you put a tile in the wrong layer (i.e. tilesbg in tiles), it causes a crash (?!) probably array indices error, which is silly
 		
 		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] );
-						
+		
+		
 		mapbg = new FlxTilemap();
-		mapbg.widthInTiles = tiledMap.width;
+		/*mapbg.widthInTiles = tiledMap.width;
 		mapbg.heightInTiles = tiledMap.height;
-		mapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png") );
+		mapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png") );*/
+		mapbg.loadMapFromArray( tiledMap.getLayer("tilesbg"), tiledMap.width, tiledMap.height, "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+		mapbg.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+		
+		tiledMap.getLayer("tiles")
+		
+		
 		
 		map = new FlxTilemapExt();
-		map.widthInTiles = tiledMap.width;
+		/*map.widthInTiles = tiledMap.width;
 		map.heightInTiles = tiledMap.height;
-		map.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png") );
-
+		map.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png") );*/
+	//	map.loadMapFromArray( tiledMap.getLayer("tiles").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+		map.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+		
 		var tempFL:Array<Int> = [34,46];
 		var tempFR:Array<Int> = [33,45];
 		var tempCL:Array<Int> = [36,48];
@@ -167,14 +174,18 @@ class PlayState extends FlxState
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);
 		
 		detailmap = new FlxTilemap();
-		detailmap.widthInTiles = tiledMap.width;
+		/*detailmap.widthInTiles = tiledMap.width;
 		detailmap.heightInTiles = tiledMap.height;
-		detailmap.loadMap( tiledMap.getLayer("tilesdetail").tileArray, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+		detailmap.loadMap( tiledMap.getLayer("tilesdetail").tileArray, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesdetail.png") );*/
+		//detailmap.loadMapFromArray( tiledMap.getLayer("tilesdetail").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+		detailmap.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
 		
 		ooze = new FlxTilemap();
-		ooze.widthInTiles = tiledMap.width;
+		/*ooze.widthInTiles = tiledMap.width;
 		ooze.heightInTiles = tiledMap.height;
-		ooze.loadMap( tiledMap.getLayer("ooze").tileArray, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
+		ooze.loadMap( tiledMap.getLayer("ooze").tileArray, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles_ooze.png") );*/
+		//ooze.loadMapFromArray( tiledMap.getLayer("ooze").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
+		ooze.loadMapFromCSV( tiledMap.getLayer("ooze"), "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
 		
 		/*hud.minimap.widthInTiles = tiledMap.width;
 		hud.minimap.heightInTiles = tiledMap.height;
@@ -185,10 +196,11 @@ class PlayState extends FlxState
 		
 #if !flash
 		//damn -- this doesn't seem to solve the vertical tearing issue -- it's actually neighboring tiles bleeding into other tiles (i.e. the dirt block bleeding into the black block)
-		mapbg.tileScaleHack = 1.02;
+		/*mapbg.tileScaleHack = 1.02;
 		map.tileScaleHack = 1.02;
 		detailmap.tileScaleHack = 1.02;
 		ooze.tileScaleHack = 1.02;
+		ooze.useScaleHack = true;*/ //this is updated in 4.0.0 maybe its fixed!!
 #end
 		
 		mapbg.camera = Reg.worldCam;
@@ -312,7 +324,7 @@ class PlayState extends FlxState
 	/**
 	 * Function that is called once every frame.
 	 */
-	override public function update():Void
+	override public function update(elapsed:Float):Void
 	{
 		// if player resurrected() is called while level is beat, we need to reset zoom stuff
 		if ( Reg.playerReset )
@@ -343,7 +355,7 @@ class PlayState extends FlxState
 			if ( newzoom < calcMaxZoom - 1.0 )
 			{
 				handleCameraZoom( newzoom );
-				camLevelBeatTimeElapsed += FlxG.elapsed;
+				camLevelBeatTimeElapsed += elapsed;
 			}
 		}
 		else
@@ -367,16 +379,16 @@ class PlayState extends FlxState
 		if ( Reg.player.usingMouse )
 			m_sprCrosshair.setPosition( Math.ceil(FlxG.mouse.screenX - m_sprCrosshair.width / 2), Math.ceil(FlxG.mouse.screenY - m_sprCrosshair.height / 2) );
 		else
-			m_sprCrosshair.setPosition( Reg.player.getScreenXY().x + Reg.player.crosshairLocation.x ,//- m_sprCrosshair.width / 2,
-										Reg.player.getScreenXY().y + Reg.player.crosshairLocation.y );// - m_sprCrosshair.height / 2);
+			m_sprCrosshair.setPosition( Reg.player.getScreenPosition().x + Reg.player.crosshairLocation.x ,//- m_sprCrosshair.width / 2,
+										Reg.player.getScreenPosition().y + Reg.player.crosshairLocation.y );// - m_sprCrosshair.height / 2);
 		
 		// Update crosshair line to player
-		var xhairScreenCenter:FlxPoint = FlxPoint.get( m_sprCrosshair.getScreenXY().x + m_sprCrosshair.width / 2, m_sprCrosshair.getScreenXY().y + m_sprCrosshair.height / 2 );
-		var playerShootScreenCenter:FlxPoint = FlxPoint.get( Reg.player.getScreenXY().x + Reg.player.width / 2 , Reg.player.getScreenXY().y + Reg.player.height / 2 - Reg.PLAYER_SHOOT_Y_OFFSET + 2 );
+		var xhairScreenCenter:FlxPoint = FlxPoint.get( m_sprCrosshair.getScreenPosition().x + m_sprCrosshair.width / 2, m_sprCrosshair.getScreenPosition().y + m_sprCrosshair.height / 2 );
+		var playerShootScreenCenter:FlxPoint = FlxPoint.get( Reg.player.getScreenPosition().x + Reg.player.width / 2 , Reg.player.getScreenPosition().y + Reg.player.height / 2 - Reg.PLAYER_SHOOT_Y_OFFSET + 2 );
 		Reg.player.crosshairLine.setPosition( xhairScreenCenter.x, xhairScreenCenter.y );
 		Reg.player.crosshairLine.origin.set( 0, 0 );
 		
-		var angle = FlxAngle.getAngle( playerShootScreenCenter, xhairScreenCenter );
+		var angle = playerShootScreenCenter.angleBetween( xhairScreenCenter );
 		Reg.player.crosshairLine.angle = angle;
 		
 		var distance:Float = xhairScreenCenter.distanceTo( playerShootScreenCenter );
@@ -384,7 +396,7 @@ class PlayState extends FlxState
 		Reg.player.crosshairLine.scale.y = Reg.RemapValClamped( distance, 150, 20, 1.0, 0.0 );
 		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
 		
-		super.update();
+		super.update(elapsed);
 		
 		if ( Reg.gameTimerStarted )
 			Reg.gameTimer += FlxG.elapsed;
