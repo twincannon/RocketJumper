@@ -172,13 +172,11 @@ class PlayState extends FlxState
 		
 		}
 		
-
-	/*	var tempFL:Array<Int> = [34,46];
+		var tempFL:Array<Int> = [34,46];
 		var tempFR:Array<Int> = [33,45];
 		var tempCL:Array<Int> = [36,48];
 		var tempCR:Array<Int> = [35,47];
-		map.setSlopes(tempFL, tempFR, tempCL, tempCR);*/  //@TODO this was crashing 4.0.0 but i kind of hated it anyway and would like to pursue a non-arbitrary way of handling slopes
-		
+		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
 		
 			
 		/*hud.minimap.widthInTiles = tiledMap.width;

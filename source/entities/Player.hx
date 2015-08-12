@@ -384,7 +384,7 @@ class Player extends FlxSprite
 		
 		/*
 		 * TODO: 
-			 * make an animation priority system.. if there isnt one
+			 * make an animation priority system.. if there isnt one (real animators call this a state machine :^))
 			 * then i can just be like "if animation doesnt loop, isnt finished, and is higher priority, dont change
 			 * like playAnimation( "anim", looping, priority );
 			 * 
