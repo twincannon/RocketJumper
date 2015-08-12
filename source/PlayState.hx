@@ -13,6 +13,7 @@ import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemap;
+import flixel.tile.FlxBaseTilemap;
 import flixel.ui.FlxButton;
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
@@ -32,6 +33,7 @@ import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
 import flixel.addons.editors.tiled.TiledObjectLayer;
 import flixel.addons.editors.tiled.TiledTileSet;
+import flixel.addons.editors.tiled.TiledTileLayer;
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -96,13 +98,12 @@ class PlayState extends FlxState
 		FlxG.mouse.visible = false;
 		add( m_sprCrosshair );
 		
-	//	FlxG.camera.follow(Reg.player, FlxCamera.STYLE_LOCKON, 0.0/*0.5*/);
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
-	//	FlxG.updateFramerate = 60; //....apparently this isnt kosher? cant be lower than draw framerate? Wtf
+	//	FlxG.updateFramerate = 60; //...? cant be lower than draw framerate? 
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
-		//FlxG.camera.setBounds(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
-		
+		FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
+
 		add(hud);
 		
 		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
@@ -111,6 +112,7 @@ class PlayState extends FlxState
 		handleCameraZoom(2);
 	}
 	
+	/* Helper function to get the starting ID a tileset in a given TiledMap */
 	function getStartGid(tiledLevel:TiledMap, tilesheetName:String):Int
 	{
 		var tileGID:Int = 1;
@@ -144,49 +146,41 @@ class PlayState extends FlxState
 			}
 		}
 		
-		//WARNING: if you put a tile in the wrong layer (i.e. tilesbg in tiles), it causes a crash (?!) probably array indices error, which is silly
+		//WARNING: if you put a tile in the wrong layer in Tiled (i.e. a tilesbg tile in "tiles" layer), it causes a crash (?!) probably array indices error, which is silly; it never used to know the difference
 		
 		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] );
 		
-		
+
 		mapbg = new FlxTilemap();
-		/*mapbg.widthInTiles = tiledMap.width;
-		mapbg.heightInTiles = tiledMap.height;
-		mapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png") );*/
-		mapbg.loadMapFromArray( tiledMap.getLayer("tilesbg"), tiledMap.width, tiledMap.height, "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
-		mapbg.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
-		
-		tiledMap.getLayer("tiles")
-		
-		
-		
 		map = new FlxTilemapExt();
-		/*map.widthInTiles = tiledMap.width;
-		map.heightInTiles = tiledMap.height;
-		map.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png") );*/
-	//	map.loadMapFromArray( tiledMap.getLayer("tiles").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
-		map.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+		detailmap = new FlxTilemap();
+		ooze = new FlxTilemap();
 		
-		var tempFL:Array<Int> = [34,46];
+		for ( layer in tiledMap.layers )
+		{
+			var tileLayer:TiledTileLayer = cast layer;
+
+			//mapbg.loadMapFromCSV(
+			if ( layer.name == "tilesbg" )
+				mapbg.loadMapFromCSV( tileLayer.csvData, "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+			else if ( layer.name == "tiles" )
+				map.loadMapFromCSV( tileLayer.csvData, "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+			else if ( layer.name == "tilesdetail" )
+				detailmap.loadMapFromCSV( tileLayer.csvData, "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+			else if ( layer.name == "ooze" )
+				ooze.loadMapFromCSV( tileLayer.csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
+		
+		}
+		
+
+	/*	var tempFL:Array<Int> = [34,46];
 		var tempFR:Array<Int> = [33,45];
 		var tempCL:Array<Int> = [36,48];
 		var tempCR:Array<Int> = [35,47];
-		map.setSlopes(tempFL, tempFR, tempCL, tempCR);
+		map.setSlopes(tempFL, tempFR, tempCL, tempCR);*/  //@TODO this was crashing 4.0.0 but i kind of hated it anyway and would like to pursue a non-arbitrary way of handling slopes
 		
-		detailmap = new FlxTilemap();
-		/*detailmap.widthInTiles = tiledMap.width;
-		detailmap.heightInTiles = tiledMap.height;
-		detailmap.loadMap( tiledMap.getLayer("tilesdetail").tileArray, "assets/images/tilesdetail.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tilesdetail.png") );*/
-		//detailmap.loadMapFromArray( tiledMap.getLayer("tilesdetail").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
-		detailmap.loadMapFromCSV( tiledMap.getLayer("tiles"), "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
 		
-		ooze = new FlxTilemap();
-		/*ooze.widthInTiles = tiledMap.width;
-		ooze.heightInTiles = tiledMap.height;
-		ooze.loadMap( tiledMap.getLayer("ooze").tileArray, "assets/images/tiles_ooze.png", 20, 20, FlxTilemap.OFF, getStartGid(tiledMap, "tiles_ooze.png") );*/
-		//ooze.loadMapFromArray( tiledMap.getLayer("ooze").map.tilesetArray, tiledMap.width, tiledMap.height, "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
-		ooze.loadMapFromCSV( tiledMap.getLayer("ooze"), "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
-		
+			
 		/*hud.minimap.widthInTiles = tiledMap.width;
 		hud.minimap.heightInTiles = tiledMap.height;
 		hud.minimap.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png" ));
@@ -200,7 +194,7 @@ class PlayState extends FlxState
 		map.tileScaleHack = 1.02;
 		detailmap.tileScaleHack = 1.02;
 		ooze.tileScaleHack = 1.02;
-		ooze.useScaleHack = true;*/ //this is updated in 4.0.0 maybe its fixed!!
+		ooze.useScaleHack = true;*/ //@TODO this is updated in 4.0.0 to just be a boolean maybe its fixed!!
 #end
 		
 		mapbg.camera = Reg.worldCam;
@@ -238,6 +232,8 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
+		
+		
 	}
 	
 	override public function onResize(Width:Int, Height:Int):Void
@@ -252,10 +248,6 @@ class PlayState extends FlxState
 		var W:Int = FlxG.stage.stageWidth;
 		var H:Int = FlxG.stage.stageHeight;
 		
-		//TODO: handle updated camera bounds...
-		
-		//TODO: make it handle deadzones ....
-		
 		var calcMaxZoom = camMaxZoom * ( W / FlxG.camera.width );
 		var calcMinZoom = camMinZoom * ( W / FlxG.camera.width );
 		
@@ -265,29 +257,30 @@ class PlayState extends FlxState
 		{
 			FlxG.camera.zoom = newzoom;
 			
-			var basezoom = W / FlxG.camera.width; //2
-			var offsetamt = basezoom - newzoom;
-			FlxG.camera.x = offsetamt * (FlxG.camera.width / basezoom) * basezoom / 2;
-			FlxG.camera.y = offsetamt * (FlxG.camera.height / basezoom) * basezoom / 2;
-
-			//@TODO make a proper bounds offset..... this isnt right.
-			var boundsOffsetX = FlxG.camera.x;
-			var boundsOffsetY = FlxG.camera.y;
-		//	FlxG.camera.setBounds( boundsOffsetX, boundsOffsetY, tiledMap.fullWidth - boundsOffsetX*2, tiledMap.fullHeight - boundsOffsetY*2);	
+			// Recalculate our camera bounds based on the new zoom level
+			if ( newzoom > 0 )
+			{
+				var offsetX = FlxG.camera.width - (FlxG.camera.width / newzoom);
+				var offsetY = FlxG.camera.height - (FlxG.camera.height / newzoom);
+				FlxG.camera.setScrollBoundsRect(0 - offsetX * 0.5, 0 - offsetY * 0.5, tiledMap.fullWidth + offsetX, tiledMap.fullHeight + offsetY);
+			}
 		}		
 	}
 	
 	private function loadEntities():Void
 	{
-		for ( group in tiledMap.objectGroups )
+		for (layer in tiledMap.layers)
 		{
-			for ( o in group.objects )
+			if (Type.enumEq(layer.type, TiledLayerType.TILE)) continue;
+			var objectLayer:TiledObjectLayer = cast layer;
+			
+			for (o in objectLayer.objects)
 			{
 				var x:Int = o.x;
 				var y:Int = o.y;
 				
 				if ( o.gid != -1 )
-					y -= group.map.getGidOwner(o.gid).tileHeight;
+					y -= layer.map.getGidOwner(o.gid).tileHeight;
 					
 				switch ( o.type.toLowerCase() )
 				{
@@ -316,7 +309,7 @@ class PlayState extends FlxState
 								signtext = StringTools.replace( o.xmlData.node.properties.node.property.att.value, "\\n", "\n" );
 						var sign = new Sign( x, y, signtext );
 						signs.add(sign);
-				}
+				}	
 			}
 		}
 	}

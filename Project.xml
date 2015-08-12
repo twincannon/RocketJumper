@@ -14,7 +14,7 @@
 	<!--------------------------------WINDOW SETTINGS------------------------------->
 	
 	<!--These window settings apply to all targets. NOTE: Vsync needs to be false for 120fps!-->
-	<window width="1366" height="768" fps="120" background="#000000" hardware="true" vsync="false" />
+	<window width="1280" height="720" fps="120" background="#000000" hardware="true" vsync="false" />
 	
 	<!--Web-specific-->
 	<window if="web" orientation="portrait"  />

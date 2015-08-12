@@ -158,12 +158,13 @@ class Player extends FlxSprite
 		if ( FlxG.keys.justPressed.R )
 			Resurrect();
 			
-		//oldMouseScreenXY = FlxPoint.get( FlxG.mouse.screenX, FlxG.mouse.screenY );
-		// Switch back to using mouse input by clicking - Was this, but broke: //if ( oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY )
-		if (!usingMouse && (FlxG.mouse.pressed || levelTimer <= 0))
+		// Gain control of mouse if it's not currently active
+		if ( !usingMouse && (oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY) )
 		{
 			FlxG.mouse.reset;
 			usingMouse = true;
+			oldMouseScreenXY.set( FlxG.mouse.screenX, FlxG.mouse.screenY );
+			
 			return;
 		}	
 		
@@ -206,7 +207,7 @@ class Player extends FlxSprite
 	private function HandleGamepadInput():Void
 	{
 		m_gamePad = FlxG.gamepads.lastActive;
-		//@todo FlxG.gamepads.getByID()???? maybe this would solve the problem
+		
 		if ( m_gamePad == null )
 			return;
 			
@@ -238,41 +239,46 @@ class Player extends FlxSprite
 		if ( m_gamePad.pressed.DPAD_RIGHT )
 			Walk( FlxObject.RIGHT );
 		
-		m_gamePad.deadZone = 0.0; //@TODO deadzone is probably fixed now in 4.0 ... so re-implement it
-		var xaxis = m_gamePad.analog.value.RIGHT_STICK_X;
-		var yaxis = m_gamePad.analog.value.RIGHT_STICK_Y;
+		m_gamePad.deadZone = 0.0; //Still not fixed in 4.0.0
+		var X = m_gamePad.analog.value.RIGHT_STICK_X;
+		var Y = m_gamePad.analog.value.RIGHT_STICK_Y;
 		
-		var vecAxis = new FlxVector( xaxis, yaxis );
+		var vecAxis = new FlxVector( X, Y );
 		var length = vecAxis.length;
 	
 		//deadzone
 		if ( length < 0.3 )
 		{
-			xaxis = m_OldGamepadAxis.x;
-			yaxis = m_OldGamepadAxis.y;
+			X = m_OldGamepadAxis.x;
+			Y = m_OldGamepadAxis.y;
 		}
+		else
+			usingMouse = false;
 		
-		var angle:Float = Math.atan2( yaxis, xaxis );
+		var angle:Float = Math.atan2( Y, X );
 		crosshairLocation.x = 75 * Math.cos(angle);
 		crosshairLocation.y = 75 * Math.sin(angle);
 		
-		//if ( xaxis != m_OldGamepadAxis.x || yaxis != m_OldGamepadAxis.y ) //there appears to be some slight jitter now making this get called when gamepad not in use
-		if(Math.abs(xaxis - m_OldGamepadAxis.x) > 0.1 || Math.abs(yaxis - m_OldGamepadAxis.y) > 0.1)
+		if(Math.abs(X - m_OldGamepadAxis.x) > 0.1 || Math.abs(Y - m_OldGamepadAxis.y) > 0.1)
 		{
 			usingMouse = false;
 			m_bAimAnimDirty = true;
 		}
-			
-		m_OldGamepadAxis = FlxPoint.get( xaxis, yaxis );
 		
-		if ( m_flRocketFireTimer <= 0.0 && xaxis != 0 && yaxis != 0 && xboxFirePressed )
+		// Store axis so we can still fire when the player has let go of the analog stick
+		var aimX = X != 0 ? X : m_OldGamepadAxis.x;
+		var aimY = Y != 0 ? Y : m_OldGamepadAxis.y;
+		
+		m_OldGamepadAxis = FlxPoint.get( X, Y );
+		
+		if ( m_flRocketFireTimer <= 0.0 && (aimX != 0 || aimY != 0) && xboxFirePressed )
 		{
-			xaxis *= 1000;
-			yaxis *= 1000;
-			xaxis += x + width * 0.5;
-			yaxis += y + height * 0.5;
-			var joyangle:Float = getMidpoint().angleBetween( FlxPoint.get(xaxis, yaxis) );
-			FireBullet( getMidpoint(), FlxPoint.get(xaxis, yaxis), joyangle );
+			aimX *= 1000;
+			aimY *= 1000;
+			aimX += x + width * 0.5;
+			aimY += y + height * 0.5;
+			var joyangle:Float = getMidpoint().angleBetween( FlxPoint.get(aimX, aimY) );
+			FireBullet( getMidpoint(), FlxPoint.get(aimX, aimY), joyangle );
 		}
 	}
 	
@@ -300,7 +306,7 @@ class Player extends FlxSprite
 			
 			if ( jumpJustPressed )
 			{
-				animation.play("jump", true, 0);
+				animation.play("jump", true);
 				firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 				velocity.y = -Reg.PLAYER_JUMP_VEL;
 				onGround = false;
@@ -333,7 +339,7 @@ class Player extends FlxSprite
 			acceleration.set( 0, 0 );
 			drag.y = 20;
 			velocity.set( 0, falling ? 18 : -18 );
-			animation.play("melt", false, 0);
+			animation.play("melt");
 			living = false;
 			return;
 		}
@@ -387,7 +393,7 @@ class Player extends FlxSprite
 				
 		if ( velocity.y == 0 && !onGround && !isTouching(FlxObject.CEILING) )
 		{
-			animation.play("land", true, 0);
+			animation.play("land", true);
 			landing = true;
 		}
 		
@@ -404,7 +410,7 @@ class Player extends FlxSprite
 			
 			if ( velocity.y != 0 )
 			{
-				animation.play("jump", true, 0);
+				animation.play("jump", true);
 				onGround = false;
 			}
 		}
@@ -425,7 +431,7 @@ class Player extends FlxSprite
 			{
 				if ( !running && velocity.x != 0 && animation.name != "runstop" && animation.name != "idle")
 				{
-					animation.play( "runstop", true, 0 );
+					animation.play( "runstop", true);
 				}
 				else if ( anim == "run" || animation.name != "runstop" || (animation.name == "runstop" && animation.finished) )
 				{
@@ -434,7 +440,7 @@ class Player extends FlxSprite
 			}
 			else if ( animation.name != "jump" ) //if we walk off of a ledge, play jump anim
 			{
-				animation.play("jump", true, 0);
+				animation.play("jump", true);
 			}
 		}
 
@@ -580,7 +586,7 @@ class Player extends FlxSprite
 		targetvec.normalize();
 		var dot = originvec.dotProduct(targetvec);
 		trace( (origin.x*target.x + origin.y*target.y) );*/
-		animation.play("fire", true, 0);
+		animation.play("fire", true);
 		firing = true;
 		
 		if ( target.x < getMidpoint().x )
@@ -590,7 +596,7 @@ class Player extends FlxSprite
 		
 		//update muzzleflash
 		m_sprFireEffect.revive();
-		m_sprFireEffect.animation.play("blast", true, 0);
+		m_sprFireEffect.animation.play("blast", true);
 		
 		var rocket = new Rocket( origin.x, origin.y );
 		rocket.angle = newAngle;

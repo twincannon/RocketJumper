@@ -1,7 +1,7 @@
 <LevelList>
 	<levels>
-		<level name="The Sewers">sewer.tmx</level>
 		<level name="Construction Yard">intro.tmx</level>
+		<level name="The Sewers">sewer.tmx</level>
 		<level name="Downtown">level01.tmx</level>
 	</levels>
 </LevelList>
