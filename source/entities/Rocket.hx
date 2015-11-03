@@ -61,7 +61,7 @@ class Rocket extends FlxSprite
 		if ( FlxG.collide(this, Reg.mapGroup, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
 		{
 			super.destroy();
-			this.destroy();				
+			this.destroy();
 		}
 	}
 	
@@ -83,6 +83,10 @@ class Rocket extends FlxSprite
 
 			FlxG.collide( Reg.player, Reg.mapGroup ); //this is ghetto, but we need to make sure the player isn't currently inside the map or the velocity change wont work... 
 												//@TODO basically we need to make rockets legit objects and handle when they're updated ourselves to properly solve this. right now they update at a point when the player/map collision in playstate isnt done or something
+			
+			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
+			if (Reg.player.onGround)
+				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
 				
 			//functionize all this nonsense.....
 			var rocketVec:FlxVector = new FlxVector( getMidpoint().x, getMidpoint().y );
@@ -95,7 +99,7 @@ class Rocket extends FlxSprite
 			
 			var distance:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
-			//normalize distance a bit here. this is to make "perfect rocketjumps" easier and less frame-perfect
+			//normalize distance a bit here. this is to make "perfect rocketjumps" easier and less frame-perfect //@TODO: consider removing this or something? with auto-rj's now
 			if ( distance > 0.5 )
 			{
 				distance = 1.0;
@@ -121,11 +125,10 @@ class Rocket extends FlxSprite
 		//TODO make this a flxgroup for all explodable stuff and iterate through it instead of only checking for player
 		
 		//@TODO modify this camera shake amount by how far away player is
-		//FIXME: small camera shake overrides big camera shake...... need a timer or something i guess
 		if ( doBigExplosion )
 			FlxG.camera.shake(0.015, 0.15);
 		else
-			FlxG.camera.shake(0.010, 0.10);
+			FlxG.camera.shake(0.003, 0.10, false);
 			
 		var expSpr:Explosion = new Explosion( getMidpoint().x, getMidpoint().y );
 		FlxG.state.add(expSpr);

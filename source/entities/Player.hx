@@ -170,13 +170,7 @@ class Player extends FlxSprite
 		
 		if ( !living || levelBeat )
 			return;	
-		
-		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
-		{
-			var mouseAngle:Float = getMidpoint().angleBetween( FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
-			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
-		}
-		
+			
 		acceleration.x = 0;
 		
 		if (FlxG.keys.anyPressed([LEFT, A]))
@@ -188,7 +182,14 @@ class Player extends FlxSprite
 		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
 		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
 		
-		// Velocity limiter (there's also maxVelocity.x I could use?)
+		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
+		{
+			var mouseAngle:Float = getMidpoint().angleBetween( FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
+			
+			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
+		}
+		
+		// Velocity limiter (there's also maxVelocity.x I could use?)  // does this do anything..?
 		if ( onGround )
 		{
 			if ( velocity.x > Reg.PLAYER_MAX_SPEED )
@@ -518,9 +519,11 @@ class Player extends FlxSprite
 		if ( dir == FlxObject.LEFT )
 		{
 			if ( !onGround && velocity.x > 0 )
-				acceleration.x = -1500;
+				acceleration.x = -1500; // To make turning around in the air easier
 			else if ( velocity.x > -Reg.PLAYER_MAX_SPEED )
-				acceleration.x = -1000;
+				acceleration.x = -1000; // Walking on ground
+			else if (!onGround) // Air accel
+				acceleration.x = -100;
 		}
 		
 		if ( dir == FlxObject.RIGHT )
@@ -529,6 +532,8 @@ class Player extends FlxSprite
 				acceleration.x = 1500;
 			else if ( velocity.x < Reg.PLAYER_MAX_SPEED )
 				acceleration.x = 1000;
+			else if (!onGround)
+				acceleration.x = 100;
 		}
 	/*	
 		if ( dir == FlxObject.LEFT && velocity.x > -Reg.PLAYER_MAX_SPEED )
@@ -579,13 +584,6 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function FireBullet( origin:FlxPoint, target:FlxPoint, newAngle:Float ):Void
 	{
-		//@TODO dotproduct this shizzle up and make it so you jump automatically if you're aiming straight down.
-	/*	var originvec = new FlxVector(origin.x, origin.y);
-		var targetvec = new FlxVector(target.x, target.y);
-		originvec.normalize();
-		targetvec.normalize();
-		var dot = originvec.dotProduct(targetvec);
-		trace( (origin.x*target.x + origin.y*target.y) );*/
 		animation.play("fire", true);
 		firing = true;
 		

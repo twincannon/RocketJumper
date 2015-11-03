@@ -27,7 +27,7 @@ class HUD extends FlxGroup
 	
 	public var hudcamera:FlxCamera;
 	
-	private var x:Float = 10000;
+	private var x:Float = 10000; // HUD assets are off in space so they're not in the game world (they just render via a camera)
 	private var y:Float = 0;
 	
 	private var signTextWidth = 600;
@@ -122,7 +122,7 @@ class HUD extends FlxGroup
 		minimap.allowCollisions = FlxObject.NONE;
 		add(minimap);*/
 		
-		updateSizes(x, y, W, H);
+		updateSizes(0, 0, W, H);
 	}
 
 	private function setBorder( Text:FlxText, Size:Int, Align:String, Color:Int = FlxColor.WHITE ):Void
@@ -137,8 +137,6 @@ class HUD extends FlxGroup
 	
 	public function updateSizes( X:Float, Y: Float, W:Int, H:Int ):Void
 	{
-		hudcamera.setSize( W, H );
-
 		centerPoint.setPosition(x + W / 2, y + H / 2);
 		hudcamera.follow(centerPoint);
 		
@@ -151,8 +149,8 @@ class HUD extends FlxGroup
 		/*
 		if ( minimapbg.cachedGraphics != null )
 		{
-		var fuck:FlxSprite = new FlxSprite( x, y, minimapbg.cachedGraphics.bitmap );
-		add(fuck);
+		var test:FlxSprite = new FlxSprite( x, y, minimapbg.cachedGraphics.bitmap );
+		add(test);
 		}
 		*/
 		

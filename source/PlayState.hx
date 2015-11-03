@@ -3,6 +3,7 @@ package;
 import entities.Goal;
 import entities.Rocket;
 import entities.Sign;
+import entities.Coin;
 import flash.events.Event;
 import flixel.addons.editors.tiled.TiledLayer;
 import flixel.FlxCamera;
@@ -28,6 +29,7 @@ import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
+import flixel.graphics.frames.FlxTileFrames;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -43,6 +45,7 @@ class PlayState extends FlxState
 	public var backgroundTiles:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
 	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
+	private var coins:FlxTypedGroup<Coin> = new FlxTypedGroup<Coin>();
 	private var goal:Goal;
 	private var map:FlxTilemapExt;
 	private var ooze:FlxTilemap;
@@ -76,9 +79,9 @@ class PlayState extends FlxState
 		FlxG.cameras.add(Reg.worldCam);
 		FlxG.camera = Reg.worldCam;
 		
-		hud = new HUD( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
-		
 		setupLevel();
+		
+		hud = new HUD( FlxG.width, FlxG.height );
 		
 		//create and add entities
 		Reg.player = new Player();
@@ -88,6 +91,7 @@ class PlayState extends FlxState
 		add(goal);
 		add(checkpoints);
 		add(signs);
+		add(coins);
 		add(Reg.player);
 		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
 		
@@ -103,7 +107,7 @@ class PlayState extends FlxState
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 		FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
-
+		
 		add(hud);
 		
 		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
@@ -159,17 +163,27 @@ class PlayState extends FlxState
 		for ( layer in tiledMap.layers )
 		{
 			var tileLayer:TiledTileLayer = cast layer;
-
-			//mapbg.loadMapFromCSV(
+			
 			if ( layer.name == "tilesbg" )
-				mapbg.loadMapFromCSV( tileLayer.csvData, "assets/images/tilesbg.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+			{
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+			}
 			else if ( layer.name == "tiles" )
-				map.loadMapFromCSV( tileLayer.csvData, "assets/images/tiles.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+			{
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+			}
 			else if ( layer.name == "tilesdetail" )
-				detailmap.loadMapFromCSV( tileLayer.csvData, "assets/images/tilesdetail.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+			{
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+			}
 			else if ( layer.name == "ooze" )
-				ooze.loadMapFromCSV( tileLayer.csvData, "assets/images/tiles_ooze.png", 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
-		
+			{
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
+			}
 		}
 		
 		var tempFL:Array<Int> = [34,46];
@@ -178,22 +192,12 @@ class PlayState extends FlxState
 		var tempCR:Array<Int> = [35,47];
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
 		
-			
 		/*hud.minimap.widthInTiles = tiledMap.width;
 		hud.minimap.heightInTiles = tiledMap.height;
 		hud.minimap.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png" ));
 		hud.minimapbg.widthInTiles = tiledMap.width;
 		hud.minimapbg.heightInTiles = tiledMap.height;
 		hud.minimapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png" ));*/
-		
-#if !flash
-		//damn -- this doesn't seem to solve the vertical tearing issue -- it's actually neighboring tiles bleeding into other tiles (i.e. the dirt block bleeding into the black block)
-		/*mapbg.tileScaleHack = 1.02;
-		map.tileScaleHack = 1.02;
-		detailmap.tileScaleHack = 1.02;
-		ooze.tileScaleHack = 1.02;
-		ooze.useScaleHack = true;*/ //@TODO this is updated in 4.0.0 to just be a boolean maybe its fixed!!
-#end
 		
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
@@ -230,26 +234,16 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
-		
-		
 	}
 	
 	override public function onResize(Width:Int, Height:Int):Void
 	{
-		//the hud camera doesn't resize correctly here but I've tried absolutely everything.
-		hud.updateSizes( 0, 0, Width, Height );		
 		handleCameraZoom( Width / FlxG.camera.width );
 	}
 	
 	private function handleCameraZoom( targetZoom:Float ):Void
 	{
-		var W:Int = FlxG.stage.stageWidth;
-		var H:Int = FlxG.stage.stageHeight;
-		
-		var calcMaxZoom = camMaxZoom * ( W / FlxG.camera.width );
-		var calcMinZoom = camMinZoom * ( W / FlxG.camera.width );
-		
-		var newzoom = Reg.Clamp( targetZoom, calcMinZoom, calcMaxZoom );
+		var newzoom = Reg.Clamp( targetZoom, camMinZoom, camMaxZoom );
 		
 		if ( FlxG.camera.zoom != newzoom )
 		{
@@ -307,6 +301,9 @@ class PlayState extends FlxState
 								signtext = StringTools.replace( o.xmlData.node.properties.node.property.att.value, "\\n", "\n" );
 						var sign = new Sign( x, y, signtext );
 						signs.add(sign);
+					case "coin":
+						var coin = new Coin( x, y );
+						coins.add(coin);
 				}	
 			}
 		}
