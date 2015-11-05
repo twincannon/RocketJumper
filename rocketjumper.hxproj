@@ -6,8 +6,8 @@
     <movie input="" />
     <movie path="project.xml" />
     <movie fps="120" />
-    <movie width="1366" />
-    <movie height="768" />
+    <movie width="1280" />
+    <movie height="720" />
     <movie version="0" />
     <movie minorVersion="0" />
     <movie platform="Lime" />

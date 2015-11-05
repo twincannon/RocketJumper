@@ -58,7 +58,7 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += elapsed;
 		
-		if ( FlxG.collide(this, Reg.mapGroup, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
+		if ( FlxG.collide(Reg.mapGroup, this, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
 		{
 			super.destroy();
 			this.destroy();
@@ -67,6 +67,9 @@ class Rocket extends FlxSprite
 	
 	private function explode(R:FlxObject, M:FlxObject):Void
 	{
+	//	if (!FlxG.pixelPerfectOverlap(R, M))
+	//		return;
+			
 		//explode, imparting velocity upon all movable objects in radius
 		//for now just try and move player
 		
@@ -110,7 +113,7 @@ class Rocket extends FlxSprite
 			var amplitudeX:Float = ROCKET_AMP_X * distance * explosionAmpMod;
 			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
 			
-			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping), with a little extra
+			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping), with a little extra. Be careful not to allow infinite wall-climbing!
 			var bonusvel = Math.max(Reg.player.velocity.y, 0) + 15;
 			
 			if ( Reg.player.velocity.y < -(Reg.PLAYER_JUMP_VEL - 80) && Reg.player.velocity.y >= -(Reg.PLAYER_JUMP_VEL) )
