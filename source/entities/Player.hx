@@ -42,6 +42,7 @@ class Player extends FlxSprite
 	public var gamepadTryNextLevel:Bool;
 	public var innerHitbox:FlxObject;
 	private static inline var INNER_HITBOX_OFFSET:Int = 2;
+	public var onPlatform:Bool = false;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -145,7 +146,7 @@ class Player extends FlxSprite
 		if ( levelTimer > 0 && !levelBeat )
 			levelTimer += elapsed;
 			
-		super.update(elapsed);
+		super.update(elapsed);		
 		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
 	}
@@ -182,6 +183,15 @@ class Player extends FlxSprite
 		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
 		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
 		
+		// If we're on a platform and hold down+jump, drop through it
+		if (FlxG.keys.anyPressed([DOWN, S]) && FlxG.keys.justPressed.SPACE && onPlatform) //@TODO: probably make W not jump anymore, since space now has unique functionality.. also add this to gamepad input
+		{
+			y += 6;
+			m_bJumpHeldThisFrame = false;
+			m_bJumpPressedThisFrame = false;
+			onPlatform = false;
+		}
+		
 		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
 		{
 			var mouseAngle:Float = getMidpoint().angleBetween( FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
@@ -196,6 +206,10 @@ class Player extends FlxSprite
 				velocity.x = Reg.PLAYER_MAX_SPEED;
 			else if (velocity.x < -Reg.PLAYER_MAX_SPEED)
 				velocity.x = -Reg.PLAYER_MAX_SPEED;
+		}
+		else
+		{
+			onPlatform = false;
 		}
 
 		// Less drag when airborn
@@ -301,7 +315,7 @@ class Player extends FlxSprite
 		
 		//if ( isTouching(FlxObject.FLOOR) )
 		
-		if ( velocity.y == 0 && !isTouching(FlxObject.CEILING) )//!(last.y > y) ) //account for head ceiling bonks
+		if ( velocity.y == 0 && !isTouching(FlxObject.CEILING) ) //account for head ceiling bonks
 		{
 			onGround = true;
 			

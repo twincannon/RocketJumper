@@ -29,6 +29,7 @@ class Reg
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;
+	public static var platforms:FlxGroup;
 	public static var rockets:FlxGroup = new FlxGroup();
 	public static var worldCam:FlxCamera;
 	

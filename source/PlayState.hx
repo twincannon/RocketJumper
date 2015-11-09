@@ -4,6 +4,7 @@ import entities.Goal;
 import entities.Rocket;
 import entities.Sign;
 import entities.Coin;
+import entities.Platform;
 import flash.events.Event;
 import flixel.addons.editors.tiled.TiledLayer;
 import flixel.FlxCamera;
@@ -87,6 +88,7 @@ class PlayState extends FlxState
 		Reg.player = new Player();
 		goal = new Goal();
 		
+		Reg.platforms = new FlxGroup();
 		loadEntities();
 		add(goal);
 		add(checkpoints);
@@ -230,9 +232,9 @@ class PlayState extends FlxState
 		add(backgroundTiles);
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
+		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );
 		Reg.mapGroup.add( detailmap );
-		Reg.mapGroup.add( ooze );
 		add( Reg.mapGroup );
 	}
 	
@@ -304,6 +306,10 @@ class PlayState extends FlxState
 					case "coin":
 						var coin = new Coin( x, y );
 						coins.add(coin);
+					case "platform":
+						var platform = new Platform( x, y, o.width );
+						Reg.platforms.add(platform);
+						Reg.mapGroup.add(platform); // for rocket collisions
 				}	
 			}
 		}
@@ -357,6 +363,8 @@ class PlayState extends FlxState
 				handleCameraZoom(FlxG.camera.zoom - 0.02);
 			else if(Reg.player.velocity.y == 0)
 				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );
+				
+			//	trace(Reg.player.velocity.y);
 		}
 			
 #if !flash
@@ -384,7 +392,7 @@ class PlayState extends FlxState
 		Reg.player.crosshairLine.scale.y = Reg.RemapValClamped( distance, 150, 20, 1.0, 0.0 );
 		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
 		
-		super.update(elapsed);
+		super.update(elapsed); // Needs to be called before player collides with map for correct velocity reporrting (bleh)
 		
 		if ( Reg.gameTimerStarted )
 			Reg.gameTimer += FlxG.elapsed;
@@ -397,6 +405,9 @@ class PlayState extends FlxState
 				hud.deadText.kill();
 				
 			FlxG.collide(map, Reg.player);
+			
+			if ( FlxG.collide(Reg.platforms, Reg.player) )
+				Reg.player.onPlatform = true;
 			
 			//Don't let player leave the map (horizontally)
 			if ( Reg.player.x < map.x )
