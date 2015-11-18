@@ -45,9 +45,12 @@ class Reg
 	public static var leveltitles:Array<String> = new Array<String>();
 	public static var levelsloaded:Bool = false;
 	public static var gameTimerStarted:Bool = false;
-	public static var gameTimer:Float = 0;
+	public static var levelTimerStarted:Bool = false;
+	public static var gameTimer:Float = 0; // total timer for entire game playthrough
+	public static var levelTimer:Float = 0; // time for current level @TODO: make an array so we can show all level times at the end in a list
 	
-	public static var playerReset:Bool = false;
+	public static var camZoomWhenLevelBeat:Float = 0;
+	public static var camLevelBeatTimeElapsed:Float = 0;
 	
 #if (native || windows)
 	public inline static var shouldPixelPerfectRender:Bool = false;

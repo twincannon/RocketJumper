@@ -10,6 +10,7 @@ import flixel.math.FlxPoint;
 import flixel.math.FlxAngle;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxVector;
+import flixel.FlxCamera.FlxCameraFollowStyle;
 
 class Player extends FlxSprite
 {
@@ -33,7 +34,6 @@ class Player extends FlxSprite
 	public var checkPointNum:Int = 0;
 	public var spawnPoint:FlxPoint;
 	public var originalSpawnPoint:FlxPoint;
-	public var levelTimer:Float = 0;
 	public var levelBeat:Bool = false;
 	public var crosshairLocation:FlxPoint = FlxPoint.get(0, 0);
 	public var usingMouse = true;
@@ -120,6 +120,7 @@ class Player extends FlxSprite
 	{
 		if ( !levelBeat )
 		{
+			Reg.levelTimerStarted = false;
 			checkPointNum = 0;
 			levelBeat = true;
 			velocity.x = 0;
@@ -141,11 +142,6 @@ class Player extends FlxSprite
 		
 		m_flRocketFireTimer -= elapsed;
 		
-		//@TODO .. so.. uh.. there's a pretty serious bug here where fraps was causing the game
-		//to run at half speed, and the timer was running at half speed too -- ok doesn't happen with vsync off at least.. <<-- this is because of fixed timestep probably.
-		if ( levelTimer > 0 && !levelBeat )
-			levelTimer += elapsed;
-			
 		super.update(elapsed);		
 		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
@@ -364,7 +360,9 @@ class Player extends FlxSprite
 	{
 		Reg.destroyRockets();
 		
-		FlxG.camera.follow(this);
+		Reg.worldCam.follow(this);
+		Reg.worldCam.zoom = 2;
+
 		melting = false;
 		living = true;
 		
@@ -384,11 +382,12 @@ class Player extends FlxSprite
 			levelBeat = false;
 			x = originalSpawnPoint.x;
 			y = originalSpawnPoint.y;
-			levelTimer = 0;
 			
-			Reg.playerReset = true;
+			Reg.levelTimerStarted = false;
+			Reg.levelTimer = 0;
 		}
 	}
+	
 	// --------------------------------------------------------------------------------------
 	// Animation choosing logic based on current movement states
 	// --------------------------------------------------------------------------------------
@@ -558,8 +557,7 @@ class Player extends FlxSprite
 			acceleration.x = drag.x;
 			//velocity.x += Reg.PLAYER_ACCEL;*/
 			
-		if ( levelTimer == 0 )
-			levelTimer += FlxG.elapsed;
+		Reg.levelTimerStarted = true;
 			
 		if ( !Reg.gameTimerStarted )
 			Reg.gameTimerStarted = true;
@@ -617,8 +615,7 @@ class Player extends FlxSprite
 		
 		m_flRocketFireTimer = Reg.ROCKET_COOLDOWN;
 		
-		if ( levelTimer == 0 )
-			levelTimer += FlxG.elapsed;
+		Reg.levelTimerStarted = true;
 	}
 	
 	public function touchCheckpoint(P:FlxObject, C:Checkpoint):Void

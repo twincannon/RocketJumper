@@ -58,7 +58,9 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += elapsed;
 		
-		if ( FlxG.collide(Reg.mapGroup, this, explode ) || m_flTimeAlive >= ROCKET_LIFETIME )
+		FlxG.collide( Reg.mapGroup, this, explode );
+		
+		if ( m_flTimeAlive >= ROCKET_LIFETIME )
 		{
 			super.destroy();
 			this.destroy();
@@ -67,11 +69,8 @@ class Rocket extends FlxSprite
 	
 	private function explode(R:FlxObject, M:FlxObject):Void
 	{
-	//	if (!FlxG.pixelPerfectOverlap(R, M))
-	//		return;
-			
-		//explode, imparting velocity upon all movable objects in radius
-		//for now just try and move player
+		if (this.touching <= 0)
+			return;
 		
 		var doBigExplosion = false;
 		if ( m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
@@ -138,6 +137,10 @@ class Rocket extends FlxSprite
 		
 		if( doBigExplosion )
 			expSpr.scale = FlxPoint.get(2, 2);
+			
+			
+		super.destroy();
+		this.destroy();
 	}
 	
 	public static inline function distance(p0:FlxPoint, p1:FlxPoint) : Float

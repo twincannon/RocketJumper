@@ -31,6 +31,7 @@ import flixel.util.FlxColor;
 import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
 import flixel.graphics.frames.FlxTileFrames;
+import openfl.geom.ColorTransform;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -56,12 +57,13 @@ class PlayState extends FlxState
 	private var hud:HUD;
 	private var tiledMap:TiledMap;
 	
+	private var initialCamPanning:Bool = true;
+	private var initialCamTarget:FlxObject;
+	
 	private static inline var camMinZoom:Float = 1.0;
 	private static inline var camMaxZoom:Float = 4.0;
 	private var camVelZoomOffset:Float = 0.0;
 	private static inline var CAM_VEL_ZOOM_OFFSET_MAX:Float = 1.0;
-	private var camZoomWhenLevelBeat:Float = 0;
-	private var camLevelBeatTimeElapsed:Float = 0;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -112,10 +114,9 @@ class PlayState extends FlxState
 		
 		add(hud);
 		
-		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
-		
 		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
-		handleCameraZoom(2);
+		handleCameraZoom(1);
+		Reg.worldCam.flash(FlxColor.BLACK, 0.75);
 	}
 	
 	/* Helper function to get the starting ID a tileset in a given TiledMap */
@@ -168,31 +169,35 @@ class PlayState extends FlxState
 			
 			if ( layer.name == "tilesbg" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tilesbg.png"
 			}
 			else if ( layer.name == "tiles" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tiles.png"
 			}
 			else if ( layer.name == "tilesdetail" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tilesdetail.png"
 			}
 			else if ( layer.name == "ooze" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tiles_ooze.png"
 			}
 		}
 		
-		var tempFL:Array<Int> = [34,46];
-		var tempFR:Array<Int> = [33,45];
-		var tempCL:Array<Int> = [36,48];
-		var tempCR:Array<Int> = [35,47];
+		var tempFL:Array<Int> = [3];//[34,46];
+		var tempFR:Array<Int> = [2];//[33,45];
+		var tempCL:Array<Int> = [5];//[36,48];
+		var tempCR:Array<Int> = [4];//[35,47];
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
+		
+
+		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
+		
 		
 		/*hud.minimap.widthInTiles = tiledMap.width;
 		hud.minimap.heightInTiles = tiledMap.height;
@@ -219,7 +224,7 @@ class PlayState extends FlxState
 			for (j in -1...4)
 			{
 				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
-				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.2;
+				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.9;
 				bgtile.width = 0;
 				bgtile.height = 0;
 				bgtile.allowCollisions = FlxObject.NONE;
@@ -236,6 +241,9 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( map );
 		Reg.mapGroup.add( detailmap );
 		add( Reg.mapGroup );
+		
+		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
+		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
 	}
 	
 	override public function onResize(Width:Int, Height:Int):Void
@@ -320,19 +328,8 @@ class PlayState extends FlxState
 	 */
 	override public function update(elapsed:Float):Void
 	{
-		// if player resurrected() is called while level is beat, we need to reset zoom stuff
-		if ( Reg.playerReset )
-		{
-			camZoomWhenLevelBeat = 0;
-			camLevelBeatTimeElapsed = 0;
-			handleCameraZoom( FlxG.stage.stageWidth / FlxG.camera.width );
-			
-			Reg.playerReset = false;
-		}
-		
-		//@TODO ok flxg.mouse.wheel doesn't work in cpp target anymore? "FLX_MOUSE_ADVANCED" ?
-		// check for camera zoom
-		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat )
+		// Mousewheel camera zoom
+		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat && !initialCamPanning )
 		{
 			handleCameraZoom( FlxG.camera.zoom + (FlxG.mouse.wheel * 0.1) );
 		}
@@ -340,31 +337,22 @@ class PlayState extends FlxState
 		// if we beat the level, do a zoom in effect
 		if ( Reg.player.levelBeat )
 		{
-			if ( camZoomWhenLevelBeat == 0 )
-				camZoomWhenLevelBeat = FlxG.camera.zoom;
+			var newzoom = Reg.Lerp( FlxG.camera.zoom, camMaxZoom, 0.025 );
 			
-			var calcMaxZoom = camMaxZoom * ( FlxG.stage.stageWidth / FlxG.camera.width );
-			var newzoom = Reg.Lerp( camZoomWhenLevelBeat, calcMaxZoom, camLevelBeatTimeElapsed / 1.5 );
-			
-			if ( newzoom < calcMaxZoom - 1.0 )
+			if ( newzoom < camMaxZoom )
 			{
 				handleCameraZoom( newzoom );
-				camLevelBeatTimeElapsed += elapsed;
 			}
 		}
 		else
 		{
-		//	var oldzoom = FlxG.camera.zoom;
-		//	var newzoom = Reg.Lerp( oldzoom, CAM_VEL_ZOOM_OFFSET_MAX, 5 );
-			
-			if(Reg.player.velocity.y > 260) //falling
+			// Vertical velocity-based automatic zooming (makes people sick, disabled)
+/*			if(Reg.player.velocity.y > 260) //falling
 				handleCameraZoom(FlxG.camera.zoom + 0.0125); //@TODO: these don't seem to be fps independant. Actually I bet a lot of this project isn't.. how do I get deltatime? -- "FlxG.elapsed"...but only relevant with non-fixed timestep!!
 			else if(Reg.player.velocity.y < -260) //rising
 				handleCameraZoom(FlxG.camera.zoom - 0.02);
 			else if(Reg.player.velocity.y == 0)
-				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );
-				
-			//	trace(Reg.player.velocity.y);
+				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );*/
 		}
 			
 #if !flash
@@ -392,12 +380,35 @@ class PlayState extends FlxState
 		Reg.player.crosshairLine.scale.y = Reg.RemapValClamped( distance, 150, 20, 1.0, 0.0 );
 		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
 		
-		super.update(elapsed); // Needs to be called before player collides with map for correct velocity reporrting (bleh)
+		super.update(elapsed); // Needs to be called before player collides with map for correct velocity reporting (bleh)
+		
+		if ( Reg.levelTimerStarted )
+		{
+			Reg.gameTimerStarted = true;
+			
+			if (initialCamPanning)
+			{
+				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) ); 									//@TODO not framerate independant ...
+				Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 0.1);
+				
+				if (Reg.worldCam.zoom - 2 > -0.01)
+				{
+					handleCameraZoom(2);
+					Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 5);
+					initialCamPanning = false;
+				}
+			}
+			
+			Reg.levelTimer += FlxG.elapsed;
+		}
 		
 		if ( Reg.gameTimerStarted )
+		{
 			Reg.gameTimer += FlxG.elapsed;
+		}
 		
-		hud.timerText.text = "Time: " + Std.int(Reg.player.levelTimer*1000) / 1000;
+		hud.levelTimerText.text = "Level time: " + Std.int(Reg.levelTimer * 1000) * 0.001;
+		hud.gameTimerText.text = "Total time: " + Std.int(Reg.gameTimer * 1000) * 0.001;
 		
 		if ( Reg.player.living )
 		{

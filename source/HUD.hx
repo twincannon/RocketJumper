@@ -15,7 +15,8 @@ import flixel.FlxCamera;
 class HUD extends FlxGroup
 {
 	public var deadText:FlxText;
-	public var timerText:FlxText;
+	public var levelTimerText:FlxText;
+	public var gameTimerText:FlxText;
 	public var levelNameText:FlxText;
 	public var levelFinishedText:FlxText;
 	public var signText:FlxText;
@@ -94,9 +95,13 @@ class HUD extends FlxGroup
 		add(deadText);
 		deadText.kill();
 		
-		timerText = new FlxText( 0, 0, timerTextWidth, "Level timer" );
-		setBorder( timerText, 24, "left" );
-		add(timerText);
+		levelTimerText = new FlxText( 0, 0, timerTextWidth, "Level timer" );
+		setBorder( levelTimerText, 24, "left" );
+		add(levelTimerText);
+		
+		gameTimerText = new FlxText( 0, 0, timerTextWidth, "Game timer" );
+		setBorder( gameTimerText, 24, "left" );
+		add(gameTimerText);
 		
 		levelFinishedText = new FlxText( 0, 0, levelFinishedTextWidth, "Level finished text" );
 		setBorder( levelFinishedText, 24, "center" );
@@ -163,8 +168,11 @@ class HUD extends FlxGroup
 		}
 		
 		signTextBox.setPosition( x + W / 2 - signTextWidth / 2, y + signTextY );
-		deadText.setPosition( x + W / 2 - deadTextWidth/2, y + deadTextY );
-		timerText.setPosition( x + cornerTextBuffer, y + cornerTextBuffer );
+		deadText.setPosition( x + W / 2 - deadTextWidth / 2, y + deadTextY );
+		
+		levelTimerText.setPosition( x + cornerTextBuffer, y + cornerTextBuffer );
+		gameTimerText.setPosition( x + cornerTextBuffer, y + cornerTextBuffer + 30 );
+		
 		levelFinishedText.setPosition( x + W / 2 - levelFinishedTextWidth / 2, y + levelFinishedTextY );
 		levelNameText.setPosition( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer );
 		signText.setPosition( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY + signTextBuffer );
