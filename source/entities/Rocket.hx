@@ -15,8 +15,8 @@ class Rocket extends FlxSprite
 {
 	private static inline var ROCKET_RADIUS:Float = 60;
 	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.5;
-	private static inline var ROCKET_AMP_X:Int = 200;
-	private static inline var ROCKET_AMP_Y:Int = 200;
+	private static inline var ROCKET_AMP_X:Int = 220;
+	private static inline var ROCKET_AMP_Y:Int = 220;
 	private static inline var ROCKET_LIFETIME:Float = 10.0;
 	private var m_flTimeAlive:Float = 0;
 
@@ -113,9 +113,9 @@ class Rocket extends FlxSprite
 			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
 			
 			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping), with a little extra. Be careful not to allow infinite wall-climbing!
-			var bonusvel = Math.max(Reg.player.velocity.y, 0) + 15;
+			var bonusvel = Math.max(Reg.player.velocity.y, 0);// + 15;
 			
-			if ( Reg.player.velocity.y < -(Reg.PLAYER_JUMP_VEL - 80) && Reg.player.velocity.y >= -(Reg.PLAYER_JUMP_VEL) )
+			if ( Reg.player.onGround )
 			{
 				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
 			}
@@ -137,7 +137,6 @@ class Rocket extends FlxSprite
 		
 		if( doBigExplosion )
 			expSpr.scale = FlxPoint.get(2, 2);
-			
 			
 		super.destroy();
 		this.destroy();

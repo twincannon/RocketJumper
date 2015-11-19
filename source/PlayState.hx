@@ -287,10 +287,11 @@ class PlayState extends FlxState
 				switch ( o.type.toLowerCase() )
 				{
 					case "player":
+						var startY:Float = o.y + o.height - Reg.player.height; // Put the player's feet at the bottom of the spawn object
 						Reg.player.x = x;
-						Reg.player.y = y;
-						Reg.player.originalSpawnPoint = FlxPoint.get( x, y );
-						Reg.player.spawnPoint = FlxPoint.get( x, y );
+						Reg.player.y = startY;
+						Reg.player.originalSpawnPoint = FlxPoint.get( x, startY );
+						Reg.player.spawnPoint = FlxPoint.get( x, startY );
 					case "goal":
 						goal.x = x;
 						goal.y = y;
@@ -501,6 +502,7 @@ class PlayState extends FlxState
 			{
 				Reg.levelnum = 0;
 				Reg.gameTimer = 0;
+				Reg.levelTimer = 0;
 			}
 				
 			Reg.player.levelBeat = false;

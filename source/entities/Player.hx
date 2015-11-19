@@ -43,6 +43,7 @@ class Player extends FlxSprite
 	public var innerHitbox:FlxObject;
 	private static inline var INNER_HITBOX_OFFSET:Int = 2;
 	public var onPlatform:Bool = false;
+	private var highestJumpY:Float = 0;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -133,6 +134,8 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	override public function update(elapsed:Float):Void
 	{
+		var wasOnGround:Bool = onGround;
+		
 		HandleDeath();
 		HandleAnimation();
 		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
@@ -145,6 +148,16 @@ class Player extends FlxSprite
 		super.update(elapsed);		
 		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
+		
+		
+		if (!onGround)
+			highestJumpY = Math.min(y, highestJumpY);
+			
+		if (onGround && !wasOnGround)
+		{
+			trace("jump height: " + Std.string(y - highestJumpY));
+			highestJumpY = y;
+		}
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -375,6 +388,8 @@ class Player extends FlxSprite
 		animation.play("idle");
 		x = spawnPoint.x;
 		y = spawnPoint.y;
+		
+		highestJumpY = y;
 		
 		if ( checkPointNum == 0 || levelBeat )
 		{
