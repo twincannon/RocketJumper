@@ -26,6 +26,7 @@ class Reg
 	public inline static var PLAYER_JUMPHOLD_VEL_MOD = 0.02; //add "min(player.velocity.x, player_max_speed) * this" to jumphold vel
 	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
 	public inline static var GRAVITY = 800;
+	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;

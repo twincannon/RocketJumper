@@ -18,14 +18,13 @@ class Player extends FlxSprite
 	private var landing:Bool = false;
 	private var firing:Bool = false;
 	private var running = false;
-	private var m_bJumpHeldNoRelease:Bool = false; //for mario style variable jump height, currently commented out
 	private inline static var PLAYER_FRAMERATE = 15;
 	private var m_sprFireEffect:FlxSprite;
 	private var m_flAimAnimTime:Float = 0;
 	private var m_flOldMouseAngle:Float = 0;
 	private var m_gamePad:FlxGamepad;
 	private var m_bJumpHeldThisFrame:Bool = false;
-	private var m_bJumpPressedThisFrame:Bool = false;
+	public var m_bJumpPressedThisFrame:Bool = false;
 	private var m_OldGamepadAxis:FlxPoint = FlxPoint.get(0, 0);
 	private var m_bAimAnimDirty:Bool = false;
 	private var m_flRocketFireTimer:Float = 0;
@@ -39,11 +38,11 @@ class Player extends FlxSprite
 	public var usingMouse = true;
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
 	public var crosshairLine:FlxSprite;
-	public var gamepadTryNextLevel:Bool;
 	public var innerHitbox:FlxObject;
 	private static inline var INNER_HITBOX_OFFSET:Int = 2;
 	public var onPlatform:Bool = false;
 	private var highestJumpY:Float = 0;
+	private var jumpLeniencyTimer:Float = 0;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -138,7 +137,7 @@ class Player extends FlxSprite
 		
 		HandleDeath();
 		HandleAnimation();
-		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
+		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame ); //@TODO figure out what i wanna do about bunnyhopping since the game technically has it currently, just frameperfect
 		HandleInput(); //handle input, update velocity
 		HandleGamepadInput();
 		UpdateFireEffect(); //muzzleflash
@@ -147,15 +146,14 @@ class Player extends FlxSprite
 		
 		super.update(elapsed);		
 		
-		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );
-		
+		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );		
 		
 		if (!onGround)
 			highestJumpY = Math.min(y, highestJumpY);
 			
 		if (onGround && !wasOnGround)
 		{
-			trace("jump height: " + Std.string(y - highestJumpY));
+			trace("jump height: " + Std.string(y - highestJumpY)); //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height
 			highestJumpY = y;
 		}
 	}
@@ -178,6 +176,14 @@ class Player extends FlxSprite
 			return;
 		}	
 		
+		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
+		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
+		
+		jumpLeniencyTimer -= FlxG.elapsed;
+		
+		if ( m_bJumpPressedThisFrame )
+			jumpLeniencyTimer = Reg.JUMP_LENIENCE_TIMER;
+		
 		if ( !living || levelBeat )
 			return;	
 			
@@ -188,9 +194,6 @@ class Player extends FlxSprite
 			
 		if (FlxG.keys.anyPressed([RIGHT, D]))
 			Walk( FlxObject.RIGHT );
-		
-		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
-		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
 		
 		// If we're on a platform and hold down+jump, drop through it
 		if (FlxG.keys.anyPressed([DOWN, S]) && FlxG.keys.justPressed.SPACE && onPlatform) //@TODO: probably make W not jump anymore, since space now has unique functionality.. also add this to gamepad input
@@ -237,12 +240,6 @@ class Player extends FlxSprite
 			
 		if ( m_gamePad.justPressed.X )
 			Resurrect();
-			
-		if ( m_gamePad.justPressed.Y )
-			gamepadTryNextLevel = true;
-			
-		if ( !living || levelBeat )
-			return;
 		
 		var xboxJumpPressed = m_gamePad.justPressed.A ||
 							  m_gamePad.justPressed.DPAD_UP ||
@@ -256,6 +253,9 @@ class Player extends FlxSprite
 							  
 		m_bJumpHeldThisFrame = ( m_bJumpHeldThisFrame || xboxJumpPressed );
 		m_bJumpPressedThisFrame = ( m_bJumpPressedThisFrame || xboxJumpPressed );
+		
+		if ( !living || levelBeat )
+			return;
 		
 		if ( m_gamePad.pressed.DPAD_LEFT )
 			Walk( FlxObject.LEFT );
@@ -313,34 +313,30 @@ class Player extends FlxSprite
 	{
 		if ( !living )
 			return;
-
-		// Mario style jumping, probably removing this for good since it's just adding too much of a variable for puzzle style jumps
-		/*if ( jumpHeld && m_bJumpHeldNoRelease && (last.y > y) )
-		{
-			velocity.y -= Reg.PLAYER_JUMPHOLD_VEL + (Math.min( Math.abs(velocity.x), Reg.PLAYER_MAX_SPEED ) * Reg.PLAYER_JUMPHOLD_VEL_MOD);
-		}
-		else
-			m_bJumpHeldNoRelease = false;*/
-		
-		//if ( isTouching(FlxObject.FLOOR) )
 		
 		if ( velocity.y == 0 && !isTouching(FlxObject.CEILING) ) //account for head ceiling bonks
 		{
 			onGround = true;
 			
-			if ( jumpJustPressed )
+			if ( jumpJustPressed || jumpLeniencyTimer > 0)
 			{
-				animation.play("jump", true);
-				firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
-				velocity.y = -Reg.PLAYER_JUMP_VEL;
-				onGround = false;
-				m_bJumpHeldNoRelease = true;
+				DoJump();
 			}
 		}
 		else
 		{
 			onGround = false;
 		}
+	}
+	
+	public function DoJump():Void
+	{
+		animation.play("jump", true);
+		firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
+		velocity.y = -Reg.PLAYER_JUMP_VEL;
+		onGround = false;
+		jumpLeniencyTimer = 0;
+		Reg.levelTimerStarted = true;
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -400,6 +396,12 @@ class Player extends FlxSprite
 			
 			Reg.levelTimerStarted = false;
 			Reg.levelTimer = 0;
+			
+			if ( Reg.levelnum == 0 )
+			{
+				Reg.gameTimerStarted = false;
+				Reg.gameTimer = 0;
+			}
 		}
 	}
 	
@@ -563,14 +565,6 @@ class Player extends FlxSprite
 			else if (!onGround)
 				acceleration.x = 100;
 		}
-	/*	
-		if ( dir == FlxObject.LEFT && velocity.x > -Reg.PLAYER_MAX_SPEED )
-			acceleration.x = -drag.x;
-			//velocity.x -= Reg.PLAYER_ACCEL;
-			
-		if ( dir == FlxObject.RIGHT && velocity.x < Reg.PLAYER_MAX_SPEED )
-			acceleration.x = drag.x;
-			//velocity.x += Reg.PLAYER_ACCEL;*/
 			
 		Reg.levelTimerStarted = true;
 			

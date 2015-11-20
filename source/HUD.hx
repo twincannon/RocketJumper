@@ -127,13 +127,15 @@ class HUD extends FlxGroup
 		minimap.allowCollisions = FlxObject.NONE;
 		add(minimap);*/
 		
+		
 		updateSizes(0, 0, W, H);
 	}
 
 	private function setBorder( Text:FlxText, Size:Int, Align:String, Color:Int = FlxColor.WHITE ):Void
 	{
+		//@TODO: look into/use FlxTextFormat instead
 		Text.borderSize = 2;
-		Text.borderStyle = FlxTextBorderStyle.OUTLINE_FAST;
+		Text.borderStyle = FlxTextBorderStyle.SHADOW;
 		Text.borderColor = 0xFF2266AA;
 		Text.size = Size;
 		Text.alignment = Align;
@@ -176,5 +178,32 @@ class HUD extends FlxGroup
 		levelFinishedText.setPosition( x + W / 2 - levelFinishedTextWidth / 2, y + levelFinishedTextY );
 		levelNameText.setPosition( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer );
 		signText.setPosition( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY + signTextBuffer );
+	}
+	
+	public function ToggleSign( Active:Bool, Text:String = "" ):Void
+	{
+		if ( Active )
+		{
+			if ( !signTextBox.alive )
+			{
+				signText.text = Text;
+				
+				var testFormat:FlxTextFormat = new FlxTextFormat(FlxColor.WHITE, false, false, FlxColor.ORANGE);
+				signText.applyMarkup(Text, [new FlxTextFormatMarkerPair(testFormat, "$")]);
+				
+				signTextBox.revive();
+				signText.revive();
+				
+				//@TODO: play a sound here, or make the text scroll in character-by-character with sfx
+			}
+		}
+		else
+		{
+			if ( signTextBox.alive )
+			{
+				signTextBox.kill();
+				signText.kill();
+			}
+		}
 	}
 }

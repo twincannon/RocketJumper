@@ -1,6 +1,7 @@
 package;
 
 import entities.Goal;
+import entities.Prop;
 import entities.Rocket;
 import entities.Sign;
 import entities.Coin;
@@ -65,6 +66,12 @@ class PlayState extends FlxState
 	private var camVelZoomOffset:Float = 0.0;
 	private static inline var CAM_VEL_ZOOM_OFFSET_MAX:Float = 1.0;
 	
+	//private var objectImagesByGID:Map<Int, String>;
+	
+	private var objectImageGIDs = new List<{ObjectGID:Int, ObjectFilename:String}>();
+	
+
+	
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -110,7 +117,7 @@ class PlayState extends FlxState
 	//	FlxG.updateFramerate = 60; //...? cant be lower than draw framerate? 
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
-		FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
+	//	FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
 		
 		add(hud);
 		
@@ -153,19 +160,45 @@ class PlayState extends FlxState
 			}
 		}
 		
-		//WARNING: if you put a tile in the wrong layer in Tiled (i.e. a tilesbg tile in "tiles" layer), it causes a crash (?!) probably array indices error, which is silly; it never used to know the difference
+		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] ); // NOTE: TiledMap.hx currently doesn't support "collection of image" tilemaps, so check "if(node.hasNode.image)" @ln 117 in TiledMap.hx to get around a crash here. (I just avoid loading them)
 		
-		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] );
+		// Load "props" tiles GID/filename associations
+		var propsxml = Xml.parse( Assets.getText("assets/data/" + Reg.levelnames[Reg.levelnum]) );
+		var propsfast = new haxe.xml.Fast( propsxml.firstElement() );
 		
-
+		for (Tileset in propsfast.nodes.tileset)
+		{
+			if (Tileset.att.name == "props")
+			{
+				var startgid:Int = Std.parseInt(Tileset.att.firstgid);
+				
+				for (Tile in Tileset.nodes.tile)
+				{
+					var curgid:Int = Std.parseInt(Tile.att.id);
+					var filename:String = Tile.node.image.att.source;
+					var cutoff = "../images/"; // Chop off this part from the filename
+					
+					var objectgid = curgid + startgid;
+					var file = filename.substr(cutoff.length);
+					
+					var newitem = { ObjectGID:objectgid, ObjectFilename:file };
+					objectImageGIDs.add(newitem);
+				}
+			}
+		}
+		
+		// Create various tilemaps
 		mapbg = new FlxTilemap();
 		map = new FlxTilemapExt();
-		detailmap = new FlxTilemap();
+		detailmap = new FlxTilemap(); //TODO: remove this since we have props now?
 		ooze = new FlxTilemap();
 		
 		for ( layer in tiledMap.layers )
 		{
-			var tileLayer:TiledTileLayer = cast layer;
+			if ( !Std.is(layer, TiledTileLayer) )
+				continue;
+			
+			var tileLayer = cast (layer, TiledTileLayer);
 			
 			if ( layer.name == "tilesbg" )
 			{
@@ -219,7 +252,7 @@ class PlayState extends FlxState
 		
 		//@TODO make 4 of these in a classic scrolling bg style instead of making way too many to cover the map
 		//also maybe make a different background type for some levels
-		for (i in -1...6)
+		/*for (i in -1...6)
 		{
 			for (j in -1...4)
 			{
@@ -232,9 +265,16 @@ class PlayState extends FlxState
 				bgtile.camera = Reg.worldCam;
 				backgroundTiles.add(bgtile);
 			}
-		}
+		}*/
 		
-		add(backgroundTiles);
+		var tempBG = new FlxSprite(0, 0);
+		tempBG.makeGraphic(Std.int(map.width - 20), Std.int(map.height), FlxColor.GRAY);
+		add(tempBG);
+		
+		Reg.worldCam.bgColor = 0xFF0A0800; //same color as the 'black' tile in the new tileset
+		
+		//add(backgroundTiles);
+		
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
 		Reg.mapGroup.add( ooze );
@@ -264,28 +304,30 @@ class PlayState extends FlxState
 			{
 				var offsetX = FlxG.camera.width - (FlxG.camera.width / newzoom);
 				var offsetY = FlxG.camera.height - (FlxG.camera.height / newzoom);
-				FlxG.camera.setScrollBoundsRect(0 - offsetX * 0.5, 0 - offsetY * 0.5, tiledMap.fullWidth + offsetX, tiledMap.fullHeight + offsetY);
+			//	FlxG.camera.setScrollBoundsRect(0 - offsetX * 0.5, 0 - offsetY * 0.5, tiledMap.fullWidth + offsetX, tiledMap.fullHeight + offsetY);
 			}
 		}		
 	}
 	
 	private function loadEntities():Void
 	{
+		
 		for (layer in tiledMap.layers)
 		{
 			if (Type.enumEq(layer.type, TiledLayerType.TILE)) continue;
-			var objectLayer:TiledObjectLayer = cast layer;
+			var objectLayer:TiledObjectLayer = cast layer; 
 			
 			for (o in objectLayer.objects)
 			{
 				var x:Int = o.x;
 				var y:Int = o.y;
 				
-				if ( o.gid != -1 )
-					y -= layer.map.getGidOwner(o.gid).tileHeight;
-					
+			//if ( o.gid != -1 ) //what the fuck does this do? nothing apparently?
+				//	y -= layer.map.getGidOwner(o.gid).tileHeight;
+				
 				switch ( o.type.toLowerCase() )
 				{
+					
 					case "player":
 						var startY:Float = o.y + o.height - Reg.player.height; // Put the player's feet at the bottom of the spawn object
 						Reg.player.x = x;
@@ -319,6 +361,29 @@ class PlayState extends FlxState
 						var platform = new Platform( x, y, o.width );
 						Reg.platforms.add(platform);
 						Reg.mapGroup.add(platform); // for rocket collisions
+					default: // Environment props/decals
+						var filename:String = "sign.png";
+						
+						var gidnoflags = o.gid;
+						gidnoflags &= ~(1 << 30);
+						gidnoflags &= ~(1 << 31);						
+						
+						for (object in objectImageGIDs)
+						{
+							if ( object.ObjectGID == gidnoflags )
+								filename = object.ObjectFilename;
+						}
+						
+						var flipX = false;
+						var flipY = false;
+						
+						if ( (o.gid & (1 << 31)) == (1 << 31) )
+							flipX = true;
+						if ( (o.gid & (1 << 30)) == (1 << 30) )
+							flipY = true;
+						
+						var prop = new Prop(x, y, o.width, o.height, flipX, flipY, o.angle, filename);
+						add(prop);
 				}	
 			}
 		}
@@ -408,8 +473,8 @@ class PlayState extends FlxState
 			Reg.gameTimer += FlxG.elapsed;
 		}
 		
-		hud.levelTimerText.text = "Level time: " + Std.int(Reg.levelTimer * 1000) * 0.001;
-		hud.gameTimerText.text = "Total time: " + Std.int(Reg.gameTimer * 1000) * 0.001;
+		hud.levelTimerText.text = "Level time: " + Std.int(Reg.levelTimer * 1000) / 1000;
+		hud.gameTimerText.text = "Total time: " + Std.int(Reg.gameTimer * 10) / 10;
 		
 		if ( Reg.player.living )
 		{
@@ -451,15 +516,13 @@ class PlayState extends FlxState
 				{
 					Reg.player.melting = true;
 				}
-				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { hud.signText.text = S.signText; return FlxG.overlap( P, S ); } ) )
+				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { hud.ToggleSign(true, S.signText); return FlxG.overlap( P, S ); } ) )
 				{
-					hud.signTextBox.revive();
-					hud.signText.revive();
+					// (Logic is handled in the overlap function)
 				}
 				else if ( hud.signText.alive )
 				{
-					hud.signTextBox.kill();
-					hud.signText.kill();
+					hud.ToggleSign(false);
 				}
 			}
 						
@@ -467,7 +530,7 @@ class PlayState extends FlxState
 			{
 				if ( Reg.levelnum < Reg.levelnames.length - 1 )
 				{
-					hud.levelFinishedText.text = "Goal! Hit [ENTER] or (Y) to go to next level!";
+					hud.levelFinishedText.text = "Goal! Press JUMP to go to the next level!";
 				}
 				else
 				{
@@ -475,7 +538,7 @@ class PlayState extends FlxState
 					var i = s.indexOf( '.' );
 					s = s.substr( 0, i + 4 );
 					
-					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + s + "\nHit [ENTER] or (Y) to play through it again.";
+					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + s + "\nHit JUMP to play through it again.";
 					Reg.gameTimerStarted = false;
 				}
 				hud.levelFinishedText.revive();
@@ -489,10 +552,8 @@ class PlayState extends FlxState
 			FlxG.camera.follow( null );
 		}
 		
-		if ( (FlxG.keys.justPressed.ENTER || Reg.player.gamepadTryNextLevel) && Reg.player.levelBeat )
+		if ( (FlxG.keys.justPressed.ENTER || Reg.player.m_bJumpPressedThisFrame) && Reg.player.levelBeat )
 		{
-			Reg.player.gamepadTryNextLevel = false;
-			
 			if ( Reg.levelnum < Reg.levelnames.length - 1 )
 			{
 				Reg.levelnum++;
@@ -502,9 +563,9 @@ class PlayState extends FlxState
 			{
 				Reg.levelnum = 0;
 				Reg.gameTimer = 0;
-				Reg.levelTimer = 0;
 			}
 				
+			Reg.levelTimer = 0;
 			Reg.player.levelBeat = false;
 			Reg.destroyRockets();
 			FlxG.switchState(new PlayState());

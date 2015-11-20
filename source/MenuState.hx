@@ -30,6 +30,7 @@ class MenuState extends FlxState
 		FlxG.mouse.visible = false;
 		FlxG.fixedTimestep = false;
 		//FlxG.autoPause = false;
+		FlxG.inputs.resetOnStateSwitch = false; // Allows player to hold down keys between state switches and not have the inputs drop
 	}
 	
 	/**

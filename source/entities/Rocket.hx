@@ -117,7 +117,7 @@ class Rocket extends FlxSprite
 			
 			if ( Reg.player.onGround )
 			{
-				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
+				Reg.player.DoJump();
 			}
 			
 			Reg.player.velocity.x += vecDir.x * amplitudeX;
