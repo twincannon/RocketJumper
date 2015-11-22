@@ -39,7 +39,7 @@ class HUD extends FlxGroup
 	private var levelNameTextWidth = 400;
 	private var deadTextWidth = 700;
 	private var deadTextY = 150;
-	private var timerTextWidth = 300;
+	private var timerTextWidth = 350;
 	private var cornerTextBuffer = 20;
 	
 	private var tl:FlxSprite;

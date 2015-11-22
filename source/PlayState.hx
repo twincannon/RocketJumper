@@ -66,11 +66,7 @@ class PlayState extends FlxState
 	private var camVelZoomOffset:Float = 0.0;
 	private static inline var CAM_VEL_ZOOM_OFFSET_MAX:Float = 1.0;
 	
-	//private var objectImagesByGID:Map<Int, String>;
-	
 	private var objectImageGIDs = new List<{ObjectGID:Int, ObjectFilename:String}>();
-	
-
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -160,7 +156,7 @@ class PlayState extends FlxState
 			}
 		}
 		
-		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] ); // NOTE: TiledMap.hx currently doesn't support "collection of image" tilemaps, so check "if(node.hasNode.image)" @ln 117 in TiledMap.hx to get around a crash here. (I just avoid loading them)
+		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] ); // NOTE: TiledMap.hx currently doesn't support "collection of image" tilesets, so check for "if(node.hasNode.image)" @ln 117 in TiledMap.hx to get around a crash here. (I just avoid loading these tilesets)
 		
 		// Load "props" tiles GID/filename associations
 		var propsxml = Xml.parse( Assets.getText("assets/data/" + Reg.levelnames[Reg.levelnum]) );
@@ -294,19 +290,7 @@ class PlayState extends FlxState
 	private function handleCameraZoom( targetZoom:Float ):Void
 	{
 		var newzoom = Reg.Clamp( targetZoom, camMinZoom, camMaxZoom );
-		
-		if ( FlxG.camera.zoom != newzoom )
-		{
-			FlxG.camera.zoom = newzoom;
-			
-			// Recalculate our camera bounds based on the new zoom level
-			if ( newzoom > 0 )
-			{
-				var offsetX = FlxG.camera.width - (FlxG.camera.width / newzoom);
-				var offsetY = FlxG.camera.height - (FlxG.camera.height / newzoom);
-			//	FlxG.camera.setScrollBoundsRect(0 - offsetX * 0.5, 0 - offsetY * 0.5, tiledMap.fullWidth + offsetX, tiledMap.fullHeight + offsetY);
-			}
-		}		
+		FlxG.camera.zoom = newzoom;
 	}
 	
 	private function loadEntities():Void
@@ -321,9 +305,6 @@ class PlayState extends FlxState
 			{
 				var x:Int = o.x;
 				var y:Int = o.y;
-				
-			//if ( o.gid != -1 ) //what the fuck does this do? nothing apparently?
-				//	y -= layer.map.getGidOwner(o.gid).tileHeight;
 				
 				switch ( o.type.toLowerCase() )
 				{
@@ -388,7 +369,7 @@ class PlayState extends FlxState
 			}
 		}
 	}
-		
+	
 	/**
 	 * Function that is called once every frame.
 	 */
@@ -454,7 +435,7 @@ class PlayState extends FlxState
 			
 			if (initialCamPanning)
 			{
-				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) ); 									//@TODO not framerate independant ...
+				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 3 * elapsed ) );
 				Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 0.1);
 				
 				if (Reg.worldCam.zoom - 2 > -0.01)

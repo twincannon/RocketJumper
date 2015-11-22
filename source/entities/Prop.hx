@@ -10,7 +10,6 @@ import openfl.Assets;
  */
 class Prop extends FlxSprite
 {
-	
 	public function new( X:Float = 0, Y:Float = 0, W:Int = 0, H:Int = 0, XFlip:Bool, YFlip:Bool, Angle:Float, Filename:String ) 
 	{
 		super(X, Y);
