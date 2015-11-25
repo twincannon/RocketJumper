@@ -29,6 +29,7 @@ import flixel.group.FlxGroup;
 import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
+import flixel.util.FlxSort;
 import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
 import flixel.graphics.frames.FlxTileFrames;
@@ -49,6 +50,9 @@ class PlayState extends FlxState
 	private var checkpoints:FlxTypedGroup<Checkpoint> = new FlxTypedGroup<Checkpoint>();
 	private var signs:FlxTypedGroup<Sign> = new FlxTypedGroup<Sign>();
 	private var coins:FlxTypedGroup<Coin> = new FlxTypedGroup<Coin>();
+	private var propsBack:FlxTypedGroup<Prop> = new FlxTypedGroup<Prop>();
+	private var propsMid:FlxTypedGroup<Prop> = new FlxTypedGroup<Prop>();
+	private var propsFore:FlxTypedGroup<Prop> = new FlxTypedGroup<Prop>();
 	private var goal:Goal;
 	private var map:FlxTilemapExt;
 	private var ooze:FlxTilemap;
@@ -68,8 +72,8 @@ class PlayState extends FlxState
 	
 	private var objectImageGIDs = new List<{ObjectGID:Int, ObjectFilename:String}>();
 	
-	/**
-	 * Function that is called up when to state is created to set it up. 
+	/** -----------------------------------------------------------------
+	 *  Function that is called up when to state is created to set it up. 
 	 */
 	override public function create():Void
 	{
@@ -85,22 +89,30 @@ class PlayState extends FlxState
 		FlxG.cameras.add(Reg.worldCam);
 		FlxG.camera = Reg.worldCam;
 		
+		var BackgroundColor:FlxColor = 0xFF0A0800; //same color as the 'black' tile in the new tileset
+		Reg.worldCam.bgColor = BackgroundColor;
+		
 		setupLevel();
 		
 		hud = new HUD( FlxG.width, FlxG.height );
-		
-		//create and add entities
-		Reg.player = new Player();
-		goal = new Goal();
-		
-		Reg.platforms = new FlxGroup();
+
 		loadEntities();
-		add(goal);
-		add(checkpoints);
-		add(signs);
-		add(coins);
-		add(Reg.player);
-		Reg.player.addFireEffect(); //add fireeffect after player for proper z-ordering
+
+		add(propsBack);
+		add(propsMid);
+		
+		add( Reg.mapGroup );
+		addMapBorders( BackgroundColor );
+		
+		add( goal );
+		add( checkpoints );
+		add( signs );
+		add( coins );
+		add( Reg.rockets );
+		Reg.player.addToState();
+		//TODO: make a rocket group and add them here?
+		
+		add(propsFore);
 		
 		//custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
@@ -122,7 +134,9 @@ class PlayState extends FlxState
 		Reg.worldCam.flash(FlxColor.BLACK, 0.75);
 	}
 	
-	/* Helper function to get the starting ID a tileset in a given TiledMap */
+	/** -------------------------------------------------------------------- 
+	 *  Helper function to get the starting ID a tileset in a given TiledMap
+	 */
 	function getStartGid(tiledLevel:TiledMap, tilesheetName:String):Int
 	{
 		var tileGID:Int = 1;
@@ -141,6 +155,9 @@ class PlayState extends FlxState
 		return tileGID;
 	}
 	
+	/** ----------------------------------------------------------------------------
+	 *  Parses the level list if necessary and then loads the currently selected map
+	 */
 	private function setupLevel():Void
 	{
 		if ( !Reg.levelsloaded )
@@ -267,8 +284,6 @@ class PlayState extends FlxState
 		tempBG.makeGraphic(Std.int(map.width - 20), Std.int(map.height), FlxColor.GRAY);
 		add(tempBG);
 		
-		Reg.worldCam.bgColor = 0xFF0A0800; //same color as the 'black' tile in the new tileset
-		
 		//add(backgroundTiles);
 		
 		Reg.mapGroup = new FlxGroup();
@@ -276,12 +291,11 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );
 		Reg.mapGroup.add( detailmap );
-		add( Reg.mapGroup );
 		
 		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
 		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
 	}
-	
+
 	override public function onResize(Width:Int, Height:Int):Void
 	{
 		handleCameraZoom( Width / FlxG.camera.width );
@@ -293,8 +307,15 @@ class PlayState extends FlxState
 		FlxG.camera.zoom = newzoom;
 	}
 	
+	/** -------------------------------------------------------------------------------------
+	 *  Creates and loads requisite data from the tilemap for all entities present in the map
+	 */
 	private function loadEntities():Void
 	{
+		//create and add entities
+		Reg.player = new Player();
+		goal = new Goal();
+		Reg.platforms = new FlxGroup();
 		
 		for (layer in tiledMap.layers)
 		{
@@ -318,7 +339,7 @@ class PlayState extends FlxState
 					case "goal":
 						goal.x = x;
 						goal.y = y;
-						goal.setSize( 20, 40 ); //@TODO parameterize these somewhere
+						goal.setSize( 20, 40 );
 					case "checkpoint":
 						var num:Int = 0;
 						if ( o.xmlData.hasNode.properties )
@@ -343,35 +364,103 @@ class PlayState extends FlxState
 						Reg.platforms.add(platform);
 						Reg.mapGroup.add(platform); // for rocket collisions
 					default: // Environment props/decals
-						var filename:String = "sign.png";
+						var filename:String = "error.png";
 						
-						var gidnoflags = o.gid;
+#if !flash
+						var gidnoflags:UInt = Std.int(Std.parseFloat(o.xmlData.att.gid)); // I don't want to explain this, just accept the fact that it exists and let's all move on with our lives
+						//TODO so this shit is broken on neko... did a ton of research, i dunno why, but i think the main problem is that the gid var itself is just an int! http://pastebin.com/Fi6BejS3
+						// i need to start using a local copy of haxeflixel so i can fix/change this shit. :/ ???? ..... 
+						//TODO ********** ALSO! FUCKING USE o.gid, DUHH.............. ************ ...maybe.. it actually reports differently.. x_x
+						//so the issue is parsefloat is tricking the gid to go outside the bounds of LONG_MAX. but if you just get the o.gid, thats just an int, so it immediately fucks up
+						// the solution is to edit TiledObject.tmx to have a wider range GID .. but.. oh well..
+#else
+						var gidnoflags = Std.parseInt(o.xmlData.att.gid);
+#end
+						var flipX = false;
+						var flipY = false;
+						
+						// first, let's use this unsigned int to check for our flipped flags
+						if ( (gidnoflags & (1 << 31)) == (1 << 31) )
+						{
+							flipX = true;
+						}
+						if ( (gidnoflags & (1 << 30)) == (1 << 30) )
+						{
+							flipY = true;
+						}
+						
+						// then let's clear those flags, revealing the GID of the image that this object uses
 						gidnoflags &= ~(1 << 30);
-						gidnoflags &= ~(1 << 31);						
+						gidnoflags &= ~(1 << 31);
 						
+						// find the right image file, and then create the prop
 						for (object in objectImageGIDs)
 						{
 							if ( object.ObjectGID == gidnoflags )
 								filename = object.ObjectFilename;
 						}
 						
-						var flipX = false;
-						var flipY = false;
-						
-						if ( (o.gid & (1 << 31)) == (1 << 31) )
-							flipX = true;
-						if ( (o.gid & (1 << 30)) == (1 << 30) )
-							flipY = true;
-						
 						var prop = new Prop(x, y, o.width, o.height, flipX, flipY, o.angle, filename);
-						add(prop);
+						
+						// See if the prop has a "scrollx" property (for scrollFactor.x, i.e. parallax) and set it
+						if ( o.xmlData.hasNode.properties )
+						{
+							for ( Property in o.xmlData.node.properties.nodes.property )
+							{
+								if ( Property.att.name == "scrollx" )
+									prop.scrollFactor.x = Std.parseFloat(Property.att.value);
+							}
+						}
+						
+						if ( prop.scrollFactor.x < 1.0 )
+						{
+							propsBack.add(prop);
+							prop.color = prop.color.getDarkened( Math.abs(prop.scrollFactor.x - 1) );
+							//prop.scrollFactor.y = Reg.RemapValClamped(prop.scrollFactor.x, 0.0, 1.0, 0.75, 1.0); // TODO: not sure if I want this (slight vertical parallax based on horiz. parallax)
+						}
+						else if ( prop.scrollFactor.x == 1.0 )
+						{
+							propsMid.add(prop);
+						}
+						else
+						{
+							propsFore.add(prop);
+						}
 				}	
 			}
 		}
+		
+		propsBack.sort(sortByScrollX);
+		propsFore.sort(sortByScrollX);
 	}
 	
-	/**
-	 * Function that is called once every frame.
+	private inline function sortByScrollX(order:Int, s1:FlxSprite, s2:FlxSprite)
+	{
+		return FlxSort.byValues(order, s1.scrollFactor.x, s2.scrollFactor.x);
+	}
+	
+	/** --------------------------------------------------------------------------------------------------------------------------------
+	 *  Adds 750 unit wide borders to the map of the color defined, to prevent things like parallax sprites from scrolling out of bounds
+	 */
+	private function addMapBorders(BackgroundColor:FlxColor):Void 
+	{
+		var BORDERSIZE:Int = 750;
+		var BorderNorth:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y - BORDERSIZE);
+		BorderNorth.makeGraphic(Std.int(BORDERSIZE * 2 + map.width), BORDERSIZE, BackgroundColor);
+		add(BorderNorth);
+		var BorderSouth:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y + map.height);
+		BorderSouth.makeGraphic(Std.int(BORDERSIZE * 2 + map.width), BORDERSIZE, BackgroundColor);
+		add(BorderSouth);
+		var BorderEast:FlxSprite = new FlxSprite(map.x + map.width, map.y);
+		BorderEast.makeGraphic(BORDERSIZE, Std.int(map.height), BackgroundColor);
+		add(BorderEast);
+		var BorderWest:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y);
+		BorderWest.makeGraphic(BORDERSIZE, Std.int(map.height), BackgroundColor);
+		add(BorderWest);
+	}
+	
+	/** ------------------------------------------
+	 *  Function that is called once every frame.
 	 */
 	override public function update(elapsed:Float):Void
 	{

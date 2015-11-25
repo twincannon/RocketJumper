@@ -93,11 +93,13 @@ class Player extends FlxSprite
 		drag.x = Reg.PLAYER_DRAG;
 	}
 	
-	// --------------------------------------------------------------------------------------
-	// Spawn fire effect (called from playstate so we can add it after player sprite)
-	// --------------------------------------------------------------------------------------
-	public function addFireEffect():Void
+	/**
+	 * Add player to state, then create and add to state the muzzleflash "fire effect" and the crosshair line.
+	 */
+	public function addToState():Void
 	{
+		FlxG.state.add(this);
+		
 		m_sprFireEffect = new FlxSprite();
 		m_sprFireEffect.loadGraphic(AssetPaths.fireeffect__png, true, 29, 17);
 		m_sprFireEffect.animation.add("blast", [for (i in 0...8) i], 30, false); //remember: the for loop here goes from startframe to endframe+1 (i.e. 0...8 means 0-7)
@@ -105,7 +107,6 @@ class Player extends FlxSprite
 		m_sprFireEffect.centerOffsets();
 		m_sprFireEffect.camera = Reg.worldCam;
 		m_sprFireEffect.kill();
-		
 		FlxG.state.add(m_sprFireEffect); //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
 		
 		crosshairLine = new FlxSprite();
@@ -620,7 +621,6 @@ class Player extends FlxSprite
 		var rocket = new Rocket( origin.x, origin.y );
 		rocket.angle = newAngle;
 		rocket.angleshoot( origin.x, origin.y - Reg.PLAYER_SHOOT_Y_OFFSET, Reg.ROCKET_SPEED, target );
-		FlxG.state.add(rocket); 
 		
 		m_flRocketFireTimer = Reg.ROCKET_COOLDOWN;
 		
