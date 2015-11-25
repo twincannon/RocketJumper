@@ -35,7 +35,6 @@ class Rocket extends FlxSprite
 		Reg.rockets.add(this);
 	}
 	
-	
 	public function angleshoot(X:Float, Y:Float, Speed:Int, Target:FlxPoint):Void
 	{
 		super.reset(X, Y);
@@ -82,10 +81,6 @@ class Rocket extends FlxSprite
 		
 		if ( Reg.player.living && !Reg.player.levelBeat && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
 		{
-
-			FlxG.collide( Reg.player, Reg.mapGroup ); //this is ghetto, but we need to make sure the player isn't currently inside the map or the velocity change wont work... 
-												//@TODO basically we need to make rockets legit objects and handle when they're updated ourselves to properly solve this. right now they update at a point when the player/map collision in playstate isnt done or something
-			
 			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
 			if (Reg.player.onGround)
 				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
@@ -101,19 +96,17 @@ class Rocket extends FlxSprite
 			
 			var distance:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
-			//normalize distance a bit here. this is to make "perfect rocketjumps" easier and less frame-perfect //@TODO: consider removing this or something? with auto-rj's now
+			// Normalize distance a bit to make "perfect rocketjumps" easier
 			if ( distance > 0.5 )
-			{
 				distance = 1.0;
-			}
 			else
 				distance = Reg.RemapValClamped( distance, 0.5, 0.0, 1.0, 0.0 );
 				
 			var amplitudeX:Float = ROCKET_AMP_X * distance * explosionAmpMod;
 			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
 			
-			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping), with a little extra. Be careful not to allow infinite wall-climbing!
-			var bonusvel = Math.max(Reg.player.velocity.y, 0);// + 15;
+			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping). Be careful not to allow infinite wall-climbing!
+			var bonusvel = Math.max(Reg.player.velocity.y, 0);
 			
 			if ( Reg.player.onGround )
 			{

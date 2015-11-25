@@ -604,7 +604,7 @@ class PlayState extends FlxState
 
 			Reg.levelTimer = 0;
 			Reg.player.levelBeat = false;
-			Reg.destroyRockets();
+			Reg.destroyRockets(true);
 			FlxG.switchState(new PlayState());
 		}
 	}

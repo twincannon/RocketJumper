@@ -22,8 +22,6 @@ class Reg
 	public inline static var PLAYER_MAX_SPEED = 150;
 	public inline static var PLAYER_ACCEL = 15;
 	public inline static var PLAYER_JUMP_VEL = 260;
-	public inline static var PLAYER_JUMPHOLD_VEL = 3; //amount of vel to apply per-frame while holding jump (mario style)
-	public inline static var PLAYER_JUMPHOLD_VEL_MOD = 0.02; //add "min(player.velocity.x, player_max_speed) * this" to jumphold vel
 	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
 	public inline static var GRAVITY = 800;
 	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
@@ -34,14 +32,22 @@ class Reg
 	public static var rockets:FlxGroup = new FlxGroup();
 	public static var worldCam:FlxCamera;
 	
-	public static inline function destroyRockets():Void
+	/**
+	 * Destroy all rockets and clear the FlxGroup.
+	 * @param	Reset	Whether or not to also destroy and recreate the FlxGroup. Only do this prior to a FlxState change as the group then needs to be re-added to the state.
+	 */
+	public static inline function destroyRockets(Reset:Bool):Void
 	{
-		for ( rocket in Reg.rockets )
-			rocket.destroy();
+		for ( r in Reg.rockets )
+			r.destroy();
 			
 		rockets.clear();
-		rockets.destroy();
-		rockets = new FlxGroup();
+		
+		if ( Reset )
+		{
+			rockets.destroy();
+			rockets = new FlxGroup();
+		}
 	}
 	
 	public static var levelnum:Int = 0;
@@ -57,7 +63,7 @@ class Reg
 #if (native || windows)
 	public inline static var shouldPixelPerfectRender:Bool = false;
 #else
-	public inline static var shouldPixelPerfectRender:Bool = true; //for whatever reason, this makes sprites jitter if false on flash target, and if true on windows target
+	public inline static var shouldPixelPerfectRender:Bool = true; //for whatever reason, this makes sprites jitter if false on flash target, and if true on windows target // TODO: is this still true?
 #end
 	
 	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float

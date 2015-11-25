@@ -371,7 +371,7 @@ class Player extends FlxSprite
 	
 	public function Resurrect():Void
 	{
-		Reg.destroyRockets();
+		Reg.destroyRockets(false);
 		
 		Reg.worldCam.follow(this);
 		Reg.worldCam.zoom = 2;
