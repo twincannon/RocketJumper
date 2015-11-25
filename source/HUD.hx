@@ -22,10 +22,7 @@ class HUD extends FlxGroup
 	public var signText:FlxText;
 	public var signTextBox:FlxSprite;
 	public var centerPoint:FlxSprite;
-	
-	/*public var minimap:FlxTilemap;
-	public var minimapbg:FlxTilemap;*/
-	
+
 	public var hudcamera:FlxCamera;
 	
 	private var x:Float = 10000; // HUD assets are off in space so they're not in the game world (they just render via a camera)
@@ -56,9 +53,6 @@ class HUD extends FlxGroup
 		centerPoint.makeGraphic(4, 4, FlxColor.PINK);
 		if( RENDER_DEBUG_STUFF )
 			add(centerPoint);
-		
-	/*	minimap = new FlxTilemap(); //loaded in PlayState:setupLevel()
-		minimapbg = new FlxTilemap();*/
 		
 		hudcamera = new FlxCamera( 0, 0, W, H, 1 );
 		hudcamera.follow( centerPoint );
@@ -118,16 +112,6 @@ class HUD extends FlxGroup
 		add(signText);
 		signText.kill();
 		
-	/*	minimapbg.setPosition(x, y);
-		minimapbg.allowCollisions = FlxObject.NONE;
-		add(minimapbg);
-		//so this is laggy as fuck. what we need to do is use this to make a bitmap
-		
-		minimap.setPosition(x, y);
-		minimap.allowCollisions = FlxObject.NONE;
-		add(minimap);*/
-		
-		
 		updateSizes(0, 0, W, H);
 	}
 
@@ -149,17 +133,6 @@ class HUD extends FlxGroup
 		
 		x += X;
 		y += Y;
-		
-	/*	minimap.setPosition(x + W / 2, y + H / 2);
-		minimapbg.setPosition(x + W / 2, y + H / 2);*/
-		
-		/*
-		if ( minimapbg.cachedGraphics != null )
-		{
-		var test:FlxSprite = new FlxSprite( x, y, minimapbg.cachedGraphics.bitmap );
-		add(test);
-		}
-		*/
 		
 		if ( RENDER_DEBUG_STUFF )
 		{

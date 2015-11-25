@@ -38,6 +38,10 @@ class Reg
 	{
 		for ( rocket in Reg.rockets )
 			rocket.destroy();
+			
+		rockets.clear();
+		rockets.destroy();
+		rockets = new FlxGroup();
 	}
 	
 	public static var levelnum:Int = 0;

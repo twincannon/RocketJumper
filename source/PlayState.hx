@@ -26,14 +26,12 @@ import openfl.Assets;
 import entities.Player;
 import flixel.math.FlxRect;
 import flixel.group.FlxGroup;
-import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxSort;
 import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
 import flixel.graphics.frames.FlxTileFrames;
-import openfl.geom.ColorTransform;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -88,9 +86,7 @@ class PlayState extends FlxState
 		
 		FlxG.cameras.add(Reg.worldCam);
 		FlxG.camera = Reg.worldCam;
-		
-		var BackgroundColor:FlxColor = 0xFF0A0800; //same color as the 'black' tile in the new tileset
-		Reg.worldCam.bgColor = BackgroundColor;
+		FlxG.camera.bgColor = 0xFF58533E;
 		
 		setupLevel();
 		
@@ -102,7 +98,7 @@ class PlayState extends FlxState
 		add(propsMid);
 		
 		add( Reg.mapGroup );
-		addMapBorders( BackgroundColor );
+		addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
 		
 		add( goal );
 		add( checkpoints );
@@ -110,7 +106,6 @@ class PlayState extends FlxState
 		add( coins );
 		add( Reg.rockets );
 		Reg.player.addToState();
-		//TODO: make a rocket group and add them here?
 		
 		add(propsFore);
 		
@@ -121,10 +116,9 @@ class PlayState extends FlxState
 		FlxG.mouse.visible = false;
 		add( m_sprCrosshair );
 		
+		//obsolete stuff
 	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
 	//	FlxG.updateFramerate = 60; //...? cant be lower than draw framerate? 
-		
-		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 	//	FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
 		
 		add(hud);
@@ -203,7 +197,6 @@ class PlayState extends FlxState
 		// Create various tilemaps
 		mapbg = new FlxTilemap();
 		map = new FlxTilemapExt();
-		detailmap = new FlxTilemap(); //TODO: remove this since we have props now?
 		ooze = new FlxTilemap();
 		
 		for ( layer in tiledMap.layers )
@@ -223,11 +216,6 @@ class PlayState extends FlxState
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
 				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tiles.png"
 			}
-			else if ( layer.name == "tilesdetail" )
-			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tilesdetail.png"
-			}
 			else if ( layer.name == "ooze" )
 			{
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
@@ -240,60 +228,24 @@ class PlayState extends FlxState
 		var tempCL:Array<Int> = [5];//[36,48];
 		var tempCR:Array<Int> = [4];//[35,47];
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
-		
 
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
-		
-		
-		/*hud.minimap.widthInTiles = tiledMap.width;
-		hud.minimap.heightInTiles = tiledMap.height;
-		hud.minimap.loadMap( tiledMap.getLayer("tiles").tileArray, "assets/images/tiles_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tiles.png" ));
-		hud.minimapbg.widthInTiles = tiledMap.width;
-		hud.minimapbg.heightInTiles = tiledMap.height;
-		hud.minimapbg.loadMap( tiledMap.getLayer("tilesbg").tileArray, "assets/images/tilesbg_minimap.png", 1, 1, FlxTilemap.OFF, getStartGid(tiledMap, "tilesbg.png" ));*/
-		
+
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
-		detailmap.camera = Reg.worldCam;
 		ooze.camera = Reg.worldCam;
 		
 		mapbg.allowCollisions = FlxObject.NONE;
-		detailmap.allowCollisions = FlxObject.NONE;
-		
-		var bgW = 303;
-		var bgH = 256;
-		
-		//@TODO make 4 of these in a classic scrolling bg style instead of making way too many to cover the map
-		//also maybe make a different background type for some levels
-		/*for (i in -1...6)
-		{
-			for (j in -1...4)
-			{
-				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
-				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.9;
-				bgtile.width = 0;
-				bgtile.height = 0;
-				bgtile.allowCollisions = FlxObject.NONE;
-				bgtile.pixelPerfectRender = Reg.shouldPixelPerfectRender;
-				bgtile.camera = Reg.worldCam;
-				backgroundTiles.add(bgtile);
-			}
-		}*/
-		
-		var tempBG = new FlxSprite(0, 0);
-		tempBG.makeGraphic(Std.int(map.width - 20), Std.int(map.height), FlxColor.GRAY);
-		add(tempBG);
-		
-		//add(backgroundTiles);
 		
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
 		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );
-		Reg.mapGroup.add( detailmap );
 		
 		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
-		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0,0), 5);
+		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 5);
+		
+		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 	}
 
 	override public function onResize(Width:Int, Height:Int):Void
@@ -365,38 +317,54 @@ class PlayState extends FlxState
 						Reg.mapGroup.add(platform); // for rocket collisions
 					default: // Environment props/decals
 						var filename:String = "error.png";
-						
-#if !flash
-						var gidnoflags:UInt = Std.int(Std.parseFloat(o.xmlData.att.gid)); // I don't want to explain this, just accept the fact that it exists and let's all move on with our lives
-						//TODO so this shit is broken on neko... did a ton of research, i dunno why, but i think the main problem is that the gid var itself is just an int! http://pastebin.com/Fi6BejS3
-						// i need to start using a local copy of haxeflixel so i can fix/change this shit. :/ ???? ..... 
-						//TODO ********** ALSO! FUCKING USE o.gid, DUHH.............. ************ ...maybe.. it actually reports differently.. x_x
-						//so the issue is parsefloat is tricking the gid to go outside the bounds of LONG_MAX. but if you just get the o.gid, thats just an int, so it immediately fucks up
-						// the solution is to edit TiledObject.tmx to have a wider range GID .. but.. oh well..
-#else
-						var gidnoflags = Std.parseInt(o.xmlData.att.gid);
-#end
 						var flipX = false;
 						var flipY = false;
+
+#if neko
+						// Neko doesn't handle unsigned ints correctly so here's an absurd hack. Note for all these clauses, if unsigned int simply worked, I could just use TiledObject.gid variable...
+						var nekoIntHack:Float = Std.parseFloat(o.xmlData.att.gid);
+						var LONG_MAX:Float = 2147483648;
 						
-						// first, let's use this unsigned int to check for our flipped flags
-						if ( (gidnoflags & (1 << 31)) == (1 << 31) )
+						if ( nekoIntHack > LONG_MAX )
+						{
+							nekoIntHack -= LONG_MAX;
+							flipX = true;
+							
+							if ( nekoIntHack > LONG_MAX/2 )
+							{
+								nekoIntHack -= LONG_MAX/2; 
+								flipY = true;
+							}
+						}
+						
+						var GIDNoFlags = Std.int(nekoIntHack);
+#elseif !flash
+						var GIDNoFlags:UInt = Std.int(Std.parseFloat(o.xmlData.att.gid)); // I don't want to explain this, just accept the fact that it exists and let's all move on with our lives
+						// Ok I'm explaining this. The above is a hack to work on Windows. Neko (which I'm not even sure I should care about) doesn't work with this hack.
+						// In attempting to fix this for Neko support, I found the core issue: this GID can be > a LONG_MAX, and the gid value itself is stored as just an Int.
+						// The solution is to make support for 64 bit (or figure out why it needs to use -1 sometimes) for TiledObject.gid variable. (which is what I should be using, not this att lookup)
+#else
+						var GIDNoFlags = Std.parseInt(o.xmlData.att.gid);
+#end
+						
+						// first, let's use this unsigned int to check for our flipped flags (neko already handles this above)
+						if ( (GIDNoFlags & (1 << 31)) == (1 << 31) )
 						{
 							flipX = true;
 						}
-						if ( (gidnoflags & (1 << 30)) == (1 << 30) )
+						if ( (GIDNoFlags & (1 << 30)) == (1 << 30) )
 						{
 							flipY = true;
 						}
 						
 						// then let's clear those flags, revealing the GID of the image that this object uses
-						gidnoflags &= ~(1 << 30);
-						gidnoflags &= ~(1 << 31);
+						GIDNoFlags &= ~(1 << 30);
+						GIDNoFlags &= ~(1 << 31);
 						
 						// find the right image file, and then create the prop
 						for (object in objectImageGIDs)
 						{
-							if ( object.ObjectGID == gidnoflags )
+							if ( object.ObjectGID == GIDNoFlags )
 								filename = object.ObjectFilename;
 						}
 						
@@ -451,7 +419,7 @@ class PlayState extends FlxState
 		var BorderSouth:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y + map.height);
 		BorderSouth.makeGraphic(Std.int(BORDERSIZE * 2 + map.width), BORDERSIZE, BackgroundColor);
 		add(BorderSouth);
-		var BorderEast:FlxSprite = new FlxSprite(map.x + map.width, map.y);
+		var BorderEast:FlxSprite = new FlxSprite(map.x + map.width - 20, map.y); // HACK: for some reason map width extends an extra tile length to the east, so compensate for it here with the minus 20
 		BorderEast.makeGraphic(BORDERSIZE, Std.int(map.height), BackgroundColor);
 		add(BorderEast);
 		var BorderWest:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y);
@@ -627,14 +595,13 @@ class PlayState extends FlxState
 			if ( Reg.levelnum < Reg.levelnames.length - 1 )
 			{
 				Reg.levelnum++;
-				FlxG.switchState(new PlayState());
 			}
 			else
 			{
 				Reg.levelnum = 0;
 				Reg.gameTimer = 0;
 			}
-				
+
 			Reg.levelTimer = 0;
 			Reg.player.levelBeat = false;
 			Reg.destroyRockets();

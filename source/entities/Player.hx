@@ -12,6 +12,9 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxVector;
 import flixel.FlxCamera.FlxCameraFollowStyle;
 
+/**
+ *  The player entity. Also handles movement input and the firing of rockets.
+ */
 class Player extends FlxSprite
 {
 	public var onGround:Bool; 
@@ -93,8 +96,8 @@ class Player extends FlxSprite
 		drag.x = Reg.PLAYER_DRAG;
 	}
 	
-	/**
-	 * Add player to state, then create and add to state the muzzleflash "fire effect" and the crosshair line.
+	/** --------------------------------------------------------------------------------------------------------
+	 *  Add player to state, then create and add to state the muzzleflash "fire effect" and the crosshair line.
 	 */
 	public function addToState():Void
 	{
@@ -154,7 +157,7 @@ class Player extends FlxSprite
 			
 		if (onGround && !wasOnGround)
 		{
-			trace("jump height: " + Std.string(y - highestJumpY)); //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height
+			//trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
 			highestJumpY = y;
 		}
 	}
