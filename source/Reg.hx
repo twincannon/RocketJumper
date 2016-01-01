@@ -21,7 +21,7 @@ class Reg
 	public static inline var PLAYER_DRAG_AIR = 100;
 	public inline static var PLAYER_MAX_SPEED = 150;
 	public inline static var PLAYER_ACCEL = 15;
-	public inline static var PLAYER_JUMP_VEL = 260;
+	public inline static var PLAYER_JUMP_VEL = 280;
 	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
 	public inline static var GRAVITY = 800;
 	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground

@@ -32,6 +32,7 @@ import flixel.util.FlxSort;
 import flixel.math.FlxAngle;
 import flixel.addons.tile.FlxTilemapExt;
 import flixel.graphics.frames.FlxTileFrames;
+import flixel.effects.postprocess.PostProcess;
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -91,9 +92,9 @@ class PlayState extends FlxState
 		setupLevel();
 		
 		hud = new HUD( FlxG.width, FlxG.height );
-
+		
 		loadEntities();
-
+		
 		add(propsBack);
 		add(propsMid);
 		
@@ -321,7 +322,7 @@ class PlayState extends FlxState
 						var flipY = false;
 
 #if neko
-						// Neko doesn't handle unsigned ints correctly so here's an absurd hack. Note for all these clauses, if unsigned int simply worked, I could just use TiledObject.gid variable...
+						// Neko doesn't handle unsigned ints correctly so here's an absurd hack. Note for all these clauses, if unsigned int simply worked, I could just use the TiledObject.gid variable...
 						var nekoIntHack:Float = Std.parseFloat(o.xmlData.att.gid);
 						var LONG_MAX:Float = 2147483648;
 						
@@ -419,7 +420,7 @@ class PlayState extends FlxState
 		var BorderSouth:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y + map.height);
 		BorderSouth.makeGraphic(Std.int(BORDERSIZE * 2 + map.width), BORDERSIZE, BackgroundColor);
 		add(BorderSouth);
-		var BorderEast:FlxSprite = new FlxSprite(map.x + map.width - 20, map.y); // HACK: for some reason map width extends an extra tile length to the east, so compensate for it here with the minus 20
+		var BorderEast:FlxSprite = new FlxSprite(map.x + map.width, map.y);
 		BorderEast.makeGraphic(BORDERSIZE, Std.int(map.height), BackgroundColor);
 		add(BorderEast);
 		var BorderWest:FlxSprite = new FlxSprite(map.x - BORDERSIZE, map.y);

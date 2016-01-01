@@ -157,7 +157,7 @@ class Player extends FlxSprite
 			
 		if (onGround && !wasOnGround)
 		{
-			//trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
+			trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
 			highestJumpY = y;
 		}
 	}
@@ -378,6 +378,7 @@ class Player extends FlxSprite
 
 		melting = false;
 		living = true;
+		landing = false;
 		
 		velocity.set(0, 0);
 		allowCollisions = FlxObject.ANY;
