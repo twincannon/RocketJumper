@@ -111,7 +111,10 @@ class Player extends FlxSprite
 		m_sprFireEffect.camera = Reg.worldCam;
 		m_sprFireEffect.kill();
 		FlxG.state.add(m_sprFireEffect); //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
-		
+	}
+	
+	public function addCrosshairLine():Void
+	{
 		crosshairLine = new FlxSprite();
 		crosshairLine.loadGraphic(AssetPaths.line__png, true, 1, 75);
 		crosshairLine.setSize(1, 1);

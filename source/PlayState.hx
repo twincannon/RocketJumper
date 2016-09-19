@@ -40,6 +40,7 @@ import flixel.addons.editors.tiled.TiledObjectLayer;
 import flixel.addons.editors.tiled.TiledTileSet;
 import flixel.addons.editors.tiled.TiledTileLayer;
 
+
 /**
  * A FlxState which can be used for the actual gameplay.
  */
@@ -85,7 +86,7 @@ class PlayState extends FlxState
 		
 		Reg.worldCam = new FlxCamera( 0, 0, FlxG.width, FlxG.height, 1 );
 		
-		FlxG.cameras.add(Reg.worldCam);
+		FlxG.cameras.add( Reg.worldCam );
 		FlxG.camera = Reg.worldCam;
 		FlxG.camera.bgColor = 0xFF58533E;
 		
@@ -94,9 +95,20 @@ class PlayState extends FlxState
 		hud = new HUD( FlxG.width, FlxG.height );
 		
 		loadEntities();
+		addGameAssetsToState();
 		
-		add(propsBack);
-		add(propsMid);
+		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
+		handleCameraZoom( 1 );
+		Reg.worldCam.flash( FlxColor.BLACK, 0.75 );	
+		
+		var shader = new PostProcess("assets/shaders/scanline.frag");
+		FlxG.addPostProcess(shader);
+	}
+	
+	function addGameAssetsToState():Void
+	{
+		add( propsBack );
+		add( propsMid );
 		
 		add( Reg.mapGroup );
 		addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
@@ -106,27 +118,22 @@ class PlayState extends FlxState
 		add( signs );
 		add( coins );
 		add( Reg.rockets );
+		
 		Reg.player.addToState();
 		
-		add(propsFore);
+		add( map ); //TODO: find out if it's safe to add this twice? (just doing it for z-ordering) this object is also added via adding the reg.mapgroup
+		add( propsFore );
 		
-		//custom mouse cursor
+		Reg.player.addCrosshairLine();
+		
+		//Custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
-		m_sprCrosshair.scrollFactor.set(0, 0);
+		m_sprCrosshair.scrollFactor.set( 0, 0 );
 		m_sprCrosshair.camera = Reg.worldCam;
 		FlxG.mouse.visible = false;
 		add( m_sprCrosshair );
-		
-		//obsolete stuff
-	//	FlxG.camera.deadzone = FlxRect.get( FlxG.width / 2, FlxG.height / 2 - 40, 0, 50 ); //causes weird issues with horizontal pixel lines?? see http://i.imgur.com/FHGaahO.gif
-	//	FlxG.updateFramerate = 60; //...? cant be lower than draw framerate? 
-	//	FlxG.camera.setScrollBoundsRect(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);	
-		
-		add(hud);
-		
-		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
-		handleCameraZoom(1);
-		Reg.worldCam.flash(FlxColor.BLACK, 0.75);
+
+		add( hud );
 	}
 	
 	/** -------------------------------------------------------------------- 
@@ -158,7 +165,7 @@ class PlayState extends FlxState
 		if ( !Reg.levelsloaded )
 		{
 			Reg.levelsloaded = true;
-			var xml = Xml.parse(Assets.getText("assets/data/levels.xml"));
+			var xml = Xml.parse(Assets.getText(Reg.ASSET_PATH_DATA + "levels.xml"));
 			var fast = new haxe.xml.Fast(xml.firstElement());
 			var levels = fast.node.levels;
 			for ( l in levels.nodes.level )
@@ -168,10 +175,10 @@ class PlayState extends FlxState
 			}
 		}
 		
-		tiledMap = new TiledMap( "assets/data/" + Reg.levelnames[Reg.levelnum] ); // NOTE: TiledMap.hx currently doesn't support "collection of image" tilesets, so check for "if(node.hasNode.image)" @ln 117 in TiledMap.hx to get around a crash here. (I just avoid loading these tilesets)
+		tiledMap = new TiledMap( Reg.ASSET_PATH_DATA + Reg.levelnames[Reg.levelnum] ); // NOTE: TiledMap.hx currently doesn't support "collection of image" tilesets, so check for "if(node.hasNode.image)" @ln 117 in TiledMap.hx to get around a crash here. (I just avoid loading these tilesets)
 		
 		// Load "props" tiles GID/filename associations
-		var propsxml = Xml.parse( Assets.getText("assets/data/" + Reg.levelnames[Reg.levelnum]) );
+		var propsxml = Xml.parse( Assets.getText(Reg.ASSET_PATH_DATA + Reg.levelnames[Reg.levelnum]) );
 		var propsfast = new haxe.xml.Fast( propsxml.firstElement() );
 		
 		for (Tileset in propsfast.nodes.tileset)
@@ -209,25 +216,25 @@ class PlayState extends FlxState
 			
 			if ( layer.name == "tilesbg" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tilesbg.png"
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") ); //was "tilesbg.png"
 			}
 			else if ( layer.name == "tiles" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tiles.png"
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") ); //was "tiles.png"
 			}
 			else if ( layer.name == "ooze" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesnew.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesnew.png") ); //was "tiles_ooze.png"
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") ); //was "tiles_ooze.png"
 			}
 		}
 		
-		var tempFL:Array<Int> = [3];//[34,46];
-		var tempFR:Array<Int> = [2];//[33,45];
-		var tempCL:Array<Int> = [5];//[36,48];
-		var tempCR:Array<Int> = [4];//[35,47];
+		var tempFL:Array<Int> = [34,46]; //tilesnew: 3
+		var tempFR:Array<Int> = [33,45]; //tilesnew: 2
+		var tempCL:Array<Int> = [36,48]; //tilesnew: 5
+		var tempCR:Array<Int> = [35,47]; //tilesnew: 4
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
 
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
@@ -243,8 +250,9 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );
 		
+		// Sets the camera target to the center of the level TODO: Change this to use a target object (also, this doesn't need to be here)
 		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
-		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 5);
+		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, 5);
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 	}
@@ -282,7 +290,6 @@ class PlayState extends FlxState
 				
 				switch ( o.type.toLowerCase() )
 				{
-					
 					case "player":
 						var startY:Float = o.y + o.height - Reg.player.height; // Put the player's feet at the bottom of the spawn object
 						Reg.player.x = x;
@@ -395,6 +402,21 @@ class PlayState extends FlxState
 						{
 							propsFore.add(prop);
 						}
+						
+						if ( prop.scrollFactor.x != 1.0 )
+						{
+							// Offset the prop to account for it being far away from the default camera top-left
+							// This makes it more accurate to what it looks like in Tiled when the player is vertically aligned with the prop
+							var difference = (prop.x * prop.scrollFactor.x) - (prop.x);
+							prop.x += difference;
+							
+							if (prop.scrollFactor.x > 1.0)
+								prop.x -= (prop.width * prop.scrollFactor.x);
+							else
+								prop.x += (prop.width * prop.scrollFactor.x);
+						}
+						
+					//end switch statement
 				}	
 			}
 		}
@@ -494,12 +516,12 @@ class PlayState extends FlxState
 			if (initialCamPanning)
 			{
 				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 3 * elapsed ) );
-				Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 0.1);
+				Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 0.1);
 				
 				if (Reg.worldCam.zoom - 2 > -0.01)
 				{
 					handleCameraZoom(2);
-					Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, FlxPoint.get(0, 0), 5);
+					Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 5);
 					initialCamPanning = false;
 				}
 			}

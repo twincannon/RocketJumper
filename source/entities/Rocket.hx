@@ -14,7 +14,7 @@ import entities.Explosion;
 class Rocket extends FlxSprite
 {
 	private static inline var ROCKET_RADIUS:Float = 60;
-	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.5;
+	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.6;
 	private static inline var ROCKET_AMP_X:Int = 220;
 	private static inline var ROCKET_AMP_Y:Int = 220;
 	private static inline var ROCKET_LIFETIME:Float = 10.0;

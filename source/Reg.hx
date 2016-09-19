@@ -15,7 +15,7 @@ import flixel.math.FlxPoint;
  */
 class Reg
 {
-	public static inline var ROCKET_SPEED = 350;
+	public static inline var ROCKET_SPEED = 400;
 	public inline static var ROCKET_COOLDOWN = 0.5;
 	public static inline var PLAYER_DRAG = 500;
 	public static inline var PLAYER_DRAG_AIR = 100;
@@ -25,6 +25,8 @@ class Reg
 	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
 	public inline static var GRAVITY = 800;
 	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
+	
+	public inline static var ASSET_PATH_DATA = "assets/data/";
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;

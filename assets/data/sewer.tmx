@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="250" height="150" tilewidth="20" tileheight="20" nextobjectid="34">
- <tileset firstgid="1" name="tiles" tilewidth="20" tileheight="20" tilecount="96">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="250" height="150" tilewidth="20" tileheight="20" nextobjectid="39">
+ <tileset firstgid="1" name="tiles" tilewidth="20" tileheight="20" tilecount="96" columns="12">
   <image source="../images/tiles.png" width="240" height="160"/>
   <terraintypes>
    <terrain name="Tiles" tile="-1"/>
@@ -37,7 +37,7 @@
   <tile id="94" terrain="2,2,3,3"/>
   <tile id="95" terrain="2,3,3,3"/>
  </tileset>
- <tileset firstgid="97" name="tilesbg" tilewidth="20" tileheight="20" tilecount="96">
+ <tileset firstgid="97" name="tilesbg" tilewidth="20" tileheight="20" tilecount="96" columns="12">
   <image source="../images/tilesbg.png" width="240" height="160"/>
   <terraintypes>
    <terrain name="TilesBG" tile="-1"/>
@@ -74,11 +74,22 @@
   <tile id="94" terrain="2,2,3,3"/>
   <tile id="95" terrain="2,3,3,3"/>
  </tileset>
- <tileset firstgid="193" name="ooze" tilewidth="20" tileheight="20" tilecount="8">
+ <tileset firstgid="193" name="ooze" tilewidth="20" tileheight="20" tilecount="8" columns="8">
   <image source="../images/tiles_ooze.png" width="160" height="20"/>
  </tileset>
- <tileset firstgid="201" name="tilesdetail" tilewidth="20" tileheight="20" tilecount="100">
+ <tileset firstgid="201" name="tilesdetail" tilewidth="20" tileheight="20" tilecount="100" columns="10">
   <image source="../images/tilesdetail.png" width="200" height="200"/>
+ </tileset>
+ <tileset firstgid="301" name="props" tilewidth="64" tileheight="64" tilecount="3" columns="0">
+  <tile id="0">
+   <image width="33" height="29" source="../images/sign.png"/>
+  </tile>
+  <tile id="1">
+   <image width="32" height="64" source="../images/stalactite.png"/>
+  </tile>
+  <tile id="2">
+   <image width="64" height="32" source="../images/tut_move.png"/>
+  </tile>
  </tileset>
  <layer name="tilesbg" width="250" height="150">
   <data encoding="csv">
@@ -594,6 +605,31 @@
   <object id="28" name="platform" type="platform" x="3100" y="1320" width="60" height="10"/>
   <object id="29" name="platform" type="platform" x="3080" y="860" width="80" height="10"/>
   <object id="33" name="platform" type="platform" x="3140" y="740" width="20" height="10"/>
+  <object id="34" gid="302" x="1468.98" y="823.03" width="32" height="64">
+   <properties>
+    <property name="scrollx" value="1.05"/>
+   </properties>
+  </object>
+  <object id="35" gid="302" x="1090" y="225" width="32" height="64">
+   <properties>
+    <property name="scrollx" value="1"/>
+   </properties>
+  </object>
+  <object id="36" gid="302" x="1090.98" y="234.527" width="32" height="64">
+   <properties>
+    <property name="scrollx" value="0.95"/>
+   </properties>
+  </object>
+  <object id="37" gid="302" x="3168" y="1463" width="32" height="64">
+   <properties>
+    <property name="scrollx" value="1.05"/>
+   </properties>
+  </object>
+  <object id="38" gid="302" x="1092" y="189.273" width="32" height="64">
+   <properties>
+    <property name="scrollx" value="1.05"/>
+   </properties>
+  </object>
  </objectgroup>
  <layer name="ooze" width="250" height="150" opacity="0.61">
   <data encoding="csv">
