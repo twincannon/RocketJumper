@@ -402,14 +402,7 @@ class Player extends FlxSprite
 			x = originalSpawnPoint.x;
 			y = originalSpawnPoint.y;
 			
-			Reg.levelTimerStarted = false;
-			Reg.levelTimer = 0;
-			
-			if ( Reg.levelnum == 0 )
-			{
-				Reg.gameTimerStarted = false;
-				Reg.gameTimer = 0;
-			}
+			Reg.resetTimers();
 		}
 	}
 	
@@ -640,6 +633,26 @@ class Player extends FlxSprite
 		{
 			checkPointNum = C.number;
 			spawnPoint.set( C.getMidpoint().x - width/2, C.y + C.height - height );
+		}
+	}
+	
+	public function ConstrainToMap( mapX:Float, mapY:Float, mapWidth:Int, mapHeight:Int ):Void
+	{
+		// Constrain to map horizontally
+		if ( x < mapX )
+		{
+			x = mapX;
+		}
+		else if ( x + width > mapWidth )
+		{
+			x = mapWidth - width;
+		}
+		
+		// Wrap around map vertically if falling off the bottom
+		if ( y > mapHeight || y < mapY )
+		{
+			y = mapY;
+			velocity.y = 0;
 		}
 	}
 }

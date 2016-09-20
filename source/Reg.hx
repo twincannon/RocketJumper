@@ -52,6 +52,18 @@ class Reg
 		}
 	}
 	
+	public static inline function resetTimers():Void
+	{
+		levelTimerStarted = false;
+		levelTimer = 0;
+		
+		if ( levelnum == 0 )
+		{
+			gameTimerStarted = false;
+			gameTimer = 0;
+		}
+	}
+	
 	public static var levelnum:Int = 0;
 	public static var leveltitle:String = "Level title";
 	public static var levelnames:Array<String> = new Array<String>();

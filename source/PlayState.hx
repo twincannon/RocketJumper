@@ -101,8 +101,10 @@ class PlayState extends FlxState
 		handleCameraZoom( 1 );
 		Reg.worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
+#if !flash
 		var shader = new PostProcess("assets/shaders/scanline.frag");
 		FlxG.addPostProcess(shader);
+#end
 	}
 	
 	function addGameAssetsToState():Void
@@ -217,17 +219,17 @@ class PlayState extends FlxState
 			if ( layer.name == "tilesbg" )
 			{
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") ); //was "tilesbg.png"
+				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
 			}
 			else if ( layer.name == "tiles" )
 			{
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") ); //was "tiles.png"
+				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
 			}
 			else if ( layer.name == "ooze" )
 			{
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
-				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") ); //was "tiles_ooze.png"
+				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
 			}
 		}
 		
@@ -236,9 +238,9 @@ class PlayState extends FlxState
 		var tempCL:Array<Int> = [36,48]; //tilesnew: 5
 		var tempCR:Array<Int> = [35,47]; //tilesnew: 4
 		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
-
+		
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
-
+		
 		mapbg.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
 		ooze.camera = Reg.worldCam;
@@ -507,7 +509,7 @@ class PlayState extends FlxState
 		Reg.player.crosshairLine.scale.y = Reg.RemapValClamped( distance, 150, 20, 1.0, 0.0 );
 		Reg.player.crosshairLine.alpha = Reg.RemapValClamped( distance, 100, 20, 1.0, 0.0 );
 		
-		super.update(elapsed); // Needs to be called before player collides with map for correct velocity reporting (bleh)
+		super.update(elapsed); // Needs to be called before player collides with map for correct velocity reporting
 		
 		if ( Reg.levelTimerStarted )
 		{
@@ -547,29 +549,16 @@ class PlayState extends FlxState
 			if ( FlxG.collide(Reg.platforms, Reg.player) )
 				Reg.player.onPlatform = true;
 			
-			//Don't let player leave the map (horizontally)
-			if ( Reg.player.x < map.x )
-				Reg.player.x = map.x;
-			else if ( Reg.player.x + Reg.player.width > tiledMap.fullWidth )
-				Reg.player.x = tiledMap.fullWidth - Reg.player.width;
+			//Don't let player leave the map
+			Reg.player.ConstrainToMap( map.x, map.y, tiledMap.fullWidth, tiledMap.fullHeight );
 			
-			if ( Reg.player.y > tiledMap.fullHeight || Reg.player.y < map.y )
-			{
-				Reg.player.y = map.y;
-				Reg.player.velocity.y = 0;
-			}
-			
-			if ( FlxG.overlap( Reg.player, checkpoints, Reg.player.touchCheckpoint ) )
-			{
-				//is it safe to kill the checkpoint in player..?
-			}
+			// Handle player/checkpoint overlap @TODO: is it safe to kill the checkpoint in player..?
+			FlxG.overlap( Reg.player, checkpoints, Reg.player.touchCheckpoint );
 			
 			if ( FlxG.overlap( Reg.player, goal ) )
 				Reg.player.goalMet();
-			
-			var drawsigntext = false;
 
-			if ( !Reg.player.levelBeat )
+			if ( Reg.player.levelBeat == false )
 			{
 				if ( ooze.overlapsWithCallback( Reg.player.innerHitbox,
 												function(P:FlxObject, T:FlxObject) { return FlxG.overlap( P, T ); },
@@ -577,7 +566,8 @@ class PlayState extends FlxState
 				{
 					Reg.player.melting = true;
 				}
-				else if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { hud.ToggleSign(true, S.signText); return FlxG.overlap( P, S ); } ) )
+				
+				if ( FlxG.overlap( Reg.player, signs, function(P:FlxObject, S:Sign) { hud.ToggleSign(true, S.signText); return FlxG.overlap( P, S ); } ) )
 				{
 					// (Logic is handled in the overlap function)
 				}
@@ -585,9 +575,13 @@ class PlayState extends FlxState
 				{
 					hud.ToggleSign(false);
 				}
+				
+				if ( hud.levelFinishedText.alive )
+				{
+					hud.levelFinishedText.kill();
+				}
 			}
-						
-			if ( Reg.player.levelBeat )
+			else
 			{
 				if ( Reg.levelnum < Reg.levelnames.length - 1 )
 				{
@@ -602,10 +596,27 @@ class PlayState extends FlxState
 					hud.levelFinishedText.text = "You beat all the levels! Nice work!\nTotal time: " + s + "\nHit JUMP to play through it again.";
 					Reg.gameTimerStarted = false;
 				}
-				hud.levelFinishedText.revive();
+				
+				if ( hud.levelFinishedText.alive == false )
+				{
+					hud.levelFinishedText.revive();
+				}
+				
+				// Current level finished, change to next level
+				if ( FlxG.keys.justPressed.ENTER || Reg.player.m_bJumpPressedThisFrame )
+				{
+					if ( Reg.levelnum < Reg.levelnames.length - 1 )
+					{
+						Reg.levelnum++;
+					}
+					else
+					{
+						Reg.levelnum = 0;
+					}
+					
+					reloadPlayState();
+				}
 			}
-			else if ( hud.levelFinishedText.alive )
-				hud.levelFinishedText.kill();
 		}
 		else
 		{
@@ -613,23 +624,20 @@ class PlayState extends FlxState
 			FlxG.camera.follow( null );
 		}
 		
-		if ( (FlxG.keys.justPressed.ENTER || Reg.player.m_bJumpPressedThisFrame) && Reg.player.levelBeat )
+		// Allow the player to just reload the current level completely
+		if ( FlxG.keys.justPressed.Y )
 		{
-			if ( Reg.levelnum < Reg.levelnames.length - 1 )
-			{
-				Reg.levelnum++;
-			}
-			else
-			{
-				Reg.levelnum = 0;
-				Reg.gameTimer = 0;
-			}
-
-			Reg.levelTimer = 0;
-			Reg.player.levelBeat = false;
-			Reg.destroyRockets(true);
-			FlxG.switchState(new PlayState());
+			reloadPlayState();
 		}
+	}
+	
+	private function reloadPlayState():Void
+	{
+		Reg.player.levelBeat = false;
+		Reg.destroyRockets(true);
+		FlxG.switchState(new PlayState());
+		
+		Reg.resetTimers();
 	}
 	
 	/**
