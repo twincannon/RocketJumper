@@ -81,11 +81,11 @@ class Rocket extends FlxSprite
 		
 		if ( Reg.player.living && !Reg.player.levelBeat && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
 		{
-			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
-			if (Reg.player.onGround)
-				Reg.player.velocity.y = -Reg.PLAYER_JUMP_VEL;
-				
-			//functionize all this nonsense.....
+			//@TODO: Make this object-ambiguous: probably have to make a baseclass for player and other things
+			// 		 that can get knocked around by rockets, and make this apply velocity/damage/etc to all of them
+			
+			//TODO make this a flxgroup for all explodable stuff and iterate through it instead of only checking for player
+			
 			var rocketVec:FlxVector = new FlxVector( getMidpoint().x, getMidpoint().y );
 			var playerVec:FlxVector = new FlxVector( Reg.player.getMidpoint().x, Reg.player.getMidpoint().y );
 			
@@ -94,30 +94,29 @@ class Rocket extends FlxSprite
 			var vecLength:Float = vecDir.length;
 			vecDir.normalize();
 			
-			var distance:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
+			var strength:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
-			// Normalize distance a bit to make "perfect rocketjumps" easier
-			if ( distance > 0.5 )
-				distance = 1.0;
+			// Normalize blast strength a bit to make "perfect rocketjumps" easier and more consistent
+			if ( strength > 0.50 )
+				strength = 1.0;
 			else
-				distance = Reg.RemapValClamped( distance, 0.5, 0.0, 1.0, 0.0 );
+				strength = Reg.RemapValClamped( strength, 0.5, 0.0, 1.0, 0.0 );
 				
-			var amplitudeX:Float = ROCKET_AMP_X * distance * explosionAmpMod;
-			var amplitudeY:Float = ROCKET_AMP_Y * distance * explosionAmpMod;
+			var amplitudeX:Float = ROCKET_AMP_X * strength * explosionAmpMod;
+			var amplitudeY:Float = ROCKET_AMP_Y * strength * explosionAmpMod;
 			
 			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping). Be careful not to allow infinite wall-climbing!
-			var bonusvel = Math.max(Reg.player.velocity.y, 0);
+			var fallingOffsetVel = Math.max(Reg.player.velocity.y, 0);
 			
+			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
 			if ( Reg.player.onGround )
 			{
 				Reg.player.DoJump();
 			}
 			
 			Reg.player.velocity.x += vecDir.x * amplitudeX;
-			Reg.player.velocity.y += vecDir.y * amplitudeY - bonusvel;
+			Reg.player.velocity.y += vecDir.y * amplitudeY - fallingOffsetVel;
 		}
-		
-		//TODO make this a flxgroup for all explodable stuff and iterate through it instead of only checking for player
 		
 		//@TODO modify this camera shake amount by how far away player is
 		if ( doBigExplosion )

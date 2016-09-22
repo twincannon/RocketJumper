@@ -17,7 +17,7 @@ class Reg
 {
 	public static inline var ROCKET_SPEED = 400;
 	public inline static var ROCKET_COOLDOWN = 0.5;
-	public static inline var PLAYER_DRAG = 500;
+	public static inline var PLAYER_DRAG = 450;
 	public static inline var PLAYER_DRAG_AIR = 100;
 	public inline static var PLAYER_MAX_SPEED = 150;
 	public inline static var PLAYER_ACCEL = 15;

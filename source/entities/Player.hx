@@ -144,9 +144,10 @@ class Player extends FlxSprite
 		
 		HandleDeath();
 		HandleAnimation();
-		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame ); //@TODO figure out what i wanna do about bunnyhopping since the game technically has it currently, just frameperfect
+		
 		HandleInput(); //handle input, update velocity
 		HandleGamepadInput();
+		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
 		UpdateFireEffect(); //muzzleflash
 		
 		m_flRocketFireTimer -= elapsed;
@@ -325,7 +326,7 @@ class Player extends FlxSprite
 		{
 			onGround = true;
 			
-			if ( jumpJustPressed || jumpLeniencyTimer > 0)
+			if ( jumpJustPressed || jumpHeld )
 			{
 				DoJump();
 			}

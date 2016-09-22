@@ -88,7 +88,7 @@ class PlayState extends FlxState
 		
 		FlxG.cameras.add( Reg.worldCam );
 		FlxG.camera = Reg.worldCam;
-		FlxG.camera.bgColor = 0xFF58533E;
+	//	FlxG.camera.bgColor = 0xFF58533E;
 		
 		setupLevel();
 		
@@ -113,7 +113,7 @@ class PlayState extends FlxState
 		add( propsMid );
 		
 		add( Reg.mapGroup );
-		addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
+	//	addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
 		
 		add( goal );
 		add( checkpoints );
@@ -208,6 +208,7 @@ class PlayState extends FlxState
 		mapbg = new FlxTilemap();
 		map = new FlxTilemapExt();
 		ooze = new FlxTilemap();
+		detailmap = new FlxTilemap();
 		
 		for ( layer in tiledMap.layers )
 		{
@@ -231,6 +232,12 @@ class PlayState extends FlxState
 				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
 				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
 			}
+			
+			else if ( layer.name == "tilesdetail" )
+			{
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+			}
 		}
 		
 		var tempFL:Array<Int> = [34,46]; //tilesnew: 3
@@ -242,15 +249,49 @@ class PlayState extends FlxState
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
 		
 		mapbg.camera = Reg.worldCam;
+		detailmap.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
 		ooze.camera = Reg.worldCam;
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		for (i in -1...16)
+  		{
+  			for (j in -1...14)
+  			{
+				var bgW = 303;
+				var bgH = 256;
+ 				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
+ 				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.9;
+ 				bgtile.width = 0;
+ 				bgtile.height = 0;
+ 				bgtile.allowCollisions = FlxObject.NONE;
+ 				bgtile.pixelPerfectRender = Reg.shouldPixelPerfectRender;
+  				bgtile.camera = Reg.worldCam;
+  				backgroundTiles.add(bgtile);
+  			}
+		}
+		add(backgroundTiles);
+		
+		
+		
+		
+		
 		mapbg.allowCollisions = FlxObject.NONE;
+		
+		detailmap.allowCollisions = FlxObject.NONE;
 		
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
+		Reg.mapGroup.add(detailmap);
 		Reg.mapGroup.add( ooze );
-		Reg.mapGroup.add( map );
+		Reg.mapGroup.add( map );		
 		
 		// Sets the camera target to the center of the level TODO: Change this to use a target object (also, this doesn't need to be here)
 		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
@@ -413,9 +454,15 @@ class PlayState extends FlxState
 							prop.x += difference;
 							
 							if (prop.scrollFactor.x > 1.0)
-								prop.x -= (prop.width * prop.scrollFactor.x);
+							{
+								prop.x += prop.width * 0.25;
+								prop.x -= Reg.worldCam.width * 0.25;
+							}
 							else
-								prop.x += (prop.width * prop.scrollFactor.x);
+							{
+								prop.x -= prop.width * 0.25;
+								prop.x += Reg.worldCam.width * 0.25;
+							}
 						}
 						
 					//end switch statement
@@ -605,16 +652,7 @@ class PlayState extends FlxState
 				// Current level finished, change to next level
 				if ( FlxG.keys.justPressed.ENTER || Reg.player.m_bJumpPressedThisFrame )
 				{
-					if ( Reg.levelnum < Reg.levelnames.length - 1 )
-					{
-						Reg.levelnum++;
-					}
-					else
-					{
-						Reg.levelnum = 0;
-					}
-					
-					reloadPlayState();
+					loadNextLevel();
 				}
 			}
 		}
@@ -629,6 +667,25 @@ class PlayState extends FlxState
 		{
 			reloadPlayState();
 		}
+		
+		if ( FlxG.keys.justPressed.P )
+		{
+			loadNextLevel();
+		}
+	}
+	
+	private function loadNextLevel():Void
+	{
+		if ( Reg.levelnum < Reg.levelnames.length - 1 )
+		{
+			Reg.levelnum++;
+		}
+		else
+		{
+			Reg.levelnum = 0;
+		}
+		
+		reloadPlayState();
 	}
 	
 	private function reloadPlayState():Void
