@@ -62,9 +62,6 @@ class PlayState extends FlxState
 	private var hud:HUD;
 	private var tiledMap:TiledMap;
 	
-	private var initialCamPanning:Bool = true;
-	private var initialCamTarget:FlxObject;
-	
 	private static inline var camMinZoom:Float = 1.0;
 	private static inline var camMaxZoom:Float = 4.0;
 	private var camVelZoomOffset:Float = 0.0;
@@ -86,6 +83,7 @@ class PlayState extends FlxState
 		
 		Reg.worldCam = new FlxCamera( 0, 0, FlxG.width, FlxG.height, 1 );
 		
+		
 		FlxG.cameras.add( Reg.worldCam );
 		FlxG.camera = Reg.worldCam;
 	//	FlxG.camera.bgColor = 0xFF58533E;
@@ -97,23 +95,25 @@ class PlayState extends FlxState
 		loadEntities();
 		addGameAssetsToState();
 		
-		onResize( FlxG.stage.stageWidth, FlxG.stage.stageHeight );
-		handleCameraZoom( 1 );
+		handleCameraZoom( 1.3333332 ); //720 (game resolution) divided by 1080 (monitor resolution)
 		Reg.worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
 #if !flash
 		var shader = new PostProcess("assets/shaders/scanline.frag");
 		FlxG.addPostProcess(shader);
 #end
+
+		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 5);
 	}
 	
 	function addGameAssetsToState():Void
 	{
 		add( propsBack );
-		add( propsMid );
 		
 		add( Reg.mapGroup );
 	//	addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
+	
+		add( propsMid );
 		
 		add( goal );
 		add( checkpoints );
@@ -136,6 +136,8 @@ class PlayState extends FlxState
 		add( m_sprCrosshair );
 
 		add( hud );
+		
+		FlxG.sound.volume = 0.2;
 	}
 	
 	/** -------------------------------------------------------------------- 
@@ -217,25 +219,29 @@ class PlayState extends FlxState
 			
 			var tileLayer = cast (layer, TiledTileLayer);
 			
+			var tileSize:FlxPoint = FlxPoint.get(20, 20);
+			var tileSpacing:FlxPoint = FlxPoint.get(0, 0);
+			var tileBorder:FlxPoint = FlxPoint.get(2, 2);
+			
 			if ( layer.name == "tilesbg" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", tileSize, tileSpacing, tileBorder);
 				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
 			}
 			else if ( layer.name == "tiles" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", tileSize, tileSpacing, tileBorder);
 				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
 			}
 			else if ( layer.name == "ooze" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", tileSize, tileSpacing, tileBorder);
 				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
 			}
 			
 			else if ( layer.name == "tilesdetail" )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", FlxPoint.get(20, 20), FlxPoint.get(2, 2));
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", tileSize, tileSpacing, tileBorder);
 				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
 			}
 		}
@@ -252,12 +258,6 @@ class PlayState extends FlxState
 		detailmap.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
 		ooze.camera = Reg.worldCam;
-		
-		
-		
-		
-		
-		
 		
 		
 		
@@ -283,6 +283,7 @@ class PlayState extends FlxState
 		
 		
 		
+		
 		mapbg.allowCollisions = FlxObject.NONE;
 		
 		detailmap.allowCollisions = FlxObject.NONE;
@@ -293,16 +294,7 @@ class PlayState extends FlxState
 		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );		
 		
-		// Sets the camera target to the center of the level TODO: Change this to use a target object (also, this doesn't need to be here)
-		initialCamTarget = new FlxObject(map.x + map.width * 0.5, map.y + map.height * 0.5);
-		Reg.worldCam.follow(initialCamTarget, FlxCameraFollowStyle.LOCKON, 5);
-		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
-	}
-
-	override public function onResize(Width:Int, Height:Int):Void
-	{
-		handleCameraZoom( Width / FlxG.camera.width );
 	}
 	
 	private function handleCameraZoom( targetZoom:Float ):Void
@@ -505,7 +497,7 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		// Mousewheel camera zoom
-		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat && !initialCamPanning )
+		if ( FlxG.mouse.wheel != 0 && !Reg.player.levelBeat )
 		{
 			handleCameraZoom( FlxG.camera.zoom + (FlxG.mouse.wheel * 0.1) );
 		}
@@ -562,19 +554,6 @@ class PlayState extends FlxState
 		{
 			Reg.gameTimerStarted = true;
 			
-			if (initialCamPanning)
-			{
-				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 3 * elapsed ) );
-				Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 0.1);
-				
-				if (Reg.worldCam.zoom - 2 > -0.01)
-				{
-					handleCameraZoom(2);
-					Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 5);
-					initialCamPanning = false;
-				}
-			}
-			
 			Reg.levelTimer += FlxG.elapsed;
 		}
 		
@@ -591,7 +570,8 @@ class PlayState extends FlxState
 			if ( hud.deadText.alive )
 				hud.deadText.kill();
 				
-			FlxG.collide(map, Reg.player);
+			if ( FlxG.collide(map, Reg.player) )
+				map.updateBuffers();
 			
 			if ( FlxG.collide(Reg.platforms, Reg.player) )
 				Reg.player.onPlatform = true;

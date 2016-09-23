@@ -4,6 +4,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
+import flixel.system.FlxSound;
 import openfl.Assets;
 import flixel.util.FlxSpriteUtil; //for debug drawing
 import flixel.util.FlxColor;
@@ -13,12 +14,14 @@ import entities.Explosion;
 
 class Rocket extends FlxSprite
 {
-	private static inline var ROCKET_RADIUS:Float = 60;
+	private static inline var ROCKET_RADIUS:Float = 80;
 	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.6;
 	private static inline var ROCKET_AMP_X:Int = 220;
 	private static inline var ROCKET_AMP_Y:Int = 220;
 	private static inline var ROCKET_LIFETIME:Float = 10.0;
 	private var m_flTimeAlive:Float = 0;
+	private var _sndExplode:FlxSound;
+	private var _sndExplodeBig:FlxSound;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -33,6 +36,9 @@ class Rocket extends FlxSprite
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		camera = Reg.worldCam;
 		Reg.rockets.add(this);
+		
+		_sndExplode = FlxG.sound.load(AssetPaths.explosion__wav);
+		_sndExplodeBig = FlxG.sound.load(AssetPaths.explosionbig__wav);
 	}
 	
 	public function angleshoot(X:Float, Y:Float, Speed:Int, Target:FlxPoint):Void
@@ -74,10 +80,9 @@ class Rocket extends FlxSprite
 		var doBigExplosion = false;
 		if ( m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
 			doBigExplosion = true;
-
+		
 		var explosionRadius = doBigExplosion ? ROCKET_RADIUS * 2 : ROCKET_RADIUS;
 		var explosionAmpMod = doBigExplosion ? 2.0 : 1.0;
-		
 		
 		if ( Reg.player.living && !Reg.player.levelBeat && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
 		{
@@ -96,8 +101,14 @@ class Rocket extends FlxSprite
 			
 			var strength:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
+			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
+			if ( Reg.player.onGround && strength > 0.5 )
+			{
+				Reg.player.DoJump();
+			}
+			
 			// Normalize blast strength a bit to make "perfect rocketjumps" easier and more consistent
-			if ( strength > 0.50 )
+			if ( strength > 0.5 )
 				strength = 1.0;
 			else
 				strength = Reg.RemapValClamped( strength, 0.5, 0.0, 1.0, 0.0 );
@@ -107,12 +118,6 @@ class Rocket extends FlxSprite
 			
 			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping). Be careful not to allow infinite wall-climbing!
 			var fallingOffsetVel = Math.max(Reg.player.velocity.y, 0);
-			
-			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
-			if ( Reg.player.onGround )
-			{
-				Reg.player.DoJump();
-			}
 			
 			Reg.player.velocity.x += vecDir.x * amplitudeX;
 			Reg.player.velocity.y += vecDir.y * amplitudeY - fallingOffsetVel;
@@ -129,6 +134,19 @@ class Rocket extends FlxSprite
 		
 		if( doBigExplosion )
 			expSpr.scale = FlxPoint.get(2, 2);
+		
+		if ( doBigExplosion )
+		{
+			_sndExplodeBig.proximity(x, y, Reg.player, FlxG.width);
+			_sndExplodeBig.setPosition(x, y);
+			_sndExplodeBig.play();
+		}
+		else
+		{
+			_sndExplode.proximity(x, y, Reg.player, FlxG.width * 3);
+			_sndExplode.setPosition(x, y);
+			_sndExplode.play();
+		}
 			
 		super.destroy();
 		this.destroy();

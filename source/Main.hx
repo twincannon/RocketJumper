@@ -10,8 +10,8 @@ import flixel.FlxState;
 
 class Main extends Sprite 
 {
-	var gameWidth:Int =  1280;// 852;//426;//562;// // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
-	var gameHeight:Int = 720;// 480;//240;//317;// // Height of the game in pixels (might be less / more in actual pixels depending on your zoom).
+	var gameWidth:Int = 1280;//960;// 852;//426;//562;// // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
+	var gameHeight:Int = 720;//540;// 480;//240;//317;// // Height of the game in pixels (might be less / more in actual pixels depending on your zoom).
 	var initialState:Class<FlxState> = MenuState; // The FlxState the game starts with.
 	var zoom:Float = -1; // If -1, zoom is automatically calculated to fit the window dimensions.
 #if flash
@@ -20,7 +20,7 @@ class Main extends Sprite
 	var framerate:Int = 120;
 #end
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
-	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
+	var startFullscreen:Bool = true; // Whether to start the game in fullscreen on desktop targets
 	
 #if windows //@TODO does this work on all native targets?
 	var constrainCursorToWindowFrame = flash.Lib.load("lime", "nme_stage_constrain_cursor_to_window_frame", 2);
@@ -59,8 +59,10 @@ class Main extends Sprite
 	
 	private function setupGame():Void
 	{
+		// Pull width/height from Project.xml
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
+		trace(Lib.current.stage.displayState);
 		
 #if windows
 		constrainCursorToWindowFrame(flash.Lib.stage.__handle, true);
@@ -73,7 +75,7 @@ class Main extends Sprite
 			gameWidth = Math.ceil(stageWidth / zoom);
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
-
+		
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
 	}
 }

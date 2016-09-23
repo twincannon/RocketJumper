@@ -3,6 +3,7 @@ package entities;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxObject;
+import flixel.system.FlxSound;
 import flixel.group.FlxGroup;
 import openfl.Assets;
 import entities.Rocket;
@@ -28,6 +29,7 @@ class Player extends FlxSprite
 	private var m_gamePad:FlxGamepad;
 	private var m_bJumpHeldThisFrame:Bool = false;
 	public var m_bJumpPressedThisFrame:Bool = false;
+	private var m_bJumpReleasedSinceLastOnGround = false; // For quake style bunnyhop
 	private var m_OldGamepadAxis:FlxPoint = FlxPoint.get(0, 0);
 	private var m_bAimAnimDirty:Bool = false;
 	private var m_flRocketFireTimer:Float = 0;
@@ -45,7 +47,9 @@ class Player extends FlxSprite
 	private static inline var INNER_HITBOX_OFFSET:Int = 2;
 	public var onPlatform:Bool = false;
 	private var highestJumpY:Float = 0;
-	private var jumpLeniencyTimer:Float = 0;
+	private var jumpLeniencyTimer:Float = 0; //depracated with quake style
+	private var _sndJump:FlxSound;
+	private var _sndShoot:FlxSound;
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -80,6 +84,9 @@ class Player extends FlxSprite
 		setFacingFlip( FlxObject.RIGHT, true, false );
 		setFacingFlip( FlxObject.LEFT + FlxObject.DOWN, false, true );
 		setFacingFlip( FlxObject.RIGHT + FlxObject.DOWN, true, true );
+		
+		_sndJump = FlxG.sound.load(AssetPaths.jump__wav);
+		_sndShoot = FlxG.sound.load(AssetPaths.shoot__wav);
 		
 		//tweak player's hitbox
 		width = 18;
@@ -132,6 +139,9 @@ class Player extends FlxSprite
 			levelBeat = true;
 			velocity.x = 0;
 			acceleration.x = 0;
+			m_bJumpHeldThisFrame = false;
+			m_bJumpPressedThisFrame = false;
+			m_bJumpReleasedSinceLastOnGround = false;
 		}
 	}
 	
@@ -219,7 +229,7 @@ class Player extends FlxSprite
 			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
 		}
 		
-		// Velocity limiter (there's also maxVelocity.x I could use?)  // does this do anything..?
+		// Velocity limiter
 		if ( onGround )
 		{
 			if ( velocity.x > Reg.PLAYER_MAX_SPEED )
@@ -321,12 +331,17 @@ class Player extends FlxSprite
 	{
 		if ( !living )
 			return;
+			
+		if ( !jumpHeld )
+		{
+			m_bJumpReleasedSinceLastOnGround = true;
+		}
 		
 		if ( velocity.y == 0 && !isTouching(FlxObject.CEILING) ) //account for head ceiling bonks
 		{
 			onGround = true;
 			
-			if ( jumpJustPressed || jumpHeld )
+			if ( jumpJustPressed || (jumpHeld && m_bJumpReleasedSinceLastOnGround) )
 			{
 				DoJump();
 			}
@@ -339,12 +354,17 @@ class Player extends FlxSprite
 	
 	public function DoJump():Void
 	{
+		if ( levelBeat )
+			return;
+			
 		animation.play("jump", true);
+		_sndJump.play();
 		firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 		velocity.y = -Reg.PLAYER_JUMP_VEL;
 		onGround = false;
 		jumpLeniencyTimer = 0;
 		Reg.levelTimerStarted = true;
+		m_bJumpReleasedSinceLastOnGround = false;
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -369,6 +389,7 @@ class Player extends FlxSprite
 			velocity.set( 0, falling ? 18 : -18 );
 			animation.play("melt");
 			living = false;
+			firing = false;
 			return;
 		}
 	}
@@ -378,7 +399,7 @@ class Player extends FlxSprite
 		Reg.destroyRockets(false);
 		
 		Reg.worldCam.follow(this);
-		Reg.worldCam.zoom = 2;
+		Reg.worldCam.zoom = 1.3333332;
 
 		melting = false;
 		living = true;
@@ -476,7 +497,7 @@ class Player extends FlxSprite
 				animation.play("jump", true);
 			}
 		}
-
+		
 		var aimAngle:Float;
 		if ( usingMouse )
 			aimAngle = getScreenPosition().angleBetween( FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY) );
@@ -610,6 +631,8 @@ class Player extends FlxSprite
 		animation.play("fire", true);
 		firing = true;
 		
+		_sndShoot.play();
+		
 		if ( target.x < getMidpoint().x )
 			facing = FlxObject.LEFT;
 		else
@@ -643,10 +666,12 @@ class Player extends FlxSprite
 		if ( x < mapX )
 		{
 			x = mapX;
+			velocity.x = 0;
 		}
 		else if ( x + width > mapWidth )
 		{
 			x = mapWidth - width;
+			velocity.x = 0;
 		}
 		
 		// Wrap around map vertically if falling off the bottom
