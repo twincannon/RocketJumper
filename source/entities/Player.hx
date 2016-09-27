@@ -116,14 +116,14 @@ class Player extends FlxSprite
 	{
 		FlxG.state.add(this);
 		
-		m_sprFireEffect = new FlxSprite();
+	/*	m_sprFireEffect = new FlxSprite();
 		m_sprFireEffect.loadGraphic(AssetPaths.fireeffect__png, true, 29, 17);
 		m_sprFireEffect.animation.add("blast", [for (i in 0...8) i], 30, false); //remember: the for loop here goes from startframe to endframe+1 (i.e. 0...8 means 0-7)
 		m_sprFireEffect.setSize(1, 1);
 		m_sprFireEffect.centerOffsets();
 		m_sprFireEffect.camera = Reg.worldCam;
 		m_sprFireEffect.kill();
-		FlxG.state.add(m_sprFireEffect); //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
+		FlxG.state.add(m_sprFireEffect);*/ //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
 	}
 	
 	public function addCrosshairLine():Void
@@ -636,7 +636,7 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	private function UpdateFireEffect():Void
 	{
-		if ( m_sprFireEffect.alive )
+		if ( m_sprFireEffect != null && m_sprFireEffect.alive )
 		{
 			if ( m_sprFireEffect.animation.finished )
 			{
@@ -675,8 +675,8 @@ class Player extends FlxSprite
 			facing = FlxObject.RIGHT;
 		
 		//update muzzleflash
-		m_sprFireEffect.revive();
-		m_sprFireEffect.animation.play("blast", true);
+	//	m_sprFireEffect.revive();
+	//	m_sprFireEffect.animation.play("blast", true);
 		
 		var rocket = new Rocket( origin.x, origin.y );
 		rocket.angle = newAngle;

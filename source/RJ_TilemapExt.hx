@@ -614,7 +614,7 @@ class RJ_TilemapExt extends FlxTilemap
 				Object.velocity.y = downhillBounceYVel;
 				didBounce = true;
 			}
-			else if ( canBounceUp )
+			else if ( !FacingEast && canBounceUp )
 			{
 				// Bounce uphill
 				Object.velocity.y = -(Math.abs(Object.velocity.x) * 1.0);
@@ -631,7 +631,7 @@ class RJ_TilemapExt extends FlxTilemap
 				Object.velocity.y = downhillBounceYVel;
 				didBounce = true;
 			}
-			else if ( canBounceUp )
+			else if ( FacingEast && canBounceUp )
 			{
 				// Bounce uphill
 				Object.velocity.y = -(Math.abs(Object.velocity.x) * 1.0);
