@@ -270,7 +270,7 @@ class PlayState extends FlxState
 				var bgW = 303;
 				var bgH = 256;
  				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
- 				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.9;
+ 				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.7;
  				bgtile.width = 0;
  				bgtile.height = 0;
  				bgtile.allowCollisions = FlxObject.NONE;
@@ -444,19 +444,14 @@ class PlayState extends FlxState
 						{
 							// Offset the prop to account for it being far away from the default camera top-left
 							// This makes it more accurate to what it looks like in Tiled when the player is vertically aligned with the prop
-							var difference = (prop.x * prop.scrollFactor.x) - (prop.x);
-							prop.x += difference;
 							
-							if (prop.scrollFactor.x > 1.0)
-							{
-								prop.x += prop.width * 0.25;
-								prop.x -= Reg.worldCam.width * 0.25;
-							}
-							else
-							{
-								prop.x -= prop.width * 0.25;
-								prop.x += Reg.worldCam.width * 0.25;
-							}
+							// This still isn't perfect but I spent a ton of hours getting it this close (all the props are slightly offset to the right based on scrollfactor)
+							// For the future: the goal is to make it so props appear where they do in Tiled when the player is centered on top of their would-be location
+							
+							// Also, this is definitely based on the width of the prop: the wider it is, the worse the offset (also, the fact that the offset is always +x)
+							var halfWidth:Float = Reg.worldCam.width * 0.5; //640
+							prop.x -= ( prop.x - (prop.x * prop.scrollFactor.x) );
+							prop.x += halfWidth - (halfWidth * prop.scrollFactor.x);
 						}
 						
 					//end switch statement

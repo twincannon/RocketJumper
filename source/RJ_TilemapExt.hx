@@ -603,8 +603,6 @@ class RJ_TilemapExt extends FlxTilemap
 		var canBounceDown:Bool = Object.velocity.y > 100;
 		var canBounceUp:Bool = Math.abs(Object.velocity.x) > Reg.PLAYER_MAX_SPEED * 1.5;
 		
-		var bounceDownScalar = Reg.RemapValClamped( Math.abs(Object.velocity.y), 250, 500, 0.0, 0.5 );
-		
 		if ( movingEast )
 		{
 			if ( FacingEast && canBounceDown)
