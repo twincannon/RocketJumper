@@ -30,9 +30,9 @@ import entities.Checkpoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxSort;
 import flixel.math.FlxAngle;
-import flixel.addons.tile.FlxTilemapExt;
 import flixel.graphics.frames.FlxTileFrames;
 import flixel.effects.postprocess.PostProcess;
+
 
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
@@ -54,7 +54,7 @@ class PlayState extends FlxState
 	private var propsMid:FlxTypedGroup<Prop> = new FlxTypedGroup<Prop>();
 	private var propsFore:FlxTypedGroup<Prop> = new FlxTypedGroup<Prop>();
 	private var goal:Goal;
-	private var map:FlxTilemapExt;
+	private var map:RJ_TilemapExt;
 	private var ooze:FlxTilemap;
 	private var mapbg:FlxTilemap;
 	private var detailmap:FlxTilemap;
@@ -91,6 +91,7 @@ class PlayState extends FlxState
 		setupLevel();
 		
 		hud = new HUD( FlxG.width, FlxG.height );
+		Reg.hud = hud;
 		
 		loadEntities();
 		addGameAssetsToState();
@@ -132,7 +133,6 @@ class PlayState extends FlxState
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
 		m_sprCrosshair.scrollFactor.set( 0, 0 );
 		m_sprCrosshair.camera = Reg.worldCam;
-		FlxG.mouse.visible = false;
 		add( m_sprCrosshair );
 
 		add( hud );
@@ -208,7 +208,7 @@ class PlayState extends FlxState
 		
 		// Create various tilemaps
 		mapbg = new FlxTilemap();
-		map = new FlxTilemapExt();
+		map = new RJ_TilemapExt();
 		ooze = new FlxTilemap();
 		detailmap = new FlxTilemap();
 		
@@ -246,12 +246,14 @@ class PlayState extends FlxState
 			}
 		}
 		
-		var tempFL:Array<Int> = [34,46]; //tilesnew: 3
-		var tempFR:Array<Int> = [33,45]; //tilesnew: 2
-		var tempCL:Array<Int> = [36,48]; //tilesnew: 5
-		var tempCR:Array<Int> = [35,47]; //tilesnew: 4
-		map.setSlopes(tempFL, tempFR, tempCL, tempCR);	
-		
+		// Sets slopes (tilesets index start at 0)
+		var tempNW:Array<Int> = [34,46, 57,58,59,60]; //tilesnew: 3
+		var tempNE:Array<Int> = [33,45]; //tilesnew: 2
+		var tempSW:Array<Int> = [36,48]; //tilesnew: 5
+		var tempSE:Array<Int> = [35,47]; //tilesnew: 4
+		map.setSlopes(tempNW, tempNE, tempSW, tempSE); // These slopes work as such: the direction is perpindicular, facing from inside the collidable area out (so NW means the northwest area is where the player stands)
+		map.setGentle([58], [57]);
+		map.setSteep([59], [60]);
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
 		
 		mapbg.camera = Reg.worldCam;

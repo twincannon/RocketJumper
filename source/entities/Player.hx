@@ -33,6 +33,8 @@ class Player extends FlxSprite
 	private var m_OldGamepadAxis:FlxPoint = FlxPoint.get(0, 0);
 	private var m_bAimAnimDirty:Bool = false;
 	private var m_flRocketFireTimer:Float = 0;
+	private var m_bAimLockHeld:Bool = false;
+	private var m_AimLockDir:FlxPoint = FlxPoint.get(0, 0);
 	public var melting:Bool = false;
 	public var living:Bool = true;
 	public var checkPointNum:Int = 0;
@@ -50,15 +52,19 @@ class Player extends FlxSprite
 	private var jumpLeniencyTimer:Float = 0; //depracated with quake style
 	private var _sndJump:FlxSound;
 	private var _sndShoot:FlxSound;
+	
+	private var m_bUsingAnalogAiming:Bool = false;
+	
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
 		super(X, Y);		
 		
-		loadGraphic(Assets.getBitmapData("assets/images/player.png"), true, 58, 58);
+		//loadGraphic(Assets.getBitmapData("assets/images/player.png"), true, 58, 58);
+		makeGraphic(18, 32, 0xFFFFFFFF);
 		camera = Reg.worldCam;
 		
-		animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
+	/*	animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
 		animation.add("runstop", [for (i in 12...17) i], PLAYER_FRAMERATE, false );
 		animation.add("jump", [for (i in 17...22) i], Std.int(PLAYER_FRAMERATE/3), false );
@@ -76,9 +82,9 @@ class Player extends FlxSprite
 		animation.add("aim_126", [34]);
 		animation.add("aim_144", [35]);
 		animation.add("aim_162", [36]);
-		animation.add("aim_180", [37]);
+		animation.add("aim_180", [37]);*/
 		
-		animation.play("idle");
+		//animation.play("idle");
 		facing = FlxObject.RIGHT;
 		setFacingFlip( FlxObject.LEFT, false, false );
 		setFacingFlip( FlxObject.RIGHT, true, false );
@@ -91,7 +97,7 @@ class Player extends FlxSprite
 		//tweak player's hitbox
 		width = 18;
 		height = 32;
-		offset.set(20, 26);
+		//offset.set(20, 26);
 		
 		//a more lenient hitbox for harmful collisions
 		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 3 );
@@ -153,7 +159,7 @@ class Player extends FlxSprite
 		var wasOnGround:Bool = onGround;
 		
 		HandleDeath();
-		HandleAnimation();
+		//HandleAnimation();
 		
 		HandleInput(); //handle input, update velocity
 		HandleGamepadInput();
@@ -171,7 +177,7 @@ class Player extends FlxSprite
 			
 		if (onGround && !wasOnGround)
 		{
-			trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
+			//trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
 			highestJumpY = y;
 		}
 	}
@@ -184,14 +190,14 @@ class Player extends FlxSprite
 		if ( FlxG.keys.justPressed.R )
 			Resurrect();
 			
+		acceleration.x = 0;
+			
 		// Gain control of mouse if it's not currently active
 		if ( !usingMouse && (oldMouseScreenXY.x != FlxG.mouse.screenX || oldMouseScreenXY.y != FlxG.mouse.screenY) )
 		{
 			FlxG.mouse.reset;
 			usingMouse = true;
 			oldMouseScreenXY.set( FlxG.mouse.screenX, FlxG.mouse.screenY );
-			
-			return;
 		}	
 		
 		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
@@ -204,8 +210,6 @@ class Player extends FlxSprite
 		
 		if ( !living || levelBeat )
 			return;	
-			
-		acceleration.x = 0;
 		
 		if (FlxG.keys.anyPressed([LEFT, A]))
 			Walk( FlxObject.LEFT );
@@ -213,7 +217,7 @@ class Player extends FlxSprite
 		if (FlxG.keys.anyPressed([RIGHT, D]))
 			Walk( FlxObject.RIGHT );
 		
-		// If we're on a platform and hold down+jump, drop through it
+		// If we're on a platform and hold down+jump, drop through it //@TODO: make this work elsewhere, probably in HandleJumping (so I don't have to copy it into gamepad code)
 		if (FlxG.keys.anyPressed([DOWN, S]) && FlxG.keys.justPressed.SPACE && onPlatform) //@TODO: probably make W not jump anymore, since space now has unique functionality.. also add this to gamepad input
 		{
 			y += 6;
@@ -259,66 +263,98 @@ class Player extends FlxSprite
 		if ( m_gamePad.justPressed.X )
 			Resurrect();
 		
-		var xboxJumpPressed = m_gamePad.justPressed.A ||
-							  m_gamePad.justPressed.DPAD_UP ||
-							  m_gamePad.justPressed.RIGHT_STICK_CLICK ||
-							  m_gamePad.justPressed.RIGHT_SHOULDER;
+		var xboxJumpPressed = m_gamePad.justPressed.A;
 		
 		var xboxFirePressed = m_gamePad.analog.value.RIGHT_TRIGGER > 0.25 ||
-							  m_gamePad.justPressed.RIGHT_STICK_CLICK ||
-							  m_gamePad.justPressed.RIGHT_SHOULDER;
-							  
-							  
+							  m_gamePad.justPressed.RIGHT_STICK_CLICK;
+		
+		if ( m_gamePad.pressed.RIGHT_SHOULDER || m_gamePad.pressed.LEFT_SHOULDER )
+			m_bAimLockHeld = true;
+		else
+			m_bAimLockHeld = false;
+		
 		m_bJumpHeldThisFrame = ( m_bJumpHeldThisFrame || xboxJumpPressed );
 		m_bJumpPressedThisFrame = ( m_bJumpPressedThisFrame || xboxJumpPressed );
 		
 		if ( !living || levelBeat )
 			return;
 		
-		if ( m_gamePad.pressed.DPAD_LEFT )
-			Walk( FlxObject.LEFT );
-		
-		if ( m_gamePad.pressed.DPAD_RIGHT )
-			Walk( FlxObject.RIGHT );
-		
-		m_gamePad.deadZone = 0.0; //Still not fixed in 4.0.0
-		var X = m_gamePad.analog.value.RIGHT_STICK_X;
-		var Y = m_gamePad.analog.value.RIGHT_STICK_Y;
-		
-		var vecAxis = new FlxVector( X, Y );
-		var length = vecAxis.length;
-	
-		//deadzone
-		if ( length < 0.3 )
+		m_gamePad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
+		m_gamePad.deadZone = 0.4;
+				
+		if ( (m_gamePad.pressed.DPAD_LEFT || m_gamePad.pressed.DPAD_RIGHT || 
+			  m_gamePad.pressed.DPAD_UP   || m_gamePad.pressed.DPAD_DOWN  ||
+			  m_gamePad.analog.value.LEFT_STICK_X != 0 || m_gamePad.analog.value.LEFT_STICK_Y != 0 ) && !m_bAimLockHeld)
 		{
-			X = m_OldGamepadAxis.x;
-			Y = m_OldGamepadAxis.y;
-		}
-		else
+			m_AimLockDir = FlxPoint.get(0, 0);
 			usingMouse = false;
+		}
+	
+		if ( m_gamePad.pressed.DPAD_LEFT || m_gamePad.analog.value.LEFT_STICK_X < 0)
+		{
+			Walk( FlxObject.LEFT );
+			m_AimLockDir.x = m_bAimLockHeld ? m_AimLockDir.x : -1;
+		}
+		else if ( m_gamePad.pressed.DPAD_RIGHT || m_gamePad.analog.value.LEFT_STICK_X > 0)
+		{
+			Walk( FlxObject.RIGHT );
+			m_AimLockDir.x = m_bAimLockHeld ? m_AimLockDir.x : 1;
+		}
 		
-		var angle:Float = Math.atan2( Y, X );
-		crosshairLocation.x = 75 * Math.cos(angle);
-		crosshairLocation.y = 75 * Math.sin(angle);
+		if ( m_gamePad.pressed.DPAD_UP || m_gamePad.analog.value.LEFT_STICK_Y < 0 )
+		{
+			m_AimLockDir.y = m_bAimLockHeld ? m_AimLockDir.y : -1;
+		}
+		else if ( m_gamePad.pressed.DPAD_DOWN || m_gamePad.analog.value.LEFT_STICK_Y > 0 )
+		{
+			m_AimLockDir.y = m_bAimLockHeld ? m_AimLockDir.y : 1;
+		}
 		
-		if(Math.abs(X - m_OldGamepadAxis.x) > 0.1 || Math.abs(Y - m_OldGamepadAxis.y) > 0.1)
+		var X = m_AimLockDir.x;
+		var Y = m_AimLockDir.y;
+		var aimX = X;
+		var aimY = Y;
+		
+		
+		if ( m_gamePad.justPressed.Y )
+		{
+			m_bUsingAnalogAiming = !m_bUsingAnalogAiming;
+			Reg.hud.setInputModeText( m_bUsingAnalogAiming ? "Analog stick style" : "D-Pad style (hold bumpers to lock aim)");
+		}
+			
+		if ( m_bUsingAnalogAiming )
+		{
+			X = m_gamePad.analog.value.RIGHT_STICK_X;
+			Y = m_gamePad.analog.value.RIGHT_STICK_Y;
+			
+			aimX = X != 0 ? X : m_OldGamepadAxis.x;
+			aimY = Y != 0 ? Y : m_OldGamepadAxis.y;
+		}
+		
+		// Store axis so we can still fire when the player has let go of the analog stick
+		m_OldGamepadAxis = FlxPoint.get( aimX, aimY );
+		
+		if ( (X != 0 || Y != 0) && m_bUsingAnalogAiming)
 		{
 			usingMouse = false;
 			m_bAimAnimDirty = true;
 		}
 		
-		// Store axis so we can still fire when the player has let go of the analog stick
-		var aimX = X != 0 ? X : m_OldGamepadAxis.x;
-		var aimY = Y != 0 ? Y : m_OldGamepadAxis.y;
-		
-		m_OldGamepadAxis = FlxPoint.get( X, Y );
+		if ( !usingMouse )
+		{
+			var angle:Float = Math.atan2( aimY, aimX );
+			crosshairLocation.x = 75 * Math.cos(angle);
+			crosshairLocation.y = 75 * Math.sin(angle);
+		}
 		
 		if ( m_flRocketFireTimer <= 0.0 && (aimX != 0 || aimY != 0) && xboxFirePressed )
 		{
-			aimX *= 1000;
-			aimY *= 1000;
-			aimX += x + width * 0.5;
-			aimY += y + height * 0.5;
+			// This is kind of hacky, but it works
+			aimX *= 10000;
+			aimY *= 10000;
+			aimX += getMidpoint().x;
+			aimY += getMidpoint().y;
+			
 			var joyangle:Float = getMidpoint().angleBetween( FlxPoint.get(aimX, aimY) );
 			FireBullet( getMidpoint(), FlxPoint.get(aimX, aimY), joyangle );
 		}
@@ -357,7 +393,7 @@ class Player extends FlxSprite
 		if ( levelBeat )
 			return;
 			
-		animation.play("jump", true);
+		//animation.play("jump", true);
 		_sndJump.play();
 		firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 		velocity.y = -Reg.PLAYER_JUMP_VEL;
@@ -387,7 +423,7 @@ class Player extends FlxSprite
 			acceleration.set( 0, 0 );
 			drag.y = 20;
 			velocity.set( 0, falling ? 18 : -18 );
-			animation.play("melt");
+			//animation.play("melt");
 			living = false;
 			firing = false;
 			return;
@@ -411,7 +447,7 @@ class Player extends FlxSprite
 		facing = FlxObject.RIGHT; //@TODO make an arg for this based on playerstart/checkpoint orientation
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
-		animation.play("idle");
+	//	animation.play("idle");
 		x = spawnPoint.x;
 		y = spawnPoint.y;
 		
@@ -563,7 +599,7 @@ class Player extends FlxSprite
 	// Run in given direction
 	// --------------------------------------------------------------------------------------
 	private function Walk( dir:Int ):Void
-	{
+	{		
 		if( !firing && living )
 			facing = dir;
 				
@@ -628,7 +664,7 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function FireBullet( origin:FlxPoint, target:FlxPoint, newAngle:Float ):Void
 	{
-		animation.play("fire", true);
+		//animation.play("fire", true);
 		firing = true;
 		
 		_sndShoot.play();

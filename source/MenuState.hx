@@ -13,7 +13,7 @@ import openfl.Assets;
 class MenuState extends FlxState
 {
 	private var logo:FlxSprite;
-	private var logotimer:Float = 0;
+	private var logotimer:Float = 1;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -26,8 +26,9 @@ class MenuState extends FlxState
 		add(logo);
 		logo.x = FlxG.width / 2 - logo.width / 2;
 		logo.y = FlxG.height / 2 - logo.height / 2;
-		
+#if !debug
 		FlxG.mouse.visible = false;
+#end
 		FlxG.fixedTimestep = false;
 		//FlxG.autoPause = false;
 		FlxG.inputs.resetOnStateSwitch = false; // Allows player to hold down keys between state switches and not have the inputs drop
@@ -49,10 +50,10 @@ class MenuState extends FlxState
 	{
 		super.update(elapsed);
 		
-//#if debug
+#if debug
 		startGame();
 		return;
-//#else
+#else
 		// Do logo display/timing
 		if (logotimer == 0)
 		{
@@ -72,7 +73,7 @@ class MenuState extends FlxState
 			logotimer = -1;
 			FlxG.cameras.fade(0x00000000, 0.50, false, startGame);
 		}
-//#end
+#end
 	}	
 
 	private function startGame():Void

@@ -20,7 +20,7 @@ class Main extends Sprite
 	var framerate:Int = 120;
 #end
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
-	var startFullscreen:Bool = true; // Whether to start the game in fullscreen on desktop targets
+	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
 	
 #if windows //@TODO does this work on all native targets?
 	var constrainCursorToWindowFrame = flash.Lib.load("lime", "nme_stage_constrain_cursor_to_window_frame", 2);

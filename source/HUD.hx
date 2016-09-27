@@ -22,6 +22,7 @@ class HUD extends FlxGroup
 	public var signText:FlxText;
 	public var signTextBox:FlxSprite;
 	public var centerPoint:FlxSprite;
+	public var inputModeText:FlxText;
 
 	public var hudcamera:FlxCamera;
 	
@@ -107,12 +108,21 @@ class HUD extends FlxGroup
 		setBorder( levelNameText, 16, "right" );
 		add(levelNameText);
 		
+		inputModeText = new FlxText( 0, 0, levelNameTextWidth, "Input Mode");
+		setBorder( inputModeText, 16, "right" );
+		add(inputModeText);
+		
 		signText = new FlxText( 0, 0, signTextWidth - signTextBuffer*2, "I'm a sign!" );
 		setBorder( signText, 16, "center" );
 		add(signText);
 		signText.kill();
 		
 		updateSizes(0, 0, W, H);
+	}
+	
+	public function setInputModeText( Text:String ):Void
+	{
+		inputModeText.text = Text;
 	}
 
 	private function setBorder( Text:FlxText, Size:Int, Align:String, Color:Int = FlxColor.WHITE ):Void
@@ -151,6 +161,8 @@ class HUD extends FlxGroup
 		levelFinishedText.setPosition( x + W / 2 - levelFinishedTextWidth / 2, y + levelFinishedTextY );
 		levelNameText.setPosition( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer );
 		signText.setPosition( x + W / 2 - signTextWidth / 2 + signTextBuffer, y + signTextY + signTextBuffer );
+		
+		inputModeText.setPosition( x + W - levelNameTextWidth - cornerTextBuffer, y + cornerTextBuffer * 2 );
 	}
 	
 	public function ToggleSign( Active:Bool, Text:String = "" ):Void

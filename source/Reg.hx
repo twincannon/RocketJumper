@@ -33,6 +33,7 @@ class Reg
 	public static var platforms:FlxGroup;
 	public static var rockets:FlxGroup = new FlxGroup();
 	public static var worldCam:FlxCamera;
+	public static var hud:HUD;
 	
 	/**
 	 * Destroy all rockets and clear the FlxGroup.
