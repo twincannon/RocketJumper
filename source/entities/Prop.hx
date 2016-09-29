@@ -36,6 +36,5 @@ class Prop extends FlxSprite
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
-		//angle += 0.1;
 	}
 }

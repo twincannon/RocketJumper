@@ -98,7 +98,7 @@ class PlayState extends FlxState
 		handleCameraZoom( 1.3333332 ); //720 (game resolution) divided by 1080 (monitor resolution)
 		Reg.worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
-#if !flash
+#if (cpp || neko)
 		var shader = new PostProcess("assets/shaders/scanline.frag");
 		FlxG.addPostProcess(shader);
 #end
@@ -123,7 +123,8 @@ class PlayState extends FlxState
 		
 		Reg.player.addToState();
 		
-		add( map ); //TODO: find out if it's safe to add this twice? (just doing it for z-ordering) this object is also added via adding the reg.mapgroup
+	//	add( map ); //@TODO: find out if it's safe to add this twice? (just doing it for z-ordering) this object is also added via adding the reg.mapgroup
+					//ok wow so yeah, this definitely makes it draw twice or something.... figure out another way to make the player behind the map, i guess (or dont)
 		add( propsFore );
 		
 		Reg.player.addCrosshairLine();
@@ -295,7 +296,7 @@ class PlayState extends FlxState
 
 			var filename = layer.name + Reg.ASSET_EXT_IMAGE;
 			var tilemapPath:String = Reg.ASSET_PATH_TILEMAPS + filename;
-
+			
 			var tileset:TiledTileSet = getTilesetByName(tiledMap, layer.name);
 			if ( tileset == null )
 			{
@@ -331,17 +332,17 @@ class PlayState extends FlxState
 			}
 		}
 		
-		// Sets slopes (tilesets index start at 0)
-		var tempNW:Array<Int> = [34,46, 57,58,59,60]; //tilesnew: 3
-		var tempNE:Array<Int> = [33,45]; //tilesnew: 2
-		var tempSW:Array<Int> = [36,48]; //tilesnew: 5
-		var tempSE:Array<Int> = [35,47]; //tilesnew: 4
-		map.setSlopes(tempNW, tempNE, tempSW, tempSE); // These slopes work as such: the direction is perpindicular, facing from inside the collidable area out (so NW means the northwest area is where the player stands)
+		// Sets slopes (index starts at 1 here, not 0!)
+		var tempNW:Array<Int> = [34,46, 57,58,59,60];
+		var tempNE:Array<Int> = [33,45];
+		var tempSW:Array<Int> = [36,48];
+		var tempSE:Array<Int> = [35,47];
+		map.setSlopes(tempNW, tempNE, tempSW, tempSE); // These slopes work as such: the direction is perpindicular, facing from inside the collidable area out (so NW means the northwest area is empty)
 		map.setGentle([58], [57]);
 		map.setSteep([59], [60]);
-		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this for tiles.png
+		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this and re-use tiles.png
 		
-		mapbg.camera = Reg.worldCam;
+		mapbg.camera = Reg.worldCam; //@TODO: Are these necessary? Not sure why I ever added them but they seem to be depracated now
 		detailmap.camera = Reg.worldCam;
 		map.camera = Reg.worldCam;
 		ooze.camera = Reg.worldCam;
@@ -653,7 +654,9 @@ class PlayState extends FlxState
 				hud.deadText.kill();
 				
 			if ( FlxG.collide(map, Reg.player) )
+			{
 				map.updateBuffers();
+			}
 			
 			if ( FlxG.collide(Reg.platforms, Reg.player) )
 				Reg.player.onPlatform = true;
