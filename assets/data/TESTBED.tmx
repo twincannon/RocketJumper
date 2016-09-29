@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="400" height="150" tilewidth="20" tileheight="20" nextobjectid="60">
  <tileset firstgid="1" name="tiles" tilewidth="20" tileheight="20" tilecount="144" columns="12">
-  <image source="../images/tiles.png" width="240" height="240"/>
+  <image source="../images/tilemaps/tiles.png" width="240" height="240"/>
  </tileset>
  <tileset firstgid="145" name="tilesbg" tilewidth="20" tileheight="20" tilecount="96" columns="12">
-  <image source="../images/tilesbg.png" width="240" height="160"/>
+  <image source="../images/tilemaps/tilesbg.png" width="240" height="160"/>
   <terraintypes>
    <terrain name="TilesBGDirtToBlack" tile="-1"/>
    <terrain name="TilesBGStoneToBlack" tile="-1"/>
@@ -37,10 +37,10 @@
   <tile id="95" terrain=",1,1,1"/>
  </tileset>
  <tileset firstgid="241" name="ooze" tilewidth="20" tileheight="20" tilecount="8" columns="8">
-  <image source="../images/tiles_ooze.png" width="160" height="20"/>
+  <image source="../images/tilemaps/tiles_ooze.png" width="160" height="20"/>
  </tileset>
  <tileset firstgid="249" name="tilesdetail" tilewidth="20" tileheight="20" tilecount="100" columns="10">
-  <image source="../images/tilesdetail.png" width="200" height="200"/>
+  <image source="../images/tilemaps/tilesdetail.png" width="200" height="200"/>
  </tileset>
  <tileset firstgid="349" name="props" tilewidth="64" tileheight="64" tilecount="3" columns="0">
   <tile id="0">

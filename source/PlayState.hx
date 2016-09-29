@@ -33,13 +33,13 @@ import flixel.math.FlxAngle;
 import flixel.graphics.frames.FlxTileFrames;
 import flixel.effects.postprocess.PostProcess;
 
-
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
 import flixel.addons.editors.tiled.TiledObjectLayer;
 import flixel.addons.editors.tiled.TiledTileSet;
 import flixel.addons.editors.tiled.TiledTileLayer;
 
+using StringTools;
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -80,9 +80,8 @@ class PlayState extends FlxState
 			Reg.worldCam.destroy;
 		
 		FlxG.cameras.reset();
-		
+
 		Reg.worldCam = new FlxCamera( 0, 0, FlxG.width, FlxG.height, 1 );
-		
 		
 		FlxG.cameras.add( Reg.worldCam );
 		FlxG.camera = Reg.worldCam;
@@ -140,30 +139,100 @@ class PlayState extends FlxState
 		FlxG.sound.volume = 0.2;
 	}
 	
-	/** -------------------------------------------------------------------- 
-	 *  Helper function to get the starting ID a tileset in a given TiledMap
-	 */
-	function getStartGid(tiledLevel:TiledMap, tilesheetName:String):Int
+	/** --------------------------------------------------------------
+	 *  Helper function to find a given TiledTileSet within a TiledMap
+	 *  -------------------------------------------------------------- */ 
+	private function getTilesetByName(tiledLevel:TiledMap, tilesheetName:String):TiledTileSet
 	{
-		var tileGID:Int = 1;
-		
 		for (tileset in tiledLevel.tilesets)
 		{
-			var tilesheetPath:Path = new Path(tileset.imageSource);
-			var thisTilesheetName = tilesheetPath.file + "." + tilesheetPath.ext;
-			
-			if (thisTilesheetName == tilesheetName)
+			if (tileset.name == tilesheetName)
 			{
-				tileGID = tileset.firstGID;
+				return tileset;
 			}
 		}
 		 
-		return tileGID;
+		return null;
+	}
+
+	/** ----------------------------------------------------------------------------------------------------
+	 *  Check that all tiles in a tilemap are within valid bounds (no accidental tiles from a wrong tileset)
+	 *  ---------------------------------------------------------------------------------------------------- */ 
+	private function checkTiles(MapData:String, StartGid:Int, NumTiles:Int):Array<Int>
+	{
+		// path to map data file
+		if (Assets.exists(MapData))
+		{
+			MapData = Assets.getText(MapData);
+		}
+		
+		// Figure out the map dimensions based on the data string
+		var _data:Array<Int> = new Array<Int>();
+		var columns:Array<String>;
+		
+		var regex:EReg = new EReg("[ \t]*((\r\n)|\r|\n)[ \t]*", "g"); // Some Tiled csv data specific filtering
+		var lines:Array<String> = regex.split(MapData);
+		var rows:Array<String> = lines.filter(function(line) return line != "");
+		
+		var heightInTiles:Int = rows.length;
+		var widthInTiles:Int = 0;
+		
+		var row:Int = 0;
+		while (row < heightInTiles)
+		{
+			var rowString = rows[row];
+			if (rowString.endsWith(","))
+				rowString = rowString.substr(0, rowString.length - 1);
+			columns = rowString.split(",");
+			
+			if (columns.length == 0)
+			{
+				heightInTiles--;
+				continue;
+			}
+			if (widthInTiles == 0)
+			{
+				widthInTiles = columns.length;
+			}
+			
+			var column = 0;
+			while (column < widthInTiles)
+			{
+				//the current tile to be added:
+				var columnString = columns[column];
+				var curTile = Std.parseInt(columnString);
+				
+				if (curTile == null)
+					throw 'String in row $row, column $column is not a valid integer: "$columnString"';
+				
+				if ( curTile < 0 )
+				{
+					curTile = 0;
+				}
+				else if (curTile > 0 && curTile < StartGid)
+				{
+					trace("WARNING: Tile id " + curTile + " at " + column + "," + row + " is below valid tile bounds!");
+					curTile = 0;
+				}
+				else if (curTile > NumTiles + StartGid)
+				{
+					trace("WARNING: Tile id " + curTile + " at " + column + "," + row + " is above valid tile bounds!");
+					curTile = NumTiles + StartGid;
+				}
+				
+				_data.push(curTile);
+				column++;
+			}
+			
+			row++;
+		}
+		
+		return _data;
 	}
 	
 	/** ----------------------------------------------------------------------------
 	 *  Parses the level list if necessary and then loads the currently selected map
-	 */
+	 *  ---------------------------------------------------------------------------- */
 	private function setupLevel():Void
 	{
 		if ( !Reg.levelsloaded )
@@ -216,33 +285,49 @@ class PlayState extends FlxState
 		{
 			if ( !Std.is(layer, TiledTileLayer) )
 				continue;
+
+			var tileLayer = cast(layer, TiledTileLayer);
 			
-			var tileLayer = cast (layer, TiledTileLayer);
-			
-			var tileSize:FlxPoint = FlxPoint.get(20, 20);
+			var tileWidth:Int = 20;
+			var tileHeight:Int = 20;
 			var tileSpacing:FlxPoint = FlxPoint.get(0, 0);
 			var tileBorder:FlxPoint = FlxPoint.get(2, 2);
-			
-			if ( layer.name == "tilesbg" )
+
+			var filename = layer.name + Reg.ASSET_EXT_IMAGE;
+			var tilemapPath:String = Reg.ASSET_PATH_TILEMAPS + filename;
+
+			var tileset:TiledTileSet = getTilesetByName(tiledMap, layer.name);
+			if ( tileset == null )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesbg.png", tileSize, tileSpacing, tileBorder);
-				mapbg.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesbg.png") );
+				trace("Couldn't resolve tilemap! File: " + tilemapPath);
+				continue;
 			}
-			else if ( layer.name == "tiles" )
+
+			if ( Assets.exists(tilemapPath) )
 			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles.png", tileSize, tileSpacing, tileBorder);
-				map.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles.png") );
-			}
-			else if ( layer.name == "ooze" )
-			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tiles_ooze.png", tileSize, tileSpacing, tileBorder);
-				ooze.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tiles_ooze.png") );
-			}
-			
-			else if ( layer.name == "tilesdetail" )
-			{
-				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders("assets/images/tilesdetail.png", tileSize, tileSpacing, tileBorder);
-				detailmap.loadMapFromCSV( tileLayer.csvData, borderedTiles, 20, 20, FlxTilemapAutoTiling.OFF, getStartGid(tiledMap, "tilesdetail.png") );
+				
+				tileset.firstGID;
+				var borderedTiles = FlxTileFrames.fromBitmapAddSpacesAndBorders(tilemapPath, FlxPoint.get(tileWidth, tileHeight), tileSpacing, tileBorder);
+				var startGid = tileset.firstGID;
+				var tileCount = tileset.numTiles;
+				var checkedTiles:Array<Int> = checkTiles(tileLayer.csvData, startGid, tileset.numTiles);
+				
+				if ( layer.name == "tilesbg" )
+				{
+					mapbg.loadMapFromArray( checkedTiles, tileLayer.width, tileLayer.height, borderedTiles, tileWidth, tileHeight, FlxTilemapAutoTiling.OFF, startGid );
+				}
+				else if ( layer.name == "tiles" )
+				{
+					map.loadMapFromArray( checkedTiles, tileLayer.width, tileLayer.height, borderedTiles, tileWidth, tileHeight, FlxTilemapAutoTiling.OFF, startGid );
+				}
+				else if ( layer.name == "ooze" )
+				{
+					ooze.loadMapFromArray( checkedTiles, tileLayer.width, tileLayer.height, borderedTiles, tileWidth, tileHeight, FlxTilemapAutoTiling.OFF, startGid );
+				}
+				else if ( layer.name == "tilesdetail" )
+				{
+					detailmap.loadMapFromArray( checkedTiles, tileLayer.width, tileLayer.height, borderedTiles, tileWidth, tileHeight, FlxTilemapAutoTiling.OFF, startGid );
+				}
 			}
 		}
 		
@@ -520,7 +605,7 @@ class PlayState extends FlxState
 				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );*/
 		}
 			
-#if !flash
+#if (!flash && !html5)
 		if ( FlxG.keys.justPressed.ESCAPE )
 			Sys.exit(0);
 #end

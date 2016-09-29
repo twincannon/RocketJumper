@@ -67,6 +67,9 @@
 	
 	<!--Disable the Flixel core focus lost screen-->
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
+	<haxedef name="HXCPP_DEBUG_LINK" if="debug" />
+	<haxelib name="hxcpp-debugger" if="debug" />
+    <haxedef name="HXCPP_DEBUGGER" if="debug"/>
 	
 	<!--Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode!-->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />

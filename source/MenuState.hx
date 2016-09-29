@@ -32,6 +32,12 @@ class MenuState extends FlxState
 		FlxG.fixedTimestep = false;
 		//FlxG.autoPause = false;
 		FlxG.inputs.resetOnStateSwitch = false; // Allows player to hold down keys between state switches and not have the inputs drop
+
+		// Create debugger (bool arg will enable hxcpp breakpoints if true)
+#if (FLX_DEBUG && windows && !neko)
+    	new debugger.HaxeRemote(false, "localhost");
+#end
+		//FlxG.log.redirectTraces = true; // Redirect traces to the ingame console log as vscode traces with windows buildtarget seems broken
 	}
 	
 	/**

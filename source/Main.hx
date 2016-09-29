@@ -29,7 +29,7 @@ class Main extends Sprite
 	// You can pretty much ignore everything from here on - your code should go in your states.
 	
 	public static function main():Void
-	{	
+	{
 		Lib.current.addChild(new Main());
 	}
 	
@@ -62,7 +62,6 @@ class Main extends Sprite
 		// Pull width/height from Project.xml
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
-		trace(Lib.current.stage.displayState);
 		
 #if windows
 		constrainCursorToWindowFrame(flash.Lib.stage.__handle, true);

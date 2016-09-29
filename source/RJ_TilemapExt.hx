@@ -740,8 +740,10 @@ class RJ_TilemapExt extends FlxTilemap
 		// Fix the slope point to the slope tile
 		fixSlopePoint(cast(Slope, FlxTile));
 		
-		// Check if the object is inside the slope
-		if (_objPoint.x > Slope.x + _snapping && _objPoint.x < Slope.x + _tileWidth + Object.width + _snapping && _objPoint.y >= _slopePoint.y && _objPoint.y <= Slope.y + _tileHeight)
+		// Check if the object is inside the slope (Updated with Holobunny's conditional)
+        if (_objPoint.x > Slope.x - _snapping && _objPoint.x < Slope.x + _tileWidth + Object.width + _snapping
+            && (_objPoint.y >= _slopePoint.y || _objPoint.y >= _slopePoint.y - _snapping && Object.velocity.x < 0 && Object.velocity.y >= 0)
+            && _objPoint.y <= Slope.y + _tileHeight)
 		{
 			// Call the collide function for the floor slope
 			onCollideFloorSlope(Slope, Object, false);
@@ -793,8 +795,10 @@ class RJ_TilemapExt extends FlxTilemap
 		// Fix the slope point to the slope tile
 		fixSlopePoint(cast(Slope, FlxTile));
 		
-		// Check if the object is inside the slope
-		if (_objPoint.x > Slope.x - Object.width - _snapping && _objPoint.x < Slope.x + _tileWidth + _snapping && _objPoint.y >= _slopePoint.y && _objPoint.y <= Slope.y + _tileHeight)
+		// Check if the object is inside the slope (Updated with Holobunny's conditional)
+        if (_objPoint.x > Slope.x - (Object.width + _snapping) && _objPoint.x < Slope.x + (_tileWidth - _snapping)
+            && (_objPoint.y >= _slopePoint.y || _objPoint.y >= _slopePoint.y - _snapping*2 && Object.velocity.x > 0 && Object.velocity.y >= 0)
+            && _objPoint.y <= Slope.y + _tileHeight)
 		{
 			// Call the collide function for the floor slope
 			onCollideFloorSlope(Slope, Object, true);

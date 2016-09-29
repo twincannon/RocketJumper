@@ -27,6 +27,10 @@ class Reg
 	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
 	
 	public inline static var ASSET_PATH_DATA = "assets/data/";
+	public inline static var ASSET_PATH_IMAGES = "assets/images/";
+	public inline static var ASSET_PATH_TILEMAPS = ASSET_PATH_IMAGES + "tilemaps/";
+
+	public inline static var ASSET_EXT_IMAGE = ".png";
 
 	public static var player:Player;
 	public static var mapGroup:FlxGroup;

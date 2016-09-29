@@ -60,8 +60,8 @@ class Player extends FlxSprite
 	{
 		super(X, Y);		
 		
-		//loadGraphic(Assets.getBitmapData("assets/images/player.png"), true, 58, 58);
-		makeGraphic(18, 32, 0xFFFFFFFF);
+		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, 25, 30);
+		
 		camera = Reg.worldCam;
 		
 	/*	animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
@@ -85,19 +85,19 @@ class Player extends FlxSprite
 		animation.add("aim_180", [37]);*/
 		
 		//animation.play("idle");
-		facing = FlxObject.RIGHT;
-		setFacingFlip( FlxObject.LEFT, false, false );
-		setFacingFlip( FlxObject.RIGHT, true, false );
-		setFacingFlip( FlxObject.LEFT + FlxObject.DOWN, false, true );
-		setFacingFlip( FlxObject.RIGHT + FlxObject.DOWN, true, true );
+		facing = FlxObject.LEFT;
+		setFacingFlip( FlxObject.LEFT, true, false );
+		setFacingFlip( FlxObject.RIGHT, false, false );
+		setFacingFlip( FlxObject.LEFT + FlxObject.DOWN, true, true );
+		setFacingFlip( FlxObject.RIGHT + FlxObject.DOWN, false, true );
 		
 		_sndJump = FlxG.sound.load(AssetPaths.jump__wav);
 		_sndShoot = FlxG.sound.load(AssetPaths.shoot__wav);
 		
 		//tweak player's hitbox
-		width = 18;
-		height = 32;
-		//offset.set(20, 26);
+		width = 17;
+		height = 30;
+		offset.set(4, 0);
 		
 		//a more lenient hitbox for harmful collisions
 		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 3 );
