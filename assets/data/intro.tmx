@@ -37,7 +37,7 @@
   <tile id="95" terrain=",1,1,1"/>
  </tileset>
  <tileset firstgid="241" name="ooze" tilewidth="20" tileheight="20" tilecount="8" columns="8">
-  <image source="../images/tilemaps/tiles_ooze.png" width="160" height="20"/>
+  <image source="../images/tilemaps/ooze.png" width="160" height="20"/>
  </tileset>
  <tileset firstgid="249" name="tilesdetail" tilewidth="20" tileheight="20" tilecount="100" columns="10">
   <image source="../images/tilemaps/tilesdetail.png" width="200" height="200"/>

@@ -50,69 +50,82 @@ class HUD extends FlxGroup
 	{
 		super();
 		
-		centerPoint = new FlxSprite(x + W/2 - 2, y + H/2 - 2);
-		centerPoint.makeGraphic(4, 4, FlxColor.PINK);
-		if( RENDER_DEBUG_STUFF )
-			add(centerPoint);
-		
 		hudcamera = new FlxCamera( 0, 0, W, H, 1 );
 		hudcamera.follow( centerPoint );
-		hudcamera.bgColor = RENDER_DEBUG_STUFF ? 0x66993333 : 0x00000000;
+		hudcamera.bgColor = RENDER_DEBUG_STUFF ? 0x66993322 : 0x00000000;
 		FlxG.cameras.add( hudcamera );
+
+		// Center point used as a focal point for the camera, we don't actually render it
+		centerPoint = new FlxSprite(x + W/2 - 2, y + H/2 - 2);
 		
 		if ( RENDER_DEBUG_STUFF )
 		{
+			centerPoint.makeGraphic(4, 4, FlxColor.PINK);
+			centerPoint.camera = hudcamera;
+			add(centerPoint);
+			
 			tl = new FlxSprite( x, y );
 			tl.makeGraphic(10, 10, FlxColor.PINK);
+			tl.camera = hudcamera;
 			add(tl);
 			
 			tr = new FlxSprite( x+W-10, y );
 			tr.makeGraphic(10, 10, FlxColor.PINK);
+			tr.camera = hudcamera;
 			add(tr);
 			
 			bl = new FlxSprite( x, y+H-10 );
 			bl.makeGraphic(10, 10, FlxColor.PINK);
+			bl.camera = hudcamera;
 			add(bl);
 			
 			br = new FlxSprite( x+W-10, y+H-10 );
 			br.makeGraphic(10, 10, FlxColor.PINK);
+			br.camera = hudcamera;
 			add(br);
 		}
 		
-
 		signTextBox = new FlxSprite( 0, 0, AssetPaths.signtextbox__png );
+		signTextBox.camera = hudcamera;
 		signTextBox.allowCollisions = FlxObject.NONE;
 		add(signTextBox);
 		signTextBox.kill();
 		
 		deadText = new FlxText( 0, 0, deadTextWidth, "Dead! Press [R] or (X) to respawn.");
+		deadText.camera = hudcamera;
 		setBorder( deadText, 32, "center", FlxColor.PINK );
 		add(deadText);
 		deadText.kill();
 		
 		levelTimerText = new FlxText( 0, 0, timerTextWidth, "Level timer" );
+		levelTimerText.camera = hudcamera;
 		setBorder( levelTimerText, 24, "left" );
 		add(levelTimerText);
 		
 		gameTimerText = new FlxText( 0, 0, timerTextWidth, "Game timer" );
+		gameTimerText.camera = hudcamera;
 		setBorder( gameTimerText, 24, "left" );
 		add(gameTimerText);
 		
 		levelFinishedText = new FlxText( 0, 0, levelFinishedTextWidth, "Level finished text" );
+		levelFinishedText.camera = hudcamera;
 		setBorder( levelFinishedText, 24, "center" );
 		add(levelFinishedText);
 		levelFinishedText.kill();
 		
 		Reg.leveltitle = Reg.leveltitles[Reg.levelnum];
 		levelNameText = new FlxText( 0, 0, levelNameTextWidth, Reg.leveltitle);
+		levelNameText.camera = hudcamera;
 		setBorder( levelNameText, 16, "right" );
 		add(levelNameText);
 		
 		inputModeText = new FlxText( 0, 0, levelNameTextWidth, "Input Mode");
+		inputModeText.camera = hudcamera;
 		setBorder( inputModeText, 16, "right" );
 		add(inputModeText);
 		
 		signText = new FlxText( 0, 0, signTextWidth - signTextBuffer*2, "I'm a sign!" );
+		signText.camera = hudcamera;
 		setBorder( signText, 16, "center" );
 		add(signText);
 		signText.kill();

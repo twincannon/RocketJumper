@@ -121,7 +121,6 @@ class Player extends FlxSprite
 		m_sprFireEffect.animation.add("blast", [for (i in 0...8) i], 30, false); //remember: the for loop here goes from startframe to endframe+1 (i.e. 0...8 means 0-7)
 		m_sprFireEffect.setSize(1, 1);
 		m_sprFireEffect.centerOffsets();
-		m_sprFireEffect.camera = Reg.worldCam;
 		m_sprFireEffect.kill();
 		FlxG.state.add(m_sprFireEffect);*/ //@TODO make stage a reg variable like in that skull multiplayer game example, so we can just reference it whenever. ALSO make player actually created from the placeentities func...
 	}
@@ -132,7 +131,6 @@ class Player extends FlxSprite
 		crosshairLine.loadGraphic(AssetPaths.line__png, true, 1, 75);
 		crosshairLine.setSize(1, 1);
 		crosshairLine.scrollFactor.set( 0, 0 );
-		crosshairLine.camera = Reg.worldCam;
 		FlxG.state.add(crosshairLine);
 	}
 	

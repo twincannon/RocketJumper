@@ -33,6 +33,7 @@ import flixel.math.FlxAngle;
 import flixel.graphics.frames.FlxTileFrames;
 import flixel.effects.postprocess.PostProcess;
 
+import flixel.addons.display.FlxBackdrop;
 import flixel.addons.editors.tiled.TiledMap;
 import flixel.addons.editors.tiled.TiledObject;
 import flixel.addons.editors.tiled.TiledObjectLayer;
@@ -71,7 +72,7 @@ class PlayState extends FlxState
 	
 	/** -----------------------------------------------------------------
 	 *  Function that is called up when to state is created to set it up. 
-	 */
+	 *  ----------------------------------------------------------------- */
 	override public function create():Void
 	{
 		super.create();
@@ -86,10 +87,15 @@ class PlayState extends FlxState
 		FlxG.cameras.add( Reg.worldCam );
 		FlxG.camera = Reg.worldCam;
 	//	FlxG.camera.bgColor = 0xFF58533E;
+
+		// Set the default camera to use for all newly added FlxObjects
+		var defaultCams:Array<FlxCamera> = new Array<FlxCamera>();
+		defaultCams.push(Reg.worldCam);
+		FlxCamera.defaultCameras = defaultCams;
 		
 		setupLevel();
 		
-		hud = new HUD( FlxG.width, FlxG.height );
+		hud = new HUD( FlxG.width, FlxG.height ); // Note: Creates and adds a second camera to FlxG.cameras
 		Reg.hud = hud;
 		
 		loadEntities();
@@ -105,7 +111,10 @@ class PlayState extends FlxState
 
 		Reg.worldCam.follow(Reg.player, FlxCameraFollowStyle.LOCKON, 5);
 	}
-	
+
+	/** -----------------------------------------------------------------
+	 *  Adds all created assets to the state in the desired Z-order
+	 *  ----------------------------------------------------------------- */	
 	function addGameAssetsToState():Void
 	{
 		add( propsBack );
@@ -129,15 +138,14 @@ class PlayState extends FlxState
 		
 		Reg.player.addCrosshairLine();
 		
-		//Custom mouse cursor
+		// Custom mouse cursor
 		m_sprCrosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
 		m_sprCrosshair.scrollFactor.set( 0, 0 );
-		m_sprCrosshair.camera = Reg.worldCam;
 		add( m_sprCrosshair );
 
 		add( hud );
 		
-		FlxG.sound.volume = 0.2;
+		FlxG.sound.volume = 0.2; //@TODO: Seems to be a bug where the first sound effect is very loud for a fraction of a second. Play a null.wav to fix?
 	}
 	
 	/** --------------------------------------------------------------
@@ -206,6 +214,8 @@ class PlayState extends FlxState
 				if (curTile == null)
 					throw 'String in row $row, column $column is not a valid integer: "$columnString"';
 				
+				// Ensure tile is within bounds: common causes for it going out of bounds is using the incorrect tileset on a layer (i.e. tilesbg on tiles),
+				// or changing the width/height of the image and Tiled not picking it up in it's image source
 				if ( curTile < 0 )
 				{
 					curTile = 0;
@@ -215,10 +225,10 @@ class PlayState extends FlxState
 					trace("WARNING: Tile id " + curTile + " at " + column + "," + row + " is below valid tile bounds!");
 					curTile = 0;
 				}
-				else if (curTile > NumTiles + StartGid)
+				else if (curTile > NumTiles + StartGid - 1)
 				{
 					trace("WARNING: Tile id " + curTile + " at " + column + "," + row + " is above valid tile bounds!");
-					curTile = NumTiles + StartGid;
+					curTile = NumTiles + StartGid - 1;
 				}
 				
 				_data.push(curTile);
@@ -342,49 +352,24 @@ class PlayState extends FlxState
 		map.setSteep([59], [60]);
 		//map.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this and re-use tiles.png
 		
-		mapbg.camera = Reg.worldCam; //@TODO: Are these necessary? Not sure why I ever added them but they seem to be depracated now
-		detailmap.camera = Reg.worldCam;
-		map.camera = Reg.worldCam;
-		ooze.camera = Reg.worldCam;
-		
-		
-		
-		for (i in -1...16)
-  		{
-  			for (j in -1...14)
-  			{
-				var bgW = 303;
-				var bgH = 256;
- 				var bgtile = new FlxSprite( i * bgW, j * bgH, "assets/images/background.png" );
- 				bgtile.scrollFactor.x = bgtile.scrollFactor.y = 0.7;
- 				bgtile.width = 0;
- 				bgtile.height = 0;
- 				bgtile.allowCollisions = FlxObject.NONE;
- 				bgtile.pixelPerfectRender = Reg.shouldPixelPerfectRender;
-  				bgtile.camera = Reg.worldCam;
-  				backgroundTiles.add(bgtile);
-  			}
-		}
-		add(backgroundTiles);
-		
-		
-		
-		
-		
-		
 		mapbg.allowCollisions = FlxObject.NONE;
-		
 		detailmap.allowCollisions = FlxObject.NONE;
+
+		var backdrop:FlxBackdrop = new FlxBackdrop( "assets/images/background.png", 0.5, 0.5, true, true );
+		add(backdrop);	
 		
 		Reg.mapGroup = new FlxGroup();
 		Reg.mapGroup.add( mapbg );
-		Reg.mapGroup.add(detailmap);
+		Reg.mapGroup.add( detailmap );
 		Reg.mapGroup.add( ooze );
 		Reg.mapGroup.add( map );		
 		
 		FlxG.worldBounds.set(0, 0, tiledMap.fullWidth, tiledMap.fullHeight);
 	}
 	
+	/** --------------------------------------------------------------------
+	 *  Handles camera zoom and ensures it stays within the games parameters
+	 *  -------------------------------------------------------------------- */
 	private function handleCameraZoom( targetZoom:Float ):Void
 	{
 		var newzoom = Reg.Clamp( targetZoom, camMinZoom, camMaxZoom );
@@ -393,7 +378,7 @@ class PlayState extends FlxState
 	
 	/** -------------------------------------------------------------------------------------
 	 *  Creates and loads requisite data from the tilemap for all entities present in the map
-	 */
+	 *  ------------------------------------------------------------------------------------- */
 	private function loadEntities():Void
 	{
 		//create and add entities
@@ -556,7 +541,7 @@ class PlayState extends FlxState
 	
 	/** --------------------------------------------------------------------------------------------------------------------------------
 	 *  Adds 750 unit wide borders to the map of the color defined, to prevent things like parallax sprites from scrolling out of bounds
-	 */
+	 *  -------------------------------------------------------------------------------------------------------------------------------- */
 	private function addMapBorders(BackgroundColor:FlxColor):Void 
 	{
 		var BORDERSIZE:Int = 750;
@@ -576,7 +561,7 @@ class PlayState extends FlxState
 	
 	/** ------------------------------------------
 	 *  Function that is called once every frame.
-	 */
+	 *  ------------------------------------------ */
 	override public function update(elapsed:Float):Void
 	{
 		// Mousewheel camera zoom
