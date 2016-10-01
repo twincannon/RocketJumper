@@ -12,7 +12,6 @@ class Coin extends FlxSprite
 		super( X, Y );
 
 		loadGraphic(AssetPaths.cursor__png, false, 20, 20);
-		camera = Reg.worldCam;
 		moves = false;
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;

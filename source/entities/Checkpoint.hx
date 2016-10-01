@@ -16,6 +16,5 @@ class Checkpoint extends FlxObject
 		setSize( W, H );
 		number = Num;
 		moves = false;
-		camera = Reg.worldCam;
 	}
 }

@@ -54,6 +54,9 @@ class Player extends FlxSprite
 	private var _sndShoot:FlxSound;
 	
 	private var m_bUsingAnalogAiming:Bool = false;
+
+	public static inline var PLAYER_WIDTH = 17;
+	public static inline var PLAYER_HEIGHT = 30;
 	
 
 	public function new(X:Float = 0, Y:Float = 0)
@@ -61,8 +64,6 @@ class Player extends FlxSprite
 		super(X, Y);		
 		
 		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, 25, 30);
-		
-		camera = Reg.worldCam;
 		
 	/*	animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
@@ -94,19 +95,23 @@ class Player extends FlxSprite
 		_sndJump = FlxG.sound.load(AssetPaths.jump__wav);
 		_sndShoot = FlxG.sound.load(AssetPaths.shoot__wav);
 		
-		//tweak player's hitbox
-		width = 17;
-		height = 30;
+		// Resize the player hitbox
+		width = PLAYER_WIDTH;
+		height = PLAYER_HEIGHT;
 		offset.set(4, 0);
 		
-		//a more lenient hitbox for harmful collisions
-		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 3 );
+		// Add a more lenient hitbox for harmful collisions
+		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
+		FlxG.state.add(innerHitbox); // I shouldn't have to add this, but if I don't then a really bizarre bug occurs: colliding with ooze tiles is off for tiles above the players spawn point?! (you can't walk over the edge of them)
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		
-		//player gravity/friction (drag gets re-set every frame in handleinput())
+		// Player gravity/friction (drag gets re-set every frame in HandleInput())
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
+
+		originalSpawnPoint = FlxPoint.get( x, y );
+		spawnPoint = FlxPoint.get( x, y );
 	}
 	
 	/** --------------------------------------------------------------------------------------------------------
@@ -166,7 +171,7 @@ class Player extends FlxSprite
 		
 		m_flRocketFireTimer -= elapsed;
 		
-		super.update(elapsed);		
+		super.update(elapsed);
 		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );		
 		
@@ -175,7 +180,7 @@ class Player extends FlxSprite
 			
 		if (onGround && !wasOnGround)
 		{
-			//trace("jump height: " + Std.string(y - highestJumpY)); //TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
+			//trace("jump height: " + Std.string(y - highestJumpY)); //@TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
 			highestJumpY = y;
 		}
 	}
@@ -317,7 +322,7 @@ class Player extends FlxSprite
 		if ( m_gamePad.justPressed.Y )
 		{
 			m_bUsingAnalogAiming = !m_bUsingAnalogAiming;
-			Reg.hud.setInputModeText( m_bUsingAnalogAiming ? "Analog stick style" : "D-Pad style (hold bumpers to lock aim)");
+			Reg.getPlayState().gameHUD.setInputModeText( m_bUsingAnalogAiming ? "Analog stick style" : "D-Pad style (hold bumpers to lock aim)");
 		}
 			
 		if ( m_bUsingAnalogAiming )
@@ -432,8 +437,9 @@ class Player extends FlxSprite
 	{
 		Reg.destroyRockets(false);
 		
-		Reg.worldCam.follow(this);
-		Reg.worldCam.zoom = 1.3333332;
+		var state:PlayState = cast FlxG.state;
+		state.worldCam.follow(this);
+		state.worldCam.zoom = 1.3333332;
 
 		melting = false;
 		living = true;

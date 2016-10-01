@@ -14,7 +14,6 @@ class Platform extends FlxSprite
 		super( X, Y );
 		makeGraphic(Std.int(W), 2);
 
-		camera = Reg.worldCam;
 		moves = false;
 		immovable = true;
 		

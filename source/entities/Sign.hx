@@ -15,7 +15,6 @@ class Sign extends FlxSprite
 		super( X, Y );
 		signText = Text;
 		loadGraphic(AssetPaths.sign__png, true, 33, 29);
-		camera = Reg.worldCam;
 		moves = false;
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		x -= 6;

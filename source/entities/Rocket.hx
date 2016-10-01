@@ -34,8 +34,8 @@ class Rocket extends FlxSprite
 		centerOffsets();
 		centerOrigin();
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
-		camera = Reg.worldCam;
-		Reg.rockets.add(this);
+		
+		Reg.getPlayState().rockets.add(this);
 		
 		_sndExplode = FlxG.sound.load(AssetPaths.explosion__wav);
 		_sndExplodeBig = FlxG.sound.load(AssetPaths.explosionbig__wav);
@@ -63,7 +63,7 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += elapsed;
 		
-		FlxG.collide( Reg.mapGroup, this, explode );
+		FlxG.collide( Reg.getPlayState().mapGroup, this, explode );
 		
 		if ( m_flTimeAlive >= ROCKET_LIFETIME )
 		{
@@ -76,6 +76,8 @@ class Rocket extends FlxSprite
 	{
 		if (this.touching <= 0)
 			return;
+
+		var player = Reg.getPlayState().player;
 		
 		var doBigExplosion = false;
 		if ( m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
@@ -84,7 +86,7 @@ class Rocket extends FlxSprite
 		var explosionRadius = doBigExplosion ? ROCKET_RADIUS * 2 : ROCKET_RADIUS;
 		var explosionAmpMod = doBigExplosion ? 2.0 : 1.0;
 		
-		if ( Reg.player.living && !Reg.player.levelBeat && distance( getMidpoint(), Reg.player.getMidpoint() ) < explosionRadius )
+		if ( player.living && !player.levelBeat && distance( getMidpoint(), player.getMidpoint() ) < explosionRadius )
 		{
 			//@TODO: Make this object-ambiguous: probably have to make a baseclass for player and other things
 			// 		 that can get knocked around by rockets, and make this apply velocity/damage/etc to all of them
@@ -92,7 +94,7 @@ class Rocket extends FlxSprite
 			//TODO make this a flxgroup for all explodable stuff and iterate through it instead of only checking for player
 			
 			var rocketVec:FlxVector = new FlxVector( getMidpoint().x, getMidpoint().y );
-			var playerVec:FlxVector = new FlxVector( Reg.player.getMidpoint().x, Reg.player.getMidpoint().y );
+			var playerVec:FlxVector = new FlxVector( player.getMidpoint().x, player.getMidpoint().y );
 			
 			var direction:FlxPoint = playerVec.subtract( rocketVec.x, rocketVec.y );
 			var vecDir:FlxVector = new FlxVector( direction.x, direction.y );
@@ -102,9 +104,9 @@ class Rocket extends FlxSprite
 			var strength:Float = Reg.RemapValClamped( vecLength, 0, explosionRadius, 1.0, 0.0 );
 			
 			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
-			if ( Reg.player.onGround && strength > 0.5 )
+			if ( player.onGround && strength > 0.5 )
 			{
-				Reg.player.DoJump();
+				player.DoJump();
 			}
 			
 			// Normalize blast strength a bit to make "perfect rocketjumps" easier and more consistent
@@ -117,10 +119,10 @@ class Rocket extends FlxSprite
 			var amplitudeY:Float = ROCKET_AMP_Y * strength * explosionAmpMod;
 			
 			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping). Be careful not to allow infinite wall-climbing!
-			var fallingOffsetVel = Math.max(Reg.player.velocity.y, 0);
+			var fallingOffsetVel = Math.max(player.velocity.y, 0);
 			
-			Reg.player.velocity.x += vecDir.x * amplitudeX;
-			Reg.player.velocity.y += vecDir.y * amplitudeY - fallingOffsetVel;
+			player.velocity.x += vecDir.x * amplitudeX;
+			player.velocity.y += vecDir.y * amplitudeY - fallingOffsetVel;
 		}
 		
 		//@TODO modify this camera shake amount by how far away player is
@@ -137,13 +139,13 @@ class Rocket extends FlxSprite
 		
 		if ( doBigExplosion )
 		{
-			_sndExplodeBig.proximity(x, y, Reg.player, FlxG.width);
+			_sndExplodeBig.proximity(x, y, player, FlxG.width);
 			_sndExplodeBig.setPosition(x, y);
 			_sndExplodeBig.play();
 		}
 		else
 		{
-			_sndExplode.proximity(x, y, Reg.player, FlxG.width * 3);
+			_sndExplode.proximity(x, y, player, FlxG.width * 3);
 			_sndExplode.setPosition(x, y);
 			_sndExplode.play();
 		}

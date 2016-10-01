@@ -1,5 +1,6 @@
 package;
 
+import flixel.FlxG;
 import entities.Player;
 import flixel.group.FlxGroup;
 import flixel.tile.FlxTilemap;
@@ -15,29 +16,43 @@ import flixel.math.FlxPoint;
  */
 class Reg
 {
+	// Const global variables
 	public static inline var ROCKET_SPEED = 400;
-	public inline static var ROCKET_COOLDOWN = 0.5;
+	public static inline var ROCKET_COOLDOWN = 0.5;
 	public static inline var PLAYER_DRAG = 450;
 	public static inline var PLAYER_DRAG_AIR = 100;
-	public inline static var PLAYER_MAX_SPEED = 150;
-	public inline static var PLAYER_ACCEL = 15;
-	public inline static var PLAYER_JUMP_VEL = 280;
-	public inline static var PLAYER_SHOOT_Y_OFFSET = 10;
-	public inline static var GRAVITY = 800;
-	public inline static var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
+	public static inline var PLAYER_MAX_SPEED = 150;
+	public static inline var PLAYER_ACCEL = 15;
+	public static inline var PLAYER_JUMP_VEL = 280;
+	public static inline var PLAYER_SHOOT_Y_OFFSET = 10;
+	public static inline var GRAVITY = 800;
+	public static inline var JUMP_LENIENCE_TIMER = 0.2; //amount of time after hitting jump in which you'll automatically jump (bunnyhop) upon hitting the ground
 	
-	public inline static var ASSET_PATH_DATA = "assets/data/";
-	public inline static var ASSET_PATH_IMAGES = "assets/images/";
-	public inline static var ASSET_PATH_TILEMAPS = ASSET_PATH_IMAGES + "tilemaps/";
+	public static inline var ASSET_PATH_DATA = "assets/data/";
+	public static inline var ASSET_PATH_IMAGES = "assets/images/";
+	public static inline var ASSET_PATH_TILEMAPS = ASSET_PATH_IMAGES + "tilemaps/";
 
-	public inline static var ASSET_EXT_IMAGE = ".png";
+	public static inline var ASSET_EXT_IMAGE = ".png";
 
-	public static var player:Player;
-	public static var mapGroup:FlxGroup;
-	public static var platforms:FlxGroup;
-	public static var rockets:FlxGroup = new FlxGroup();
-	public static var worldCam:FlxCamera;
-	public static var hud:HUD;
+	// Global variables
+	public static var levelnum:Int = 0;
+	public static var leveltitle:String = "Level title";
+	public static var levelnames:Array<String> = new Array<String>();
+	public static var leveltitles:Array<String> = new Array<String>();
+	public static var levelsloaded:Bool = false;
+	public static var gameTimerStarted:Bool = false;
+	public static var levelTimerStarted:Bool = false;
+	public static var gameTimer:Float = 0; // total timer for entire game playthrough
+	public static var levelTimer:Float = 0; // time for current level @TODO: make an array so we can show all level times at the end in a list
+	
+	public static inline function getPlayState():PlayState
+	{
+		var state:PlayState = cast FlxG.state;
+		return state;
+	}
+
+	// @TODO: Refactor these global vars into playstate
+
 	
 	/**
 	 * Destroy all rockets and clear the FlxGroup.
@@ -45,15 +60,17 @@ class Reg
 	 */
 	public static inline function destroyRockets(Reset:Bool):Void
 	{
-		for ( r in Reg.rockets )
+		var state = getPlayState();
+		
+		for ( r in state.rockets )
 			r.destroy();
 			
-		rockets.clear();
+		state.rockets.clear();
 		
 		if ( Reset )
 		{
-			rockets.destroy();
-			rockets = new FlxGroup();
+			state.rockets.destroy();
+			state.rockets = new FlxGroup();
 		}
 	}
 	
@@ -69,20 +86,11 @@ class Reg
 		}
 	}
 	
-	public static var levelnum:Int = 0;
-	public static var leveltitle:String = "Level title";
-	public static var levelnames:Array<String> = new Array<String>();
-	public static var leveltitles:Array<String> = new Array<String>();
-	public static var levelsloaded:Bool = false;
-	public static var gameTimerStarted:Bool = false;
-	public static var levelTimerStarted:Bool = false;
-	public static var gameTimer:Float = 0; // total timer for entire game playthrough
-	public static var levelTimer:Float = 0; // time for current level @TODO: make an array so we can show all level times at the end in a list
 	
 #if (native || windows)
-	public inline static var shouldPixelPerfectRender:Bool = false;
+	public static inline var shouldPixelPerfectRender:Bool = false;
 #else
-	public inline static var shouldPixelPerfectRender:Bool = true; //for whatever reason, this makes sprites jitter if false on flash target, and if true on windows target // TODO: is this still true?
+	public static inline var shouldPixelPerfectRender:Bool = true; //for whatever reason, this makes sprites jitter if false on flash target, and if true on windows target // TODO: is this still true?
 #end
 	
 	public static inline function RemapValClamped( val:Float, A:Float, B:Float, C:Float, D:Float) : Float
