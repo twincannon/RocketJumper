@@ -101,8 +101,7 @@ class Player extends FlxSprite
 		offset.set(4, 0);
 		
 		// Add a more lenient hitbox for harmful collisions
-		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
-		FlxG.state.add(innerHitbox); // I shouldn't have to add this, but if I don't then a really bizarre bug occurs: colliding with ooze tiles is off for tiles above the players spawn point?! (you can't walk over the edge of them)
+		innerHitbox = new FlxObject( INNER_HITBOX_OFFSET, INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		
