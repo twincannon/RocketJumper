@@ -63,7 +63,7 @@ class Main extends Sprite
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
 		
-#if windows
+#if (windows && !debug)
 		constrainCursorToWindowFrame(flash.Lib.stage.__handle, true);
 #end
 		if (zoom == -1)

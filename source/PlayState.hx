@@ -114,7 +114,7 @@ class PlayState extends FlxState
 	//	addMapBorders( 0xFF0A0800 ); // Same color as the 'black' tile in the new tileset
 		add(_tilemapBackground);
 		add(_tilemapDetail);
-		add(_tilemapOoze);
+		
 		add(platforms);
 	
 		add( _propsMid );
@@ -127,6 +127,7 @@ class PlayState extends FlxState
 		
 		player.addToState();
 		
+		add(_tilemapOoze);
 		add(_tilemapMain);
 		
 		add( _propsFore );

@@ -27,7 +27,7 @@ class Player extends FlxSprite
 	private var landing:Bool = false;
 	private var firing:Bool = false;
 	private var running = false;
-	private inline static var PLAYER_FRAMERATE = 15;
+	private inline static var PLAYER_FRAMERATE = 10;
 	private var m_sprFireEffect:FlxSprite;
 	private var m_flAimAnimTime:Float = 0;
 	private var m_flOldMouseAngle:Float = 0;
@@ -68,8 +68,16 @@ class Player extends FlxSprite
 	{
 		super(X, Y);		
 		
-		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, 25, 30);
+		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, 25, 31);
 		
+		animation.add("idle", [0]);
+		animation.add("run", [for (i in 1...3) i], PLAYER_FRAMERATE, true);
+
+		animation.add("runstop", [2], PLAYER_FRAMERATE, false );
+		animation.add("jump", [1], PLAYER_FRAMERATE, false );
+		animation.add("land", [2], PLAYER_FRAMERATE, false );
+		animation.add("fire", [2], PLAYER_FRAMERATE, false );
+		animation.add("melt", [2], PLAYER_FRAMERATE, false );
 	/*	animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
 		animation.add("runstop", [for (i in 12...17) i], PLAYER_FRAMERATE, false );
@@ -90,7 +98,7 @@ class Player extends FlxSprite
 		animation.add("aim_162", [36]);
 		animation.add("aim_180", [37]);*/
 		
-		//animation.play("idle");
+		animation.play("idle");
 		facing = FlxObject.LEFT;
 		setFacingFlip( FlxObject.LEFT, true, false );
 		setFacingFlip( FlxObject.RIGHT, false, false );
@@ -101,9 +109,9 @@ class Player extends FlxSprite
 		_sndShoot = FlxG.sound.load(AssetPaths.shoot__wav);
 		
 		// Resize the player hitbox
+		offset.set(4, 0);
 		width = PLAYER_WIDTH;
 		height = PLAYER_HEIGHT;
-		offset.set(4, 0);
 		
 		// Add a more lenient hitbox for harmful collisions
 		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
@@ -165,7 +173,7 @@ class Player extends FlxSprite
 	{
 		var wasOnGround:Bool = onGround;
 		
-		//HandleAnimation();
+		HandleAnimation();
 		HandleInput(); //handle input, update velocity
 		HandleGamepadInput(); //@TODO: some logic is replicated in both input functions, and it shouldn't be
 		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
@@ -399,7 +407,7 @@ class Player extends FlxSprite
 		if ( levelBeat )
 			return;
 			
-		//animation.play("jump", true);
+		animation.play("jump", true);
 		_sndJump.play();
 		firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 		velocity.y = -Reg.PLAYER_JUMP_VEL;
@@ -426,7 +434,7 @@ class Player extends FlxSprite
 				acceleration.set( 0, 0 );
 				drag.y = 20;
 				velocity.set( 0, falling ? 18 : -18 );
-				//animation.play("melt");
+				animation.play("melt");
 		}
 	}
 	
@@ -455,7 +463,7 @@ class Player extends FlxSprite
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
 		drag.y = 0; // Some death causes can set this
-	//	animation.play("idle");
+		animation.play("idle");
 		
 		highestJumpY = y;
 		
@@ -540,7 +548,7 @@ class Player extends FlxSprite
 			}
 		}
 		
-		var aimAngle:Float;
+	/*	var aimAngle:Float;
 		if ( usingMouse )
 			aimAngle = getScreenPosition().angleBetween( FlxPoint.get(FlxG.mouse.screenX, FlxG.mouse.screenY) );
 		else
@@ -595,7 +603,7 @@ class Player extends FlxSprite
 		if ( velocity.x == 0 && velocity.y == 0 )
 			m_flAimAnimTime += FlxG.elapsed;
 		else
-			m_flAimAnimTime = 0;
+			m_flAimAnimTime = 0;*/
 		
 		//set running to false for next frame now that we're done with it
 		running = false;
@@ -670,7 +678,7 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function FireBullet( origin:FlxPoint, target:FlxPoint, newAngle:Float ):Void
 	{
-		//animation.play("fire", true);
+		animation.play("fire", true);
 		firing = true;
 		
 		_sndShoot.play();
