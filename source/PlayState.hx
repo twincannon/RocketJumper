@@ -646,11 +646,9 @@ class PlayState extends FlxState
 
 			if ( player.levelBeat == false )
 			{
-				if ( _tilemapOoze.overlapsWithCallback( player.innerHitbox,
-												function(P:FlxObject, T:FlxObject) { return FlxG.overlap( P, T ); },
-												true ) ) //the bool here makes this return the specific FlxTile to the function
+				if ( _tilemapOoze.overlapsWithCallback( player.innerHitbox, function(P:FlxObject, T:FlxObject) { return FlxG.overlap( P, T ); }, true ) )
 				{
-					player.melting = true;
+					player.died(CauseOfDeath.MELTING);
 				}
 				
 				if ( FlxG.overlap( player, _signs, function(P:FlxObject, S:Sign) { gameHUD.ToggleSign(true, S.signText); return FlxG.overlap( P, S ); } ) )

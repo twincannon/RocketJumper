@@ -13,6 +13,11 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxVector;
 import flixel.FlxCamera.FlxCameraFollowStyle;
 
+enum CauseOfDeath
+{
+	MELTING;
+}
+
 /**
  *  The player entity. Also handles movement input and the firing of rockets.
  */
@@ -46,7 +51,7 @@ class Player extends FlxSprite
 	public var oldMouseScreenXY:FlxPoint = FlxPoint.get(0, 0);
 	public var crosshairLine:FlxSprite;
 	public var innerHitbox:FlxObject;
-	private static inline var INNER_HITBOX_OFFSET:Int = 2;
+	private static inline var INNER_HITBOX_OFFSET:Int = 4;
 	public var onPlatform:Bool = false;
 	private var highestJumpY:Float = 0;
 	private var jumpLeniencyTimer:Float = 0; //depracated with quake style
@@ -101,7 +106,7 @@ class Player extends FlxSprite
 		offset.set(4, 0);
 		
 		// Add a more lenient hitbox for harmful collisions
-		innerHitbox = new FlxObject( INNER_HITBOX_OFFSET, INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
+		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
 		
 		pixelPerfectRender = Reg.shouldPixelPerfectRender;
 		
@@ -115,7 +120,7 @@ class Player extends FlxSprite
 	
 	/** --------------------------------------------------------------------------------------------------------
 	 *  Add player to state, then create and add to state the muzzleflash "fire effect" and the crosshair line.
-	 */
+	 *  -------------------------------------------------------------------------------------------------------- */
 	public function addToState():Void
 	{
 		FlxG.state.add(this);
@@ -160,19 +165,18 @@ class Player extends FlxSprite
 	{
 		var wasOnGround:Bool = onGround;
 		
-		HandleDeath();
 		//HandleAnimation();
-		
 		HandleInput(); //handle input, update velocity
-		HandleGamepadInput();
+		HandleGamepadInput(); //@TODO: some logic is replicated in both input functions, and it shouldn't be
 		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
 		UpdateFireEffect(); //muzzleflash
 		
 		m_flRocketFireTimer -= elapsed;
 		
-		super.update(elapsed);
-		
+		super.update(elapsed); // Resets touching flags
+
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );		
+		innerHitbox.update(elapsed); // Manually updated to be in sync with the main player sprite (never added to state, so doesn't update normally)
 		
 		if (!onGround)
 			highestJumpY = Math.min(y, highestJumpY);
@@ -190,7 +194,7 @@ class Player extends FlxSprite
 	public function HandleInput():Void
 	{
 		if ( FlxG.keys.justPressed.R )
-			Resurrect();
+			resurrect();
 			
 		acceleration.x = 0;
 			
@@ -263,7 +267,7 @@ class Player extends FlxSprite
 			return;
 			
 		if ( m_gamePad.justPressed.X )
-			Resurrect();
+			resurrect();
 		
 		var xboxJumpPressed = m_gamePad.justPressed.A;
 		
@@ -404,35 +408,32 @@ class Player extends FlxSprite
 		Reg.levelTimerStarted = true;
 		m_bJumpReleasedSinceLastOnGround = false;
 	}
-	
-	// --------------------------------------------------------------------------------------
-	// Check whether we should be alive or dead
-	// --------------------------------------------------------------------------------------
-	private function HandleDeath():Void
+
+	/** -----------------------------------------------------------------------------------------
+	 *  Called when the player dies, handles setting the appropriate variables depending on cause
+	 *  @param	 Cause	The cause of the player death
+	 *  ----------------------------------------------------------------------------------------- */
+	public function died(Cause:CauseOfDeath):Void
 	{
-		if ( !living )
-			return;
-			
-		if ( melting )
+		living = false;
+		firing = false;
+
+		switch(Cause)
 		{
-			var falling = true;
-			if ( velocity.y < 0 )
-				falling = false;
-			y += falling ? 24 : 6;
-			facing += falling ? 0 : FlxObject.DOWN;
-			allowCollisions = FlxObject.NONE;
-			innerHitbox.allowCollisions = FlxObject.NONE;
-			acceleration.set( 0, 0 );
-			drag.y = 20;
-			velocity.set( 0, falling ? 18 : -18 );
-			//animation.play("melt");
-			living = false;
-			firing = false;
-			return;
+			case MELTING:
+				var falling = (velocity.y >= 0);
+				facing += falling ? 0 : FlxObject.DOWN;
+				acceleration.set( 0, 0 );
+				drag.y = 20;
+				velocity.set( 0, falling ? 18 : -18 );
+				//animation.play("melt");
 		}
 	}
 	
-	public function Resurrect():Void
+	/** -----------------------------------------------------------------------------------------
+	 *  Resurrects the player at the most recent checkpoint and resets all death related vars
+	 *  ----------------------------------------------------------------------------------------- */
+	public function resurrect():Void
 	{
 		Reg.destroyRockets(false);
 		
@@ -440,19 +441,21 @@ class Player extends FlxSprite
 		state.worldCam.follow(this);
 		state.worldCam.zoom = 1.3333332;
 
+		setPosition(spawnPoint.x, spawnPoint.y);
+
 		melting = false;
 		living = true;
 		landing = false;
 		
 		velocity.set(0, 0);
+		acceleration.set(0, 0);
 		allowCollisions = FlxObject.ANY;
 		innerHitbox.allowCollisions = FlxObject.ANY;
 		facing = FlxObject.RIGHT; //@TODO make an arg for this based on playerstart/checkpoint orientation
 		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
+		drag.y = 0; // Some death causes can set this
 	//	animation.play("idle");
-		x = spawnPoint.x;
-		y = spawnPoint.y;
 		
 		highestJumpY = y;
 		
