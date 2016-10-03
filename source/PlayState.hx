@@ -389,7 +389,7 @@ class PlayState extends FlxState
 				switch ( o.type.toLowerCase() )
 				{
 					case "player":
-						player = new Player(x, y + o.height - Player.PLAYER_HEIGHT); // Create the player at the bottom of the spawn point
+						player = new Player(x, y + o.height - Player.HITBOX_HEIGHT); // Create the player at the bottom of the spawn point
 					case "goal":
 						_goal = new Goal(x, y);
 					case "checkpoint":

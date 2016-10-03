@@ -27,7 +27,7 @@ class Player extends FlxSprite
 	private var landing:Bool = false;
 	private var firing:Bool = false;
 	private var running = false;
-	private inline static var PLAYER_FRAMERATE = 10;
+	private inline static var PLAYER_FRAMERATE = 15;
 	private var m_sprFireEffect:FlxSprite;
 	private var m_flAimAnimTime:Float = 0;
 	private var m_flOldMouseAngle:Float = 0;
@@ -60,23 +60,28 @@ class Player extends FlxSprite
 	
 	private var m_bUsingAnalogAiming:Bool = false;
 
-	public static inline var PLAYER_WIDTH = 17;
-	public static inline var PLAYER_HEIGHT = 30;
+	public static inline var SPRITE_WIDTH = 29;
+	public static inline var SPRITE_HEIGHT = 32;
+	
+	public static inline var HITBOX_WIDTH = 17;
+	public static inline var HITBOX_HEIGHT = 30;
 	
 
 	public function new(X:Float = 0, Y:Float = 0)
 	{
 		super(X, Y);		
 		
-		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, 25, 31);
+		loadGraphic(Assets.getBitmapData(AssetPaths.player__png), true, SPRITE_WIDTH, SPRITE_HEIGHT);
 		
+		// Define animations (use "StartFrame-1 to EndFrame" from aseprite)
 		animation.add("idle", [0]);
-		animation.add("run", [for (i in 1...3) i], PLAYER_FRAMERATE, true);
+		animation.add("run", [for (i in 1...9) i], PLAYER_FRAMERATE, true);
 
 		animation.add("runstop", [2], PLAYER_FRAMERATE, false );
-		animation.add("jump", [1], PLAYER_FRAMERATE, false );
-		animation.add("land", [2], PLAYER_FRAMERATE, false );
-		animation.add("fire", [2], PLAYER_FRAMERATE, false );
+		animation.add("jump", [6], Std.int(PLAYER_FRAMERATE/2), true );
+		animation.add("fall", [for (i in 3...5) i], Std.int(PLAYER_FRAMERATE/2), true );
+		animation.add("land", [7], PLAYER_FRAMERATE, false );
+		animation.add("fire", [6], PLAYER_FRAMERATE, false );
 		animation.add("melt", [2], PLAYER_FRAMERATE, false );
 	/*	animation.add("idle", [0,1], Std.int(PLAYER_FRAMERATE / 5));
 		animation.add("run", [for (i in 2...12) i], PLAYER_FRAMERATE);
@@ -109,9 +114,10 @@ class Player extends FlxSprite
 		_sndShoot = FlxG.sound.load(AssetPaths.shoot__wav);
 		
 		// Resize the player hitbox
-		offset.set(4, 0);
-		width = PLAYER_WIDTH;
-		height = PLAYER_HEIGHT;
+		offset.x = (SPRITE_WIDTH - HITBOX_WIDTH) / 2;
+		offset.y = SPRITE_HEIGHT - HITBOX_HEIGHT;
+		width = HITBOX_WIDTH;
+		height = HITBOX_HEIGHT;
 		
 		// Add a more lenient hitbox for harmful collisions
 		innerHitbox = new FlxObject( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET, width - INNER_HITBOX_OFFSET * 2, height - INNER_HITBOX_OFFSET * 2 );
@@ -514,8 +520,16 @@ class Player extends FlxSprite
 			
 			if ( velocity.y != 0 )
 			{
-				animation.play("jump", true);
 				onGround = false;
+
+				if ( velocity.y < 0 )
+				{
+					animation.play("jump", true);
+				}
+				else
+				{
+					animation.play("fall", true);
+				}
 			}
 		}
 		
@@ -542,9 +556,13 @@ class Player extends FlxSprite
 					animation.play( anim );
 				}
 			}
-			else if ( animation.name != "jump" ) //if we walk off of a ledge, play jump anim
+			else if ( velocity.y < 0 && animation.name != "jump")
 			{
 				animation.play("jump", true);
+			}
+			else if ( velocity.y > 0 && animation.name != "fall" )
+			{
+				animation.play("fall", true);
 			}
 		}
 		
