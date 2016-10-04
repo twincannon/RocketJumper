@@ -93,17 +93,16 @@ class PlayState extends FlxState
 		loadEntities();
 		addGameAssetsToState();
 		
-		handleCameraZoom( 1.3333332 ); //720 (game resolution) divided by 1080 (monitor resolution) @TODO: Make this not magic numbered
+		handleCameraZoom( 1.3333332 ); //720 (game resolution) divided by 1080 (monitor resolution) @TODO: Make this not magic numbered  -- wait what? this isn't accurate
 		worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
 #if (cpp || neko)
 		var shader = new PostProcess("assets/shaders/scanline.frag");
 		FlxG.addPostProcess(shader);
 #end
-
 		worldCam.follow(player, FlxCameraFollowStyle.LOCKON, 5);
 	}
-
+	
 	/** -----------------------------------------------------------------
 	 *  Adds all created assets to the state in the desired Z-order
 	 *  ----------------------------------------------------------------- */	
@@ -470,6 +469,14 @@ class PlayState extends FlxState
 						
 						var prop = new Prop(x, y, o.width, o.height, flipX, flipY, o.angle, filename);
 						
+						// If the prop is flipped 180 degrees, we can account for that easily; other rotations aren't supported (but will still load)
+						if (prop.angle == -180)
+						{
+							prop.offset.set( -prop.width, prop.height);
+							prop.x -= prop.width;
+							prop.y += prop.height;
+						}
+						
 						// See if the prop has a "scrollx" property (for scrollFactor.x, i.e. parallax) and set it
 						if ( o.xmlData.hasNode.properties )
 						{
@@ -480,6 +487,7 @@ class PlayState extends FlxState
 							}
 						}
 						
+						// Figure out which group to add the prop to based on scrollfactor (for z-ordering)
 						if ( prop.scrollFactor.x < 1.0 )
 						{
 							_propsBack.add(prop);
@@ -495,18 +503,12 @@ class PlayState extends FlxState
 							_propsFore.add(prop);
 						}
 						
+						// Offset the prop, if it has scrollfactor, so that it lines up with the player being at it's position in Tiled (normally it's position is just modified naively)
 						if ( prop.scrollFactor.x != 1.0 )
 						{
-							// Offset the prop to account for it being far away from the default camera top-left
-							// This makes it more accurate to what it looks like in Tiled when the player is vertically aligned with the prop
-							
-							// This still isn't perfect but I spent a ton of hours getting it this close (all the props are slightly offset to the right based on scrollfactor)
-							// For the future: the goal is to make it so props appear where they do in Tiled when the player is centered on top of their would-be location
-							
-							// Also, this is definitely based on the width of the prop: the wider it is, the worse the offset (also, the fact that the offset is always +x)
-							var halfWidth:Float = worldCam.width * 0.5; //640
-							prop.x -= ( prop.x - (prop.x * prop.scrollFactor.x) );
-							prop.x += halfWidth - (halfWidth * prop.scrollFactor.x);
+							var halfWidth:Float = FlxG.width * 0.5;
+							prop.x -= prop.getMidpoint().x - (prop.getMidpoint().x * prop.scrollFactor.x); // Prop position offset
+							prop.x += halfWidth - (halfWidth * prop.scrollFactor.x); // Half screen width offset
 						}
 						
 					//end switch statement
@@ -612,12 +614,12 @@ class PlayState extends FlxState
 		{
 			Reg.gameTimerStarted = true;
 			
-			Reg.levelTimer += FlxG.elapsed;
+			Reg.levelTimer += elapsed;
 		}
 		
 		if ( Reg.gameTimerStarted )
 		{
-			Reg.gameTimer += FlxG.elapsed;
+			Reg.gameTimer += elapsed;
 		}
 		
 		gameHUD.levelTimerText.text = "Level time: " + Std.int(Reg.levelTimer * 1000) / 1000;

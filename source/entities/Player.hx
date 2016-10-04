@@ -13,6 +13,11 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxVector;
 import flixel.FlxCamera.FlxCameraFollowStyle;
 
+#if debug
+	import flixel.system.debug.watch.Tracker;
+	import flixel.FlxBasic;
+#end
+
 enum CauseOfDeath
 {
 	MELTING;
@@ -130,6 +135,12 @@ class Player extends FlxSprite
 
 		originalSpawnPoint = FlxPoint.get( x, y );
 		spawnPoint = FlxPoint.get( x, y );
+
+#if debug
+		FlxG.debugger.addTrackerProfile(new TrackerProfile(Player, ["onGround", "landing", "firing", "running", "animation.name"], [FlxSprite]));
+		FlxG.debugger.track(this);
+		FlxG.watch.add(this, "onGround");
+#end
 	}
 	
 	/** --------------------------------------------------------------------------------------------------------
@@ -188,7 +199,7 @@ class Player extends FlxSprite
 		m_flRocketFireTimer -= elapsed;
 		
 		super.update(elapsed); // Resets touching flags
-
+		
 		innerHitbox.setPosition( x + INNER_HITBOX_OFFSET, y + INNER_HITBOX_OFFSET );		
 		innerHitbox.update(elapsed); // Manually updated to be in sync with the main player sprite (never added to state, so doesn't update normally)
 		
@@ -462,11 +473,10 @@ class Player extends FlxSprite
 		landing = false;
 		
 		velocity.set(0, 0);
-		acceleration.set(0, 0);
+		acceleration.set(0, Reg.GRAVITY);
 		allowCollisions = FlxObject.ANY;
 		innerHitbox.allowCollisions = FlxObject.ANY;
 		facing = FlxObject.RIGHT; //@TODO make an arg for this based on playerstart/checkpoint orientation
-		acceleration.y = Reg.GRAVITY;
 		drag.x = Reg.PLAYER_DRAG;
 		drag.y = 0; // Some death causes can set this
 		animation.play("idle");
@@ -636,27 +646,32 @@ class Player extends FlxSprite
 			facing = dir;
 				
 		running = true;
-		
-		if ( dir == FlxObject.LEFT )
+
+		// Limit velocity only if we're running along on the ground
+		if ( onGround )
+			maxVelocity.x = Reg.PLAYER_MAX_SPEED;
+		else
+			maxVelocity.x = 0;
+
+		var dirScaler = (dir == FlxObject.RIGHT) ? 1.0 : -1.0;
+		var absVel = Math.abs(velocity.x);
+		var reverseDir = (dir == FlxObject.LEFT && velocity.x > 0) || (dir == FlxObject.RIGHT && velocity.x < 0);
+
+		// Set target accel
+		if ( onGround )
 		{
-			if ( !onGround && velocity.x > 0 )
-				acceleration.x = -1500; // To make turning around in the air easier
-			else if ( velocity.x > -Reg.PLAYER_MAX_SPEED )
-				acceleration.x = -1000; // Walking on ground
-			else if (!onGround) // Air accel
-				acceleration.x = -100;
+			acceleration.x = 1000 * dirScaler;
 		}
-		
-		if ( dir == FlxObject.RIGHT )
+		else
 		{
-			if ( !onGround && velocity.x < 0 )
-				acceleration.x = 1500;
-			else if ( velocity.x < Reg.PLAYER_MAX_SPEED )
-				acceleration.x = 1000;
+			if ( reverseDir ) 
+				acceleration.x = 1500 * dirScaler; // To make changing direction in the air faster
+			else if ( absVel > 0 && absVel < Reg.PLAYER_MAX_SPEED ) 
+				acceleration.x = 1000 * dirScaler;
 			else if (!onGround)
-				acceleration.x = 100;
+				acceleration.x = 100 * dirScaler; // Regular air accel
 		}
-			
+		
 		Reg.levelTimerStarted = true;
 			
 		if ( !Reg.gameTimerStarted )
