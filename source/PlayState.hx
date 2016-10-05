@@ -23,6 +23,11 @@ import flixel.util.FlxSort;
 import flixel.math.FlxPoint;
 import flixel.effects.postprocess.PostProcess;
 
+import flixel.system.scaleModes.FillScaleMode;
+import flixel.system.scaleModes.FixedScaleMode;
+import flixel.system.scaleModes.RatioScaleMode;
+import flixel.system.scaleModes.RelativeScaleMode;
+
 import flixel.tile.FlxTilemap;
 import flixel.tile.FlxBaseTilemap;
 import flixel.graphics.frames.FlxTileFrames;
@@ -80,7 +85,7 @@ class PlayState extends FlxState
 		FlxG.cameras.add( worldCam );
 		FlxG.camera = worldCam;
 	//	FlxG.camera.bgColor = 0xFF58533E;
-
+		
 		// Set the default camera to use for all newly added FlxObjects
 		var defaultCams:Array<FlxCamera> = new Array<FlxCamera>();
 		defaultCams.push(worldCam);
@@ -89,18 +94,40 @@ class PlayState extends FlxState
 		setupLevel();
 		
 		gameHUD = new HUD( FlxG.width, FlxG.height ); // Note: Creates and adds a second camera to FlxG.cameras
-
+		
 		loadEntities();
 		addGameAssetsToState();
 		
-		handleCameraZoom( 1.3333332 ); //720 (game resolution) divided by 1080 (monitor resolution) @TODO: Make this not magic numbered  -- wait what? this isn't accurate
+		FlxG.camera.zoom = ( (FlxG.width / FlxG.stage.stageWidth) * 2 ); // Set pixel perfect 2.0 ratio zoom (also done in onResize);
+		
 		worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
 #if (cpp || neko)
 		var shader = new PostProcess("assets/shaders/scanline.frag");
 		FlxG.addPostProcess(shader);
 #end
-		worldCam.follow(player, FlxCameraFollowStyle.LOCKON, 5);
+		worldCam.follow(player, FlxCameraFollowStyle.LOCKON, 1);
+		worldCam.targetOffset.set(0, -20);
+		
+		//FlxG.scaleMode = new RatioScaleMode(true); //@TODO: I'd like to use this, but it breaks the HUD currently -- need to position HUD elements based on distance from edges of screen
+	}
+	
+	/** -----------------------------------------------------------------
+	 *  Called whenever game window is resized
+	 *  ----------------------------------------------------------------- */	
+	override function onResize(Width:Int, Height:Int):Void
+	{	
+		super.onResize(Width, Height);
+		
+		// Attempt to achieve a pixel-perfect 2.0 zoom level based on game and window width
+		FlxG.camera.zoom = ( (FlxG.width / FlxG.stage.stageWidth) * 2 );
+		//trace("New zoom after resize: "+FlxG.camera.zoom);
+		
+		//trace(FlxG.stage.width); // why do these 2 report higher values when I zoom in, and lower on zoom out?!
+		//trace(FlxG.game.width);
+		
+		//trace(FlxG.width); // game resolution (doesn't change)
+		//trace(FlxG.stage.stageWidth); // window resolution
 	}
 	
 	/** -----------------------------------------------------------------
@@ -469,12 +496,33 @@ class PlayState extends FlxState
 						
 						var prop = new Prop(x, y, o.width, o.height, flipX, flipY, o.angle, filename);
 						
-						// If the prop is flipped 180 degrees, we can account for that easily; other rotations aren't supported (but will still load)
-						if (prop.angle == -180)
+						// Fix up hitboxes for props that are cardinally aligned (can't support non-cardinal rotations)
+						if (prop.angle < 0)
 						{
-							prop.offset.set( -prop.width, prop.height);
-							prop.x -= prop.width;
-							prop.y += prop.height;
+							// For some reason, Tiled rotations are always negative							
+							if (prop.angle % -270 == 0)
+							{
+								var tempWidth = prop.width;
+								prop.width = prop.height;
+								prop.height = tempWidth;
+								prop.offset.set(0, prop.height * 2);
+								prop.y += prop.height * 2;
+							}
+							else if (prop.angle % -180 == 0)
+							{
+								prop.offset.set( -prop.width, prop.height);
+								prop.x -= prop.width;
+								prop.y += prop.height;
+							}
+							else if (prop.angle % -90 == 0)
+							{
+								var tempWidth = prop.width;
+								prop.width = prop.height;
+								prop.height = tempWidth;
+								prop.offset.set(-prop.width, prop.height);
+								prop.y += prop.height;
+								prop.x -= prop.width;
+							}
 						}
 						
 						// See if the prop has a "scrollx" property (for scrollFactor.x, i.e. parallax) and set it

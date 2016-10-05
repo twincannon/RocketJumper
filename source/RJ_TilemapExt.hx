@@ -592,6 +592,7 @@ class RJ_TilemapExt extends FlxTilemap
 		//@TODO: Make this only affect players/characters/whatever
 				//(it's affecting rockets atm, and I mistakenly thought the player was triggering a bounce when they weren't)
 				//after I do that, try making it so 0 x velocity bounces downward again (basically stop checking movingEast/West)
+		//@TODO: Fix up the hacks in here, try and implement actual vector reflection to fix the "colliding twice over 2 frames" bug... (i.e. go so fast that one collision isn't enough to deviate you away from the tiles)
 				
 		var threshold:Float = 50;
 		var downhillBounceYVel:Float = -50;
@@ -615,9 +616,11 @@ class RJ_TilemapExt extends FlxTilemap
 			else if ( !FacingEast && canBounceUp )
 			{
 				// Bounce uphill
-				Object.velocity.y = -(Math.abs(Object.velocity.x) * 1.0);
+				Object.velocity.y = Math.min( Object.velocity.y, -(Math.abs(Object.velocity.x) * 1.0) );
 				Object.velocity.x *= 0.5;
+				Object.x -= 2; // Hack to prevent colliding with a tile two frames in a row, causing undesired velocity changes
 				didBounce = true;
+				
 			}
 		}
 		else if ( movingWest )
@@ -632,8 +635,9 @@ class RJ_TilemapExt extends FlxTilemap
 			else if ( FacingEast && canBounceUp )
 			{
 				// Bounce uphill
-				Object.velocity.y = -(Math.abs(Object.velocity.x) * 1.0);
+				Object.velocity.y = Math.min( Object.velocity.y, -(Math.abs(Object.velocity.x) * 1.0) );
 				Object.velocity.x *= 0.5;
+				Object.x += 2; // Hack to prevent colliding with a tile two frames in a row, causing undesired velocity changes
 				didBounce = true;
 			}
 		}
@@ -650,7 +654,7 @@ class RJ_TilemapExt extends FlxTilemap
 		var remainder:Float = targetPoint - targetInt;
 		
 		Object.y = targetPoint;
-
+		
 		// This goofy math is a hack to prevent gentle slopes having "subpixels" with a 0.5 offset that cause the player to continously fall and never land
 		if ( remainder == 0.5 )
 		{
@@ -682,7 +686,10 @@ class RJ_TilemapExt extends FlxTilemap
 		Object.touching = FlxObject.CEILING;
 		
 		// Adjust the object's vertical velocity by it's horizontal velocity
-		Object.velocity.y = Math.max(Object.velocity.x, 0);
+		if(FacingEast)
+			Object.velocity.y = Math.abs(Math.min(Object.velocity.x, 0));
+		else
+			Object.velocity.y = Math.max(Object.velocity.x, 0);
 		
 		// Reposition the object
 		Object.y = _slopePoint.y;

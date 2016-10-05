@@ -464,7 +464,6 @@ class Player extends FlxSprite
 		
 		var state:PlayState = cast FlxG.state;
 		state.worldCam.follow(this);
-		state.worldCam.zoom = 1.3333332;
 
 		setPosition(spawnPoint.x, spawnPoint.y);
 
