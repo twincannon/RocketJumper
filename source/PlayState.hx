@@ -109,6 +109,8 @@ class PlayState extends FlxState
 		worldCam.follow(player, FlxCameraFollowStyle.LOCKON, 1);
 		worldCam.targetOffset.set(0, -20);
 		
+		FlxG.mouse.visible = false;
+		
 		//FlxG.scaleMode = new RatioScaleMode(true); //@TODO: I'd like to use this, but it breaks the HUD currently -- need to position HUD elements based on distance from edges of screen
 	}
 	
@@ -163,7 +165,7 @@ class PlayState extends FlxState
 		// Custom mouse cursor
 		_crosshair = new FlxSprite( 0, 0, AssetPaths.cursor__png );
 		_crosshair.scrollFactor.set( 0, 0 );
-		add( _crosshair );
+	//	add( _crosshair );
 
 		add( gameHUD );
 		

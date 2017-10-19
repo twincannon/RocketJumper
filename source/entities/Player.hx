@@ -3,6 +3,7 @@ package entities;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxObject;
+import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.system.FlxSound;
 import flixel.group.FlxGroup;
 import openfl.Assets;
@@ -10,6 +11,7 @@ import entities.Rocket;
 import flixel.math.FlxPoint;
 import flixel.math.FlxAngle;
 import flixel.input.gamepad.FlxGamepad;
+import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxVector;
 import flixel.FlxCamera.FlxCameraFollowStyle;
 
@@ -63,7 +65,13 @@ class Player extends FlxSprite
 	private var _sndJump:FlxSound;
 	private var _sndShoot:FlxSound;
 	
+	private var _shootDelay:Float = 0.025;
+	private var _shootDelayTimer:Float = 0;
+	
 	private var m_bUsingAnalogAiming:Bool = false;
+	
+	private var _resurrectInput:Bool = false;
+	private var _oldAnalogY:Float = 0;
 
 	public static inline var SPRITE_WIDTH = 29;
 	public static inline var SPRITE_HEIGHT = 32;
@@ -165,7 +173,7 @@ class Player extends FlxSprite
 		crosshairLine.loadGraphic(AssetPaths.line__png, true, 1, 75);
 		crosshairLine.setSize(1, 1);
 		crosshairLine.scrollFactor.set( 0, 0 );
-		FlxG.state.add(crosshairLine);
+	//	FlxG.state.add(crosshairLine);
 	}
 	
 	public function goalMet():Void
@@ -218,7 +226,11 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	public function HandleInput():Void
 	{
-		if ( FlxG.keys.justPressed.R )
+		
+		var fireKeys:Array<FlxKey> = [UP, DOWN, LEFT, RIGHT];
+		var firePressed:Bool = FlxG.keys.anyPressed(fireKeys);
+		
+		if ( FlxG.keys.justPressed.R || !living && FlxG.keys.anyJustPressed(fireKeys))
 			resurrect();
 			
 		acceleration.x = 0;
@@ -231,8 +243,8 @@ class Player extends FlxSprite
 			oldMouseScreenXY.set( FlxG.mouse.screenX, FlxG.mouse.screenY );
 		}	
 		
-		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, UP, SPACE]);
-		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, UP, SPACE]);
+		m_bJumpHeldThisFrame = FlxG.keys.anyPressed([W, SPACE]);
+		m_bJumpPressedThisFrame = FlxG.keys.anyJustPressed([W, SPACE]);
 		
 		jumpLeniencyTimer -= FlxG.elapsed;
 		
@@ -242,14 +254,14 @@ class Player extends FlxSprite
 		if ( !living || levelBeat )
 			return;	
 		
-		if (FlxG.keys.anyPressed([LEFT, A]))
+		if (FlxG.keys.anyPressed([/*LEFT,*/ A]))
 			Walk( FlxObject.LEFT );
 			
-		if (FlxG.keys.anyPressed([RIGHT, D]))
+		if (FlxG.keys.anyPressed([/*RIGHT,*/ D]))
 			Walk( FlxObject.RIGHT );
 		
 		// If we're on a platform and hold down+jump, drop through it //@TODO: make this work elsewhere, probably in HandleJumping (so I don't have to copy it into gamepad code)
-		if (FlxG.keys.anyPressed([DOWN, S]) && FlxG.keys.justPressed.SPACE && onPlatform) //@TODO: probably make W not jump anymore, since space now has unique functionality.. also add this to gamepad input
+		if (FlxG.keys.anyPressed([/*DOWN,*/ S]) && FlxG.keys.justPressed.SPACE && onPlatform) //@TODO: probably make W not jump anymore, since space now has unique functionality.. also add this to gamepad input
 		{
 			y += 6;
 			m_bJumpHeldThisFrame = false;
@@ -257,11 +269,59 @@ class Player extends FlxSprite
 			onPlatform = false;
 		}
 		
-		if (FlxG.mouse.pressed && m_flRocketFireTimer <= 0.0)
+		if (usingMouse && !firePressed)
 		{
-			var mouseAngle:Float = getMidpoint().angleBetween( FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y));
+			_resurrectInput = false;
+		}
+		
+		// ************* really REALLY need to consolidate gamepad + keyboard input somehow *********************
+		// New "8 way shoot Isaac style" controls
+		if (!_resurrectInput && firePressed)
+		{
+			usingMouse = true;
 			
-			FireBullet( getMidpoint(), FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y), mouseAngle );
+			if (_shootDelayTimer >= _shootDelay)
+			{
+				var point:FlxPoint = getMidpoint();
+				var fire = false;
+				
+				if (FlxG.keys.pressed.RIGHT)
+				{
+					point.x += 100;
+					fire = true;
+				}
+				else if (FlxG.keys.pressed.LEFT)
+				{
+					point.x += -100;
+					fire = true;
+				}
+				
+				if (FlxG.keys.pressed.UP)
+				{
+					point.y += -100;
+					fire = true;
+				}
+				else if (FlxG.keys.pressed.DOWN)
+				{
+					point.y += 100;
+					fire = true;
+				}
+				
+				var angle:Float = getMidpoint().angleBetween(point);
+				
+				if (fire && m_flRocketFireTimer <= 0.0)
+				{
+					FireBullet( getMidpoint(), point, angle );
+				}
+			}
+			else
+			{
+				_shootDelayTimer += FlxG.elapsed;
+			}
+		}
+		else if(usingMouse)
+		{
+			_shootDelayTimer = 0;
 		}
 		
 		// Velocity limiter
@@ -290,104 +350,90 @@ class Player extends FlxSprite
 		
 		if ( m_gamePad == null )
 			return;
+		
+		var fireButtons:Array<FlxGamepadInputID> = [B, X, Y, A];
+		var firePressed:Bool = m_gamePad.anyPressed(fireButtons);
 			
-		if ( m_gamePad.justPressed.X )
+		if ( m_gamePad.justPressed.BACK || !living && m_gamePad.anyJustPressed(fireButtons) )
 			resurrect();
 		
-		var xboxJumpPressed = m_gamePad.justPressed.A;
+		var xboxJumpPressed = m_gamePad.pressed.DPAD_UP || m_gamePad.analog.value.LEFT_STICK_Y < 0;
+		var xboxJumpJustPressed = m_gamePad.justPressed.DPAD_UP || (m_gamePad.analog.value.LEFT_STICK_Y < 0 && _oldAnalogY == 0);
 		
-		var xboxFirePressed = m_gamePad.analog.value.RIGHT_TRIGGER > 0.25 ||
-							  m_gamePad.justPressed.RIGHT_STICK_CLICK;
-		
-		if ( m_gamePad.pressed.RIGHT_SHOULDER || m_gamePad.pressed.LEFT_SHOULDER )
-			m_bAimLockHeld = true;
-		else
-			m_bAimLockHeld = false;
+		_oldAnalogY = m_gamePad.analog.value.LEFT_STICK_Y;
 		
 		m_bJumpHeldThisFrame = ( m_bJumpHeldThisFrame || xboxJumpPressed );
-		m_bJumpPressedThisFrame = ( m_bJumpPressedThisFrame || xboxJumpPressed );
+		m_bJumpPressedThisFrame = ( m_bJumpPressedThisFrame || xboxJumpJustPressed );
 		
 		if ( !living || levelBeat )
 			return;
 		
 		m_gamePad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
 		m_gamePad.deadZone = 0.4;
-				
-		if ( (m_gamePad.pressed.DPAD_LEFT || m_gamePad.pressed.DPAD_RIGHT || 
-			  m_gamePad.pressed.DPAD_UP   || m_gamePad.pressed.DPAD_DOWN  ||
-			  m_gamePad.analog.value.LEFT_STICK_X != 0 || m_gamePad.analog.value.LEFT_STICK_Y != 0 ) && !m_bAimLockHeld)
+		
+		if (!usingMouse && !firePressed)
 		{
-			m_AimLockDir = FlxPoint.get(0, 0);
-			usingMouse = false;
+			_resurrectInput = false;
 		}
+		
+		// New "8 way shoot Isaac style" controls
+		if (!_resurrectInput && firePressed)
+		{
+			usingMouse = false;
+			
+			if (_shootDelayTimer >= _shootDelay)
+			{
+				var point:FlxPoint = getMidpoint();
+				var fire = false;
+				
+				if (m_gamePad.pressed.B)
+				{
+					point.x += 100;
+					fire = true;
+				}
+				else if (m_gamePad.pressed.X)
+				{
+					point.x += -100;
+					fire = true;
+				}
+				
+				if (m_gamePad.pressed.Y)
+				{
+					point.y += -100;
+					fire = true;
+				}
+				else if (m_gamePad.pressed.A)
+				{
+					point.y += 100;
+					fire = true;
+				}
+				
+				var angle:Float = getMidpoint().angleBetween(point);
+				
+				if (fire && m_flRocketFireTimer <= 0.0)
+				{
+					FireBullet( getMidpoint(), point, angle );
+				}
+			}
+			else
+			{
+				_shootDelayTimer += FlxG.elapsed;
+			}
+		}
+		else if(!usingMouse)
+		{
+			_shootDelayTimer = 0;
+		}
+		
+		
 	
 		if ( m_gamePad.pressed.DPAD_LEFT || m_gamePad.analog.value.LEFT_STICK_X < 0)
 		{
 			Walk( FlxObject.LEFT );
-			m_AimLockDir.x = m_bAimLockHeld ? m_AimLockDir.x : -1;
 		}
 		else if ( m_gamePad.pressed.DPAD_RIGHT || m_gamePad.analog.value.LEFT_STICK_X > 0)
 		{
 			Walk( FlxObject.RIGHT );
-			m_AimLockDir.x = m_bAimLockHeld ? m_AimLockDir.x : 1;
-		}
-		
-		if ( m_gamePad.pressed.DPAD_UP || m_gamePad.analog.value.LEFT_STICK_Y < 0 )
-		{
-			m_AimLockDir.y = m_bAimLockHeld ? m_AimLockDir.y : -1;
-		}
-		else if ( m_gamePad.pressed.DPAD_DOWN || m_gamePad.analog.value.LEFT_STICK_Y > 0 )
-		{
-			m_AimLockDir.y = m_bAimLockHeld ? m_AimLockDir.y : 1;
-		}
-		
-		var X = m_AimLockDir.x;
-		var Y = m_AimLockDir.y;
-		var aimX = X;
-		var aimY = Y;
-		
-		
-		if ( m_gamePad.justPressed.Y )
-		{
-			m_bUsingAnalogAiming = !m_bUsingAnalogAiming;
-			Reg.getPlayState().gameHUD.setInputModeText( m_bUsingAnalogAiming ? "Analog stick style" : "D-Pad style (hold bumpers to lock aim)");
-		}
-			
-		if ( m_bUsingAnalogAiming )
-		{
-			X = m_gamePad.analog.value.RIGHT_STICK_X;
-			Y = m_gamePad.analog.value.RIGHT_STICK_Y;
-			
-			aimX = X != 0 ? X : m_OldGamepadAxis.x;
-			aimY = Y != 0 ? Y : m_OldGamepadAxis.y;
-		}
-		
-		// Store axis so we can still fire when the player has let go of the analog stick
-		m_OldGamepadAxis = FlxPoint.get( aimX, aimY );
-		
-		if ( (X != 0 || Y != 0) && m_bUsingAnalogAiming)
-		{
-			usingMouse = false;
-			m_bAimAnimDirty = true;
-		}
-		
-		if ( !usingMouse )
-		{
-			var angle:Float = Math.atan2( aimY, aimX );
-			crosshairLocation.x = 75 * Math.cos(angle);
-			crosshairLocation.y = 75 * Math.sin(angle);
-		}
-		
-		if ( m_flRocketFireTimer <= 0.0 && (aimX != 0 || aimY != 0) && xboxFirePressed )
-		{
-			// This is kind of hacky, but it works
-			aimX *= 10000;
-			aimY *= 10000;
-			aimX += getMidpoint().x;
-			aimY += getMidpoint().y;
-			
-			var joyangle:Float = getMidpoint().angleBetween( FlxPoint.get(aimX, aimY) );
-			FireBullet( getMidpoint(), FlxPoint.get(aimX, aimY), joyangle );
 		}
 	}
 	
@@ -491,6 +537,8 @@ class Player extends FlxSprite
 			
 			Reg.resetTimers();
 		}
+		
+		_resurrectInput = true;
 	}
 	
 	// --------------------------------------------------------------------------------------
@@ -726,7 +774,7 @@ class Player extends FlxSprite
 		
 		var rocket = new Rocket( origin.x, origin.y );
 		rocket.angle = newAngle;
-		rocket.angleshoot( origin.x, origin.y - Reg.PLAYER_SHOOT_Y_OFFSET, Reg.ROCKET_SPEED, target );
+		rocket.angleshoot( origin.x, origin.y /*- Reg.PLAYER_SHOOT_Y_OFFSET*/, Reg.ROCKET_SPEED, target );
 		
 		m_flRocketFireTimer = Reg.ROCKET_COOLDOWN;
 		
