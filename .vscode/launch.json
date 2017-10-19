@@ -30,62 +30,37 @@
 			"stopOnEntry": true
 		},
 
-		{
-			"name": "Linux: Build and Debug",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"compilePath=${workspaceRoot}",
-				"compileCommand=openfl build linux -debug -DHXCPP_DEBUGGER",
-				"runPath=${workspaceRoot}/Export/linux64/cpp/bin/",
-				"runCommand=rocketjumper",
-				"runInTerminal=false"
-			],
-			"type": "hxcpp",
-			"request": "launch",
-			"stopOnEntry": true
-		},
-		{
-			"name": "Linux: Debug",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"runPath=${workspaceRoot}/Export/linux64/cpp/bin/",
-				"runCommand=rocketjumper",
-				"runInTerminal=false"
-			],
-			"type": "hxcpp",
-			"request": "launch",
-			"program": "",
-			"stopOnEntry": true
-		},
 
 		{
-			"name": "OSX: Build and Debug",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"compilePath=${workspaceRoot}",
-				"compileCommand=openfl build mac -debug -DHXCPP_DEBUGGER",
-				"runPath=${workspaceRoot}/Export/mac/cpp/bin/",
-				"runCommand=rocketjumper",
-				"runInTerminal=false"
-			],
-			"type": "hxcpp",
+			"name": "Flash",
+			"type": "fdb",
 			"request": "launch",
-			"stopOnEntry": true
+			"program": "${workspaceRoot}/export/flash/bin/rocketjumper.swf"
 		},
 		{
-			"name": "OSX: Debug",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"runPath=${workspaceRoot}/Export/mac/cpp/bin/",
-				"runCommand=rocketjumper",
-				"runInTerminal=false"
-			],
+			"name": "Flash (+rebuild)",
+			"type": "fdb",
+			"request": "launch",
+			"program": "${workspaceRoot}/export/flash/bin/rocketjumper.swf",
+			"preLaunchTask": "flash debug (build only)"
+		},
+		{
+			"name": "Windows",
 			"type": "hxcpp",
 			"request": "launch",
-			"program": "",
-			"stopOnEntry": true
+			"program": "${workspaceRoot}/export/windows/cpp/bin/rocketjumper.exe"
+		},
+		{
+			"name": "Linux",
+			"type": "hxcpp",
+			"request": "launch",
+			"program": "${workspaceRoot}/export/linux64/cpp/bin/rocketjumper"
+		},
+		{
+			"name": "Mac",
+			"type": "hxcpp",
+			"request": "launch",
+			"program": "${workspaceRoot}/export/mac64/cpp/bin/rocketjumper.app/Contents/MacOS/rocketjumper"
 		}
-
-
 	]
 }

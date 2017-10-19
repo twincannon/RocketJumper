@@ -18,17 +18,17 @@
     <class path="C:\HaxeToolkit\haxe\lib\flixel\git" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\3,6,1" />
     <class path="C:\HaxeToolkit\haxe\lib\lime\2,9,1" />
-    <class path="C:\HaxeToolkit\haxe\lib\hscript\2,0,7" />
+    <class path="C:\HaxeToolkit\haxe\lib\hscript\2,1,1" />
     <class path="C:\HaxeToolkit\haxe\lib\flixel-addons\git" />
     <class path="C:\HaxeToolkit\haxe\lib\hxcpp-debugger\git" />
-    <class path="C:\HaxeToolkit\haxe\lib\hxcpp\3,3,49" />
+    <class path="C:\HaxeToolkit\haxe\lib\hxcpp\3,4,188" />
     <class path="source" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\3,6,1\extern" />
     <class path="export\windows\neko\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="flixel=4.1.1&#xA;openfl=3.6.1&#xA;lime=2.9.1&#xA;hscript=2.0.7&#xA;flixel-addons=2.1.0&#xA;hxcpp-debugger=1.2.0&#xA;hxcpp=3.3.49&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;FLX_NO_FOCUS_LOST_SCREEN&#xA;HXCPP_DEBUGGER&#xA;tools=2.9.1&#xA;NAPE_NO_INLINE&#xA;no-compilation&#xA;native&#xA;HXCPP_DEBUG_LINK&#xA;lime-native&#xA;openfl-native&#xA;windows&#xA;desktop&#xA;display" />
+    <option directives="flixel=4.3.0&#xA;openfl=3.6.1&#xA;lime=2.9.1&#xA;hscript=2.1.1&#xA;flixel-addons=2.5.0&#xA;hxcpp-debugger=1.2.0&#xA;hxcpp=3.4.188&#xA;HXCPP_QUIET&#xA;openfl-next&#xA;FLX_NO_FOCUS_LOST_SCREEN&#xA;HXCPP_DEBUGGER&#xA;tools=2.9.1&#xA;NAPE_NO_INLINE&#xA;no-compilation&#xA;native&#xA;HXCPP_DEBUG_LINK&#xA;lime-native&#xA;openfl-native&#xA;windows&#xA;desktop&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />

@@ -1,368 +1,135 @@
 {
-    "version": "0.1.0",
-    "command": "haxelib",
-    "args": ["run", "lime", "test"],
-    "tasks": [
-        {
-            "taskName": "flash release",
-            "suppressTaskName": true,
-            "args": ["flash"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "flash debug",
-            "suppressTaskName": true,
-            "args": ["flash", "-Ddebug"],
-            "isBuildCommand": true,
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "html5 release",
-            "suppressTaskName": true,
-            "args": ["html5"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "html5 debug",
-            "suppressTaskName": true,
-            "args": ["html5", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "neko release",
-            "suppressTaskName": true,
-            "args": ["neko"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "neko debug",
-            "suppressTaskName": true,
-            "args": ["neko", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "neko release -Dnext",
-            "suppressTaskName": true,
-            "args": ["neko", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "neko debug -Dnext",
-            "suppressTaskName": true,
-            "args": ["neko", "-Ddebug", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "cpp release",
-            "suppressTaskName": true,
-            "args": ["cpp"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "cpp debug",
-            "suppressTaskName": true,
-            "args": ["cpp", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "cpp release -Dnext",
-            "suppressTaskName": true,
-            "args": ["cpp", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "cpp debug -Dnext",
-            "suppressTaskName": true,
-            "args": ["cpp", "-Dnext", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "android debug",
-            "suppressTaskName": true,
-            "args": ["android", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "android release",
-            "suppressTaskName": true,
-            "args": ["android"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "android debug -Dnext",
-            "suppressTaskName": true,
-            "args": ["android", "-Ddebug", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "android release -Dnext",
-            "suppressTaskName": true,
-            "args": ["android", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "ios debug",
-            "suppressTaskName": true,
-            "args": ["ios", "-Ddebug"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "ios release",
-            "suppressTaskName": true,
-            "args": ["ios"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "ios debug -Dnext",
-            "suppressTaskName": true,
-            "args": ["ios", "-Ddebug", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        },
-        {
-            "taskName": "ios release -Dnext",
-            "suppressTaskName": true,
-            "args": ["ios", "-Dnext"],
-            "problemMatcher": {
-                "owner": "haxe",
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (?:lines \\d+-(\\d+)|character(?:s (\\d+)-| )(\\d+)) : (?:(Warning) : )?(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "endLine": 3,
-                    "column": 4,
-                    "endColumn": 5,
-                    "severity": 6,
-                    "message": 7
-                }
-            }
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"taskName": "flash release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "flash"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "flash debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "flash", "-debug", "-Dfdb"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "flash debug (build only)",
+			"command": "haxelib",
+			"args": ["run", "lime", "build", "flash", "-debug", "-Dfdb"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "html5 release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "html5"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "html5 debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "html5", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "neko release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "neko"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "neko debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "neko", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "neko release -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "neko", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "neko debug -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "neko", "-debug", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "cpp release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "cpp"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "cpp debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "cpp", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "cpp release -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "cpp", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "cpp debug -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "cpp", "-Dnext", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "android debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "android", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "android release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "android"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "android debug -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "android", "-debug", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "android release -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "android", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "ios debug",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "ios", "-debug"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "ios release",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "ios"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "ios debug -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "ios", "-debug", "-Dnext"],
+			"problemMatcher": "$haxe"
+		},
+		{
+			"taskName": "ios release -Dnext",
+			"command": "haxelib",
+			"args": ["run", "lime", "test", "ios", "-Dnext"],
+			"problemMatcher": "$haxe"
+		}
+	]
 }
