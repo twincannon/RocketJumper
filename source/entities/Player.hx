@@ -7,7 +7,7 @@ import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.system.FlxSound;
 import flixel.group.FlxGroup;
 import openfl.Assets;
-import entities.Rocket;
+import entities.projectiles.Rocket;
 import flixel.math.FlxPoint;
 import flixel.math.FlxAngle;
 import flixel.input.gamepad.FlxGamepad;
@@ -218,6 +218,13 @@ class Player extends FlxSprite
 		{
 			//trace("jump height: " + Std.string(y - highestJumpY)); //@TODO: finish this //actually, this is "longest fall", I'd need to record takeoff point as well to get actual height TODO
 			highestJumpY = y;
+		}
+
+		// @TODO: uhh... need to like make a minimum timer here, and make Shoot work, instead of jump
+		// Current level finished, change to next level
+		if ( levelBeat && (FlxG.keys.justPressed.ENTER || m_bJumpPressedThisFrame) )
+		{
+			Reg.getPlayState().loadNextLevel();
 		}
 	}
 	

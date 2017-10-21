@@ -1,4 +1,4 @@
-package entities;
+package entities.projectiles;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -12,33 +12,29 @@ import flixel.addons.display.shapes.FlxShape;
 import flixel.math.FlxVector;
 import entities.Explosion;
 
-class Rocket extends FlxSprite
+class Rocket extends Projectile
 {
 	private static inline var ROCKET_RADIUS:Float = 80;
 	private static inline var ROCKET_ENHANCE_TIMER:Float = 0.6;
 	private static inline var ROCKET_AMP_X:Int = 220;
 	private static inline var ROCKET_AMP_Y:Int = 220;
-	private static inline var ROCKET_LIFETIME:Float = 10.0;
-	private var m_flTimeAlive:Float = 0;
 	private var _sndExplode:FlxSound;
 	private var _sndExplodeBig:FlxSound;
 
-	public function new(X:Float = 0, Y:Float = 0)
+	override public function new(X:Float = 0, Y:Float = 0)
 	{
 		super(X, Y);
+		
 		loadGraphic(AssetPaths.rocket__png, true, 32, 62);
 		animation.add("spin", [for (i in 0...13) i], 30);
 		animation.play("spin");
 		scale.set(0.25, 0.25);
-		setSize( 1, 1 );
-		centerOffsets();
-		centerOrigin();
-		pixelPerfectRender = Reg.shouldPixelPerfectRender;
-		
-		Reg.getPlayState().rockets.add(this);
+	
 		
 		_sndExplode = FlxG.sound.load(AssetPaths.explosion__wav);
 		_sndExplodeBig = FlxG.sound.load(AssetPaths.explosionbig__wav);
+		postInitialize();
+		
 	}
 	
 	public function angleshoot(X:Float, Y:Float, Speed:Int, Target:FlxPoint):Void
@@ -53,34 +49,28 @@ class Rocket extends FlxSprite
 	
 	override public function update(elapsed:Float):Void 
 	{
-		super.update(elapsed);
-		
-		if ( scale.x < 0.6 && m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
+		if ( scale.x < 0.6 && _timeAlive >= ROCKET_ENHANCE_TIMER )
 		{
 			scale.x *= 1.1;
 			scale.y *= 1.1;
 		}
-			
-		m_flTimeAlive += elapsed;
-		
-		FlxG.collide( Reg.mapLoader.mapGroup, this, explode );
-		
-		if ( m_flTimeAlive >= ROCKET_LIFETIME )
-		{
-			super.destroy();
-			this.destroy();
-		}
+
+		super.update(elapsed);
+	}
+
+	override private function collisionFound(collidable:FlxObject, projectile:FlxObject):Void
+	{
+		explode(collidable, projectile);
+
+		super.collisionFound(collidable, projectile);
 	}
 	
 	private function explode(R:FlxObject, M:FlxObject):Void
 	{
-		if (this.touching <= 0)
-			return;
-
 		var player = Reg.getPlayState().player;
 		
 		var doBigExplosion = false;
-		if ( m_flTimeAlive >= ROCKET_ENHANCE_TIMER )
+		if ( _timeAlive >= ROCKET_ENHANCE_TIMER )
 			doBigExplosion = true;
 		
 		var explosionRadius = doBigExplosion ? ROCKET_RADIUS * 2 : ROCKET_RADIUS;
@@ -149,9 +139,6 @@ class Rocket extends FlxSprite
 			_sndExplode.setPosition(x, y);
 			_sndExplode.play();
 		}
-			
-		super.destroy();
-		this.destroy();
 	}
 	
 	public static inline function distance(p0:FlxPoint, p1:FlxPoint) : Float

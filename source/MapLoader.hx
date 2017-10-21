@@ -27,7 +27,7 @@ import entities.Player;
 import entities.Checkpoint;
 import entities.Goal;
 import entities.Prop;
-import entities.Rocket;
+import entities.projectiles.Rocket;
 import entities.Sign;
 import entities.Coin;
 import entities.Platform;

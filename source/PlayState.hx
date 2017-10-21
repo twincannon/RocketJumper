@@ -243,7 +243,7 @@ class PlayState extends FlxState
 		}
 	}
 	
-	private function loadNextLevel():Void
+	public function loadNextLevel():Void
 	{
 		if ( Reg.levelnum < Reg.levelnames.length - 1 )
 		{

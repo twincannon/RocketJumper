@@ -5,7 +5,7 @@ import entities.Player;
 import flixel.group.FlxGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
-import entities.Rocket;
+import entities.projectiles.Rocket;
 import flixel.FlxCamera;
 import flixel.math.FlxPoint;
 
