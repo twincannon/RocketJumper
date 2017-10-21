@@ -33,7 +33,7 @@ class PlayState extends FlxState
 	public var player:Player;
 
 	
-	public var rockets:FlxGroup = new FlxGroup();
+	public var rockets:FlxGroup = new FlxGroup(); // should really be elsewhere
 	public var worldCam:FlxCamera;
 
 	private var _crosshair:FlxSprite;

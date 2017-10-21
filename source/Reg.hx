@@ -16,8 +16,6 @@ import flixel.math.FlxPoint;
  */
 class Reg
 {
-	public static var mapLoader:MapLoader;
-	public static var HUD:HUD;
 	// Const global variables
 	public static inline var ROCKET_SPEED = 400;
 	public static inline var ROCKET_COOLDOWN = 0.5;
@@ -37,6 +35,9 @@ class Reg
 	public static inline var ASSET_EXT_IMAGE = ".png";
 
 	// Global variables
+	public static var mapLoader:MapLoader;
+	public static var HUD:HUD;
+	
 	public static var levelnum:Int = 0;
 	public static var leveltitle:String = "Level title";
 	public static var levelnames:Array<String> = new Array<String>();
@@ -122,21 +123,7 @@ class Reg
 		return (start + percent * (end - start));
 	}
 	
-	/**
-	 * Generic levels Array that can be used for cross-state stuff.
-	 * Example usage: Storing the levels of a platformer.
-	 */
-	public static var levels:Array<Dynamic> = [];
-	/**
-	 * Generic level variable that can be used for cross-state stuff.
-	 * Example usage: Storing the current level number.
-	 */
-	public static var scores:Array<Dynamic> = [];
-	/**
-	 * Generic score variable that can be used for cross-state stuff.
-	 * Example usage: Storing the current score.
-	 */
-	public static var score:Int = 0;
+
 	/**
 	 * Generic bucket for storing different FlxSaves.
 	 * Especially useful for setting up multiple save slots.
