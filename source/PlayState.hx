@@ -92,6 +92,8 @@ class PlayState extends FlxState
 		FlxCamera.defaultCameras = defaultCams;
 		
 		setupLevel();
+
+		FlxG.camera.setScrollBoundsRect(0, 0, _tilemapMain.width, _tilemapMain.height);
 		
 		gameHUD = new HUD( FlxG.width, FlxG.height ); // Note: Creates and adds a second camera to FlxG.cameras
 		
@@ -375,7 +377,7 @@ class PlayState extends FlxState
 		_tilemapMain.setGentle([58], [57]);
 		_tilemapMain.setSteep([59], [60]);
 		//_tilemapMain.color = 0x333333; // this basically multiplies the base color, so instead of having a separate dark tilemap for tilesbg, i could just use this and re-use tiles.png
-		
+
 		_tilemapBackground.allowCollisions = FlxObject.NONE;
 		_tilemapDetail.allowCollisions = FlxObject.NONE;
 
@@ -501,7 +503,7 @@ class PlayState extends FlxState
 						// Fix up hitboxes for props that are cardinally aligned (can't support non-cardinal rotations)
 						if (prop.angle < 0)
 						{
-							// For some reason, Tiled rotations are always negative							
+							// For some reason, Tiled rotations are always negative	// @TODO: revisit this garbage??						
 							if (prop.angle % -270 == 0)
 							{
 								var tempWidth = prop.width;
@@ -527,6 +529,8 @@ class PlayState extends FlxState
 							}
 						}
 						
+						var forceForeground:Bool = false;
+
 						// See if the prop has a "scrollx" property (for scrollFactor.x, i.e. parallax) and set it
 						if ( o.xmlData.hasNode.properties )
 						{
@@ -534,11 +538,17 @@ class PlayState extends FlxState
 							{
 								if ( Property.att.name == "scrollx" )
 									prop.scrollFactor.x = Std.parseFloat(Property.att.value);
+								else if ( Property.att.name == "forcefore" )
+									forceForeground = true;
 							}
 						}
 						
 						// Figure out which group to add the prop to based on scrollfactor (for z-ordering)
-						if ( prop.scrollFactor.x < 1.0 )
+						if(prop.scrollFactor.x > 1.0 || forceForeground)
+						{
+							_propsFore.add(prop);
+						}
+						else if ( prop.scrollFactor.x < 1.0 )
 						{
 							_propsBack.add(prop);
 							prop.color = prop.color.getDarkened( Math.abs(prop.scrollFactor.x - 1) );
@@ -547,10 +557,6 @@ class PlayState extends FlxState
 						else if ( prop.scrollFactor.x == 1.0 )
 						{
 							_propsMid.add(prop);
-						}
-						else
-						{
-							_propsFore.add(prop);
 						}
 						
 						// Offset the prop, if it has scrollfactor, so that it lines up with the player being at it's position in Tiled (normally it's position is just modified naively)

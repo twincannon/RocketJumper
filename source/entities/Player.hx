@@ -287,23 +287,23 @@ class Player extends FlxSprite
 				
 				if (FlxG.keys.pressed.RIGHT)
 				{
-					point.x += 100;
+					point.x += 10000;
 					fire = true;
 				}
 				else if (FlxG.keys.pressed.LEFT)
 				{
-					point.x += -100;
+					point.x += -10000;
 					fire = true;
 				}
 				
 				if (FlxG.keys.pressed.UP)
 				{
-					point.y += -100;
+					point.y += -10000;
 					fire = true;
 				}
 				else if (FlxG.keys.pressed.DOWN)
 				{
-					point.y += 100;
+					point.y += 10000;
 					fire = true;
 				}
 				
