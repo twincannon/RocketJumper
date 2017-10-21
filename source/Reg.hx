@@ -16,6 +16,8 @@ import flixel.math.FlxPoint;
  */
 class Reg
 {
+	public static var mapLoader:MapLoader;
+	public static var HUD:HUD;
 	// Const global variables
 	public static inline var ROCKET_SPEED = 400;
 	public static inline var ROCKET_COOLDOWN = 0.5;

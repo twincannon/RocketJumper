@@ -63,7 +63,7 @@ class Rocket extends FlxSprite
 			
 		m_flTimeAlive += elapsed;
 		
-		FlxG.collide( Reg.getPlayState().mapGroup, this, explode );
+		FlxG.collide( Reg.mapLoader.mapGroup, this, explode );
 		
 		if ( m_flTimeAlive >= ROCKET_LIFETIME )
 		{
