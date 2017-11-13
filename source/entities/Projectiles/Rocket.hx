@@ -29,6 +29,8 @@ class Rocket extends Projectile
 		animation.add("spin", [for (i in 0...13) i], 30);
 		animation.play("spin");
 		scale.set(0.25, 0.25);
+
+		projectileSize = FlxPoint.get(1, 1);
 	
 		
 		_sndExplode = FlxG.sound.load(AssetPaths.explosion__wav);
@@ -39,12 +41,22 @@ class Rocket extends Projectile
 	
 	public function angleshoot(X:Float, Y:Float, Speed:Int, Target:FlxPoint):Void
 	{
-		super.reset(X, Y);
-		
 		solid = true;
 		var rangle:Float = Math.atan2(Target.y - (y + (height / 2)), Target.x - (x + (width / 2)));  //This gives angle in radians
+
+		var truncateDigits:Int = 10000;
+		rangle = Math.round(rangle * truncateDigits) / truncateDigits;
+
 		velocity.x = Math.cos(rangle) * Speed;
 		velocity.y = Math.sin(rangle) * Speed;
+
+		// Normalize and zero out horizontal velocity if it's very small
+		// this is because cos(pi/2) is an irrational number and we need rockets able to go straight down
+		var cosineTolerance = 0.02;
+		if(Math.abs(velocity.x) < cosineTolerance)
+		{
+			velocity.x = 0;
+		}
 	}
 	
 	override public function update(elapsed:Float):Void 
@@ -96,21 +108,22 @@ class Rocket extends Projectile
 			// Automatically make the player "jump" when on the ground and hit by a rocket's explosion (automatic rocket jump)
 			if ( player.onGround && strength > 0.5 )
 			{
-				player.DoJump();
+				player.DoJump(false);
 			}
 			
 			// Normalize blast strength a bit to make "perfect rocketjumps" easier and more consistent
-			if ( strength > 0.5 )
+			var threshold:Float = 0.75;
+			if ( strength > threshold )
 				strength = 1.0;
 			else
-				strength = Reg.RemapValClamped( strength, 0.5, 0.0, 1.0, 0.0 );
-				
+				strength = Reg.RemapValClamped( strength, threshold, 0.0, 1.0, 0.0 );
+
 			var amplitudeX:Float = ROCKET_AMP_X * strength * explosionAmpMod;
 			var amplitudeY:Float = ROCKET_AMP_Y * strength * explosionAmpMod;
 			
 			// Offset our falling velocity when rocketjumping (to help with pogo'ing/skipping). Be careful not to allow infinite wall-climbing!
 			var fallingOffsetVel = Math.max(player.velocity.y, 0);
-			
+
 			player.velocity.x += vecDir.x * amplitudeX;
 			player.velocity.y += vecDir.y * amplitudeY - fallingOffsetVel;
 		}

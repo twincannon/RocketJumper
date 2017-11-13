@@ -27,13 +27,15 @@ using StringTools;
  */
 class PlayState extends FlxState
 {
+	private static inline var CAM_ZOOM_DEFAULT:Float = 2.0;
 	private static inline var CAM_ZOOM_MIN:Float = 1.0;
 	private static inline var CAM_ZOOM_MAX:Float = 4.0;
 	
 	public var player:Player;
 
+	private var currentCameraYOffset:Float = 0.0;
 	
-	public var rockets:FlxGroup = new FlxGroup(); // should really be elsewhere
+	public var projectiles:FlxGroup = new FlxGroup(); // should really be elsewhere
 	public var worldCam:FlxCamera;
 
 	private var _crosshair:FlxSprite;
@@ -67,7 +69,7 @@ class PlayState extends FlxState
 		
 		addGameAssetsToState();
 		
-		FlxG.camera.zoom = ( (FlxG.width / FlxG.stage.stageWidth) * 2 ); // Set pixel perfect 2.0 ratio zoom (also done in onResize);
+		resetCameraZoom();
 		
 		worldCam.flash( FlxColor.BLACK, 0.75 );	
 		
@@ -76,7 +78,7 @@ class PlayState extends FlxState
 		FlxG.addPostProcess(shader);
 #end
 		worldCam.follow(player, FlxCameraFollowStyle.LOCKON, 1);
-		worldCam.targetOffset.set(0, -20);
+		worldCam.targetOffset.set(0, 0);
 		
 		FlxG.mouse.visible = false;
 		
@@ -91,7 +93,7 @@ class PlayState extends FlxState
 		super.onResize(Width, Height);
 		
 		// Attempt to achieve a pixel-perfect 2.0 zoom level based on game and window width
-		FlxG.camera.zoom = ( (FlxG.width / FlxG.stage.stageWidth) * 2 );
+		resetCameraZoom();
 		//trace("New zoom after resize: "+FlxG.camera.zoom);
 		
 		//trace(FlxG.stage.width); // why do these 2 report higher values when I zoom in, and lower on zoom out?!
@@ -99,6 +101,11 @@ class PlayState extends FlxState
 		
 		//trace(FlxG.width); // game resolution (doesn't change)
 		//trace(FlxG.stage.stageWidth); // window resolution
+	}
+
+	private function resetCameraZoom():Void
+	{
+		FlxG.camera.zoom = ( (FlxG.width / FlxG.stage.stageWidth) * CAM_ZOOM_DEFAULT );
 	}
 	
 	/** -----------------------------------------------------------------
@@ -109,7 +116,7 @@ class PlayState extends FlxState
 		Reg.mapLoader.addBackgroundObjects(this);
 
 
-		add( rockets );
+		add( projectiles );
 		
 		player.addToState();
 		
@@ -126,10 +133,6 @@ class PlayState extends FlxState
 		
 		FlxG.sound.volume = 0.2; //@TODO: Seems to be a bug where the first sound effect is very loud for a fraction of a second. Play a null.wav to fix?
 	}
-	
-
-
-
 
 	
 	/** --------------------------------------------------------------------
@@ -141,7 +144,25 @@ class PlayState extends FlxState
 		FlxG.camera.zoom = newzoom;
 	}
 
-	
+
+	// -----------------------------------------------------------------------------------------------------
+	private function updateCameraVelocityOffset(elapsed:Float):Void
+	{
+		var velocityStart:Float = 300;
+		var velocityEnd:Float = 1000;
+		var offsetStart:Float = 0;
+		var offsetEnd:Float = 50;
+		var offsetChangeSpeed:Float = 5.0;
+
+		var targetYOffset:Float = Reg.RemapValClamped(Math.abs(player.velocity.y), velocityStart, velocityEnd, offsetStart, offsetEnd);
+		if(player.velocity.y < 0)
+		{
+			targetYOffset *= -1;
+		}
+
+		currentCameraYOffset = Reg.Lerp(currentCameraYOffset, targetYOffset, elapsed * offsetChangeSpeed);
+		worldCam.targetOffset.set(worldCam.targetOffset.x, currentCameraYOffset);
+	}
 
 	
 	/** ------------------------------------------
@@ -149,6 +170,8 @@ class PlayState extends FlxState
 	 *  ------------------------------------------ */
 	override public function update(elapsed:Float):Void
 	{
+		updateCameraVelocityOffset(elapsed);
+
 		// Mousewheel camera zoom
 		if ( FlxG.mouse.wheel != 0 && !player.levelBeat )
 		{
@@ -164,16 +187,6 @@ class PlayState extends FlxState
 			{
 				handleCameraZoom( newzoom );
 			}
-		}
-		else
-		{
-			// Vertical velocity-based automatic zooming (makes people sick, disabled)
-/*			if(player.velocity.y > 260) //falling
-				handleCameraZoom(FlxG.camera.zoom + 0.0125); //@TODO: these don't seem to be fps independant. Actually I bet a lot of this project isn't.. how do I get deltatime? -- "FlxG.elapsed"...but only relevant with non-fixed timestep!!
-			else if(player.velocity.y < -260) //rising
-				handleCameraZoom(FlxG.camera.zoom - 0.02);
-			else if(player.velocity.y == 0)
-				handleCameraZoom( Reg.Lerp( FlxG.camera.zoom, 2, 0.05 ) );*/
 		}
 			
 #if (!flash && !html5)
@@ -260,7 +273,7 @@ class PlayState extends FlxState
 	private function reloadPlayState():Void
 	{
 		player.levelBeat = false;
-		Reg.destroyRockets(true);
+		Reg.destroyProjectiles(true);
 		FlxG.switchState(new PlayState());
 		
 		Reg.resetTimers();

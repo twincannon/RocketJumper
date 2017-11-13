@@ -76,8 +76,8 @@ class Player extends FlxSprite
 	public static inline var SPRITE_WIDTH = 29;
 	public static inline var SPRITE_HEIGHT = 32;
 	
-	public static inline var HITBOX_WIDTH = 17;
-	public static inline var HITBOX_HEIGHT = 30;
+	public static inline var HITBOX_WIDTH = 10;
+	public static inline var HITBOX_HEIGHT = 20;
 	
 
 	public function new(X:Float = 0, Y:Float = 0)
@@ -199,7 +199,7 @@ class Player extends FlxSprite
 		var wasOnGround:Bool = onGround;
 		
 		HandleAnimation();
-		HandleInput(); //handle input, update velocity
+		HandleInput(elapsed); //handle input, update velocity
 		HandleGamepadInput(); //@TODO: some logic is replicated in both input functions, and it shouldn't be
 		HandleJumping( m_bJumpHeldThisFrame, m_bJumpPressedThisFrame );
 		UpdateFireEffect(); //muzzleflash
@@ -231,7 +231,7 @@ class Player extends FlxSprite
 	// --------------------------------------------------------------------------------------
 	// Keyboard/mouse input
 	// --------------------------------------------------------------------------------------
-	public function HandleInput():Void
+	public function HandleInput(elapsed:Float):Void
 	{
 		
 		var fireKeys:Array<FlxKey> = [UP, DOWN, LEFT, RIGHT];
@@ -334,10 +334,14 @@ class Player extends FlxSprite
 		// Velocity limiter
 		if ( onGround )
 		{
-			if ( velocity.x > Reg.PLAYER_MAX_SPEED )
-				velocity.x = Reg.PLAYER_MAX_SPEED;
-			else if (velocity.x < -Reg.PLAYER_MAX_SPEED)
-				velocity.x = -Reg.PLAYER_MAX_SPEED;
+			if ( Math.abs(velocity.x) > Reg.PLAYER_MAX_SPEED )
+			{
+				// Scale our limited velocity over time so we don't come to a sudden step
+				var direction = (velocity.x < 0 ? -1 : 1);
+				var speedLimitRate = 10;
+				var velocityScaled = Reg.Lerp(Math.abs(velocity.x), Reg.PLAYER_MAX_SPEED, elapsed * speedLimitRate);
+				velocity.x = velocityScaled * direction;
+			}
 		}
 		else
 		{
@@ -472,13 +476,18 @@ class Player extends FlxSprite
 		}
 	}
 	
-	public function DoJump():Void
+	public function DoJump(playSound:Bool = true):Void
 	{
 		if ( levelBeat )
 			return;
 			
 		animation.play("jump", true);
-		_sndJump.play();
+
+		if(playSound)
+		{
+			_sndJump.play();
+		}
+
 		firing = false; //we can interrupt a fire animation with jumping. @TODO really need to refactor into like "TryAnimation(anim,priority,loops)" (loops = false would set force to true and frame to 0)
 		velocity.y = -Reg.PLAYER_JUMP_VEL;
 		onGround = false;
@@ -513,7 +522,7 @@ class Player extends FlxSprite
 	 *  ----------------------------------------------------------------------------------------- */
 	public function resurrect():Void
 	{
-		Reg.destroyRockets(false);
+		Reg.destroyProjectiles(false);
 		
 		var state:PlayState = cast FlxG.state;
 		state.worldCam.follow(this);
@@ -703,28 +712,34 @@ class Player extends FlxSprite
 
 		// Limit velocity only if we're running along on the ground
 		if ( onGround )
-			maxVelocity.x = Reg.PLAYER_MAX_SPEED;
+		{
+			// Kind of hacky, but this simulates drag when holding walk, since normally hitting walk makes velocity calc
+			// instantly cap velocity, so you'd slide to a stop more slowly if you didn't hold a key than if you did
+			maxVelocity.x = Math.max(Reg.PLAYER_MAX_SPEED, Math.abs(velocity.x) * 0.98);
+		}
 		else
+		{
 			maxVelocity.x = 0;
+		}
 
-		var dirScaler = (dir == FlxObject.RIGHT) ? 1.0 : -1.0;
-		var absVel = Math.abs(velocity.x);
 		var reverseDir = (dir == FlxObject.LEFT && velocity.x > 0) || (dir == FlxObject.RIGHT && velocity.x < 0);
 
 		// Set target accel
 		if ( onGround )
 		{
-			acceleration.x = 1000 * dirScaler;
+			acceleration.x = Reg.PLAYER_ACCELERATION;
 		}
-		else
+		else // in air
 		{
 			if ( reverseDir ) 
-				acceleration.x = 1500 * dirScaler; // To make changing direction in the air faster
-			else if ( absVel > 0 && absVel < Reg.PLAYER_MAX_SPEED ) 
-				acceleration.x = 1000 * dirScaler;
+				acceleration.x = Reg.PLAYER_ACCELERATION * 1.5; // To make changing direction/stopping in the air faster
+			else if ( Math.abs(velocity.x) < Reg.PLAYER_MAX_SPEED ) 
+				acceleration.x = Reg.PLAYER_ACCELERATION; // Ramp up to regular running speed normally
 			else if (!onGround)
-				acceleration.x = 100 * dirScaler; // Regular air accel
+				acceleration.x = Reg.PLAYER_ACCELERATION * 0.1; // Regular air accel much lower
 		}
+
+		acceleration.x *= (dir == FlxObject.RIGHT) ? 1.0 : -1.0;
 		
 		Reg.levelTimerStarted = true;
 			
@@ -780,6 +795,7 @@ class Player extends FlxSprite
 	//	m_sprFireEffect.animation.play("blast", true);
 		
 		var rocket = new Rocket( origin.x, origin.y );
+	
 		rocket.angle = newAngle;
 		rocket.angleshoot( origin.x, origin.y /*- Reg.PLAYER_SHOOT_Y_OFFSET*/, Reg.ROCKET_SPEED, target );
 		

@@ -22,7 +22,7 @@ class Reg
 	public static inline var PLAYER_DRAG = 450;
 	public static inline var PLAYER_DRAG_AIR = 100;
 	public static inline var PLAYER_MAX_SPEED = 150;
-	public static inline var PLAYER_ACCEL = 15;
+	public static inline var PLAYER_ACCELERATION = 1000;
 	public static inline var PLAYER_JUMP_VEL = 280;
 	public static inline var PLAYER_SHOOT_Y_OFFSET = 10;
 	public static inline var GRAVITY = 800;
@@ -61,19 +61,19 @@ class Reg
 	 * Destroy all rockets and clear the FlxGroup.
 	 * @param	Reset	Whether or not to also destroy and recreate the FlxGroup. Only do this prior to a FlxState change as the group then needs to be re-added to the state.
 	 */
-	public static inline function destroyRockets(Reset:Bool):Void
+	public static inline function destroyProjectiles(Reset:Bool):Void
 	{
 		var state = getPlayState();
 		
-		for ( r in state.rockets )
+		for ( r in state.projectiles )
 			r.destroy();
 			
-		state.rockets.clear();
+		state.projectiles.clear();
 		
 		if ( Reset )
 		{
-			state.rockets.destroy();
-			state.rockets = new FlxGroup();
+			state.projectiles.destroy();
+			state.projectiles = new FlxGroup();
 		}
 	}
 	

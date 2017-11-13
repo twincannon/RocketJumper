@@ -3,11 +3,14 @@ package entities.projectiles;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxObject;
+import flixel.math.FlxPoint;
 
 class Projectile extends FlxSprite
 {
 	private static inline var PROJECTILE_LIFETIME:Float = 10.0;
     private var _timeAlive:Float = 0;
+
+	var projectileSize:FlxPoint = FlxPoint.get(10, 10);
 
 	override public function new(X:Float = 0, Y:Float = 0)
 	{
@@ -20,11 +23,14 @@ class Projectile extends FlxSprite
 
 	private function postInitialize():Void
 	{
-		setSize( 1, 1 );
+		setSize(projectileSize.x, projectileSize.y);
+
 		centerOffsets();
 		centerOrigin();
 		
-		Reg.getPlayState().rockets.add(this);
+		setPosition(x - width * 0.5, y - height * 0.5);
+		
+		Reg.getPlayState().projectiles.add(this);
 	}
 
     override public function update(elapsed:Float):Void

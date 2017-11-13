@@ -36,6 +36,8 @@ using StringTools;
 
 class MapLoader extends FlxBasic
 {
+	private static inline var TILE_SIZE:Int = 20;
+
 	public var mapGroup:FlxGroup = new FlxGroup();
 	
     private var _tiledMap:TiledMap;
@@ -208,8 +210,8 @@ class MapLoader extends FlxBasic
 
 			var tileLayer = cast(layer, TiledTileLayer);
 			
-			var tileWidth:Int = 20;
-			var tileHeight:Int = 20;
+			var tileWidth:Int = TILE_SIZE;
+			var tileHeight:Int = TILE_SIZE;
 			var tileSpacing:FlxPoint = FlxPoint.get(0, 0);
 			var tileBorder:FlxPoint = FlxPoint.get(2, 2);
 
